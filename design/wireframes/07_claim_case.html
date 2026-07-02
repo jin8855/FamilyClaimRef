@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>청구 시작</title>
+<style>
+body{margin:0;background:#f3f4f6;color:#1f2933;font-family:Arial,"Noto Sans KR",sans-serif}header{padding:12px 20px;background:#fff;border-bottom:1px solid #cfd6dd}.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px}h1{margin:0;font-size:22px}.subtitle{margin:4px 0 0;color:#53616f;font-size:13px}.breadcrumb{font-size:13px;color:#53616f;white-space:nowrap}.breadcrumb a{color:#1f2933;text-decoration:none}main{max-width:1240px;margin:0 auto;padding:24px 18px}.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px}.steps a{border:1px solid #cfd6dd;border-radius:4px;padding:9px;background:#fff;text-decoration:none;color:#1f2933;text-align:center}.layout{display:grid;grid-template-columns:280px 1fr 300px;gap:14px}.panel{background:#fff;border:1px solid #cfd6dd;border-radius:6px;padding:14px;margin-bottom:14px}.panel h2{margin:0 0 8px;font-size:17px;line-height:1.3}.panel-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}.panel-title h2{margin:0;font-size:17px}.panel-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap}.next-panel .panel-title{margin-bottom:0}.next-panel .panel-actions{margin-left:auto}.box{border:1px dashed #9aa5b1;border-radius:4px;padding:10px;background:#fbfcfd;margin:8px 0}.fields{display:grid;grid-template-columns:1fr 1fr;gap:8px}.btn-sm{display:inline-block;border:1px solid #cfd6dd;border-radius:4px;padding:4px 7px;font-size:12px;background:#fbfcfd;color:#1f2933;text-decoration:none}.meta dl{display:grid;grid-template-columns:130px 1fr;gap:8px;margin:0}.meta dt{font-weight:700}.meta dd{margin:0}@media(max-width:1000px){.steps,.layout,.fields,.meta dl{grid-template-columns:1fr}}@media(max-width:800px){.topbar,.panel-title{display:block}.breadcrumb{margin-top:6px;white-space:normal}.panel-actions{justify-content:flex-start;margin-top:8px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="topbar"><h1>청구 시작</h1><nav class="breadcrumb"><a href="index.html">홈</a> &gt; <a href="07_claim_case.html">보험 청구하기</a> &gt; 청구 시작</nav></div>
+  <p class="subtitle">서류/이미지를 추가하고 OCR 후보값을 바탕으로 청구 입력값을 수정한다.</p>
+</header>
+<main>
+  <nav class="steps"><a href="07_claim_case.html">1. 청구 시작(서류/이미지 추가)</a><a href="06_ocr_review.html">2. OCR 확인</a><a href="09_claim_reference_result.html">3. 보험 찾기</a><a href="08_claim_submission.html">4. 진행 현황</a><a href="14_claim_complete.html">5. 청구 완료</a></nav>
+  <section class="layout">
+    <aside class="panel"><h2>서류/이미지 추가</h2><div class="box">진단서</div><div class="box">진료비 영수증</div><div class="box">약제비 영수증</div><div class="box">세부산정내역서</div><div class="box">기타 서류</div></aside>
+    <section class="panel"><h2>OCR 또는 직접 입력으로 보완할 청구 입력값</h2><div class="fields"><div class="box">가족 선택</div><div class="box">진료일</div><div class="box">진료유형</div><div class="box">진단명 후보</div><div class="box">진단코드 prefix</div><div class="box">키워드/태그</div><div class="box">병원 후보</div><div class="box">금액</div><div class="box">약제비 여부</div><div class="box">메모</div></div></section>
+    <aside class="panel"><h2>작업 안내</h2><div class="box">먼저 서류를 추가한다</div><div class="box">OCR 확인에서 후보값을 확인한다</div><div class="box">조건으로 보험을 찾는다</div></aside>
+  </section>
+  <section class="panel next-panel"><div class="panel-title"><h2>다음 작업</h2><div class="panel-actions"><a class="btn-sm" href="18_claim_document_register.html">청구 서류 등록</a><a class="btn-sm" href="06_ocr_review.html">OCR 확인</a><span class="btn-sm">임시저장</span><span class="btn-sm">저장</span><a class="btn-sm" href="09_claim_reference_result.html">조건으로 보험 찾기</a></div></div></section>
+  <section class="panel meta"><dl><dt>화면 목적</dt><dd>청구 시작 단계에서 서류 추가와 청구 입력값 보완을 함께 진행한다.</dd><dt>입력값</dt><dd>서류 후보, 가족, 진료일, 진료유형, 진단명 후보, 진단코드 prefix, 키워드/태그, 병원 후보, 금액, 약제비 여부, 메모</dd><dt>저장값</dt><dd>청구 시작 입력값 후보, 임시저장 후보</dd><dt>조회값</dt><dd>가족 관리값, 문서 후보</dd><dt>민감정보 여부</dt><dd>있음. 진료 정보와 청구 준비 정보는 민감정보로 취급한다.</dd><dt>다음 이동</dt><dd>청구 서류 등록, OCR 확인, 보험 찾기</dd></dl></section>
+</main>
+</body>
+</html>

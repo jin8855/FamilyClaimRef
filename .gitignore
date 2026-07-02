@@ -1,0 +1,24 @@
+# Local sensitive or user-provided files
+attachments/
+data/local/
+
+# .NET build outputs
+bin/
+obj/
+TestResults/
+
+# Visual Studio / user-local files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Local runtime/database files
+*.db
+*.sqlite
+*.sqlite3
+
+# OS/editor noise
+.DS_Store
+Thumbs.db

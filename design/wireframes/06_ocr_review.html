@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OCR 확인</title>
+<style>
+body{margin:0;background:#f3f4f6;color:#1f2933;font-family:Arial,"Noto Sans KR",sans-serif}header{padding:12px 20px;background:#fff;border-bottom:1px solid #cfd6dd}.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px}h1{margin:0;font-size:22px}.subtitle{margin:4px 0 0;color:#53616f;font-size:13px}.breadcrumb{font-size:13px;color:#53616f;white-space:nowrap}.breadcrumb a{color:#1f2933;text-decoration:none}main{max-width:1240px;margin:0 auto;padding:24px 18px}.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px}.steps a,.btn-sm{border:1px solid #cfd6dd;border-radius:4px;padding:9px;background:#fff;text-decoration:none;color:#1f2933;text-align:center}.btn-sm{display:inline-block;padding:4px 7px;font-size:12px;background:#fbfcfd}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.panel{background:#fff;border:1px solid #cfd6dd;border-radius:6px;padding:14px;margin-bottom:14px}.panel h2{margin:0 0 8px;font-size:17px;line-height:1.3}.panel-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}.panel-title h2{margin:0;font-size:17px}.panel-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap}.next-panel .panel-title{margin-bottom:0}.next-panel .panel-actions{margin-left:auto}.box{border:1px dashed #9aa5b1;border-radius:4px;padding:10px;background:#fbfcfd;margin:8px 0}.meta dl{display:grid;grid-template-columns:130px 1fr;gap:8px;margin:0}.meta dt{font-weight:700}.meta dd{margin:0}@media(max-width:1000px){.grid{grid-template-columns:1fr}}@media(max-width:900px){.steps,.meta dl{grid-template-columns:1fr}}@media(max-width:800px){.topbar,.panel-title{display:block}.breadcrumb{margin-top:6px;white-space:normal}.panel-actions{justify-content:flex-start;margin-top:8px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="topbar"><h1>OCR 확인</h1><nav class="breadcrumb"><a href="index.html">홈</a> &gt; <a href="07_claim_case.html">보험 청구하기</a> &gt; OCR 확인</nav></div>
+  <p class="subtitle">문서에서 추출된 후보값을 확인하고 연결 대상에 맞는 사용자 확정값을 남긴다.</p>
+</header>
+<main>
+  <nav class="steps"><a href="07_claim_case.html">1. 청구 시작(서류/이미지 추가)</a><a href="06_ocr_review.html">2. OCR 확인</a><a href="09_claim_reference_result.html">3. 보험 찾기</a><a href="08_claim_submission.html">4. 진행 현황</a><a href="14_claim_complete.html">5. 청구 완료</a></nav>
+  <section class="panel"><h2>진입 정보</h2><div class="grid"><div class="box">진입 출처: 보험 문서 등록 / 청구 서류 등록 / 문서함</div><div class="box">문서 목적: 보험 관리용 / 청구용</div><div class="box">연결 대상: 선택된 보험 / 현재 청구 사건</div></div></section>
+  <section class="grid">
+    <div class="panel"><h2>문서 후보</h2><div class="box">보험 문서 후보 A</div><div class="box">청구 서류 후보 A</div><div class="box">확인 필요 필드 후보</div></div>
+    <div class="panel"><h2>OCR 후보값</h2><div class="box">문서 유형 후보</div><div class="box">금액 또는 담보 후보</div><div class="box">키워드/태그 후보</div><div class="box">보험명/보험사 후보</div></div>
+    <div class="panel"><h2>사용자 확정값</h2><div class="box">문서 목적</div><div class="box">연결 대상</div><div class="box">사용자 확인 상태</div><div class="box">문서 유형 확정값</div><div class="box">금액 또는 담보 후보 확정값</div><div class="box">키워드/태그 확정값</div></div>
+  </section>
+  <section class="panel next-panel"><div class="panel-title"><h2>다음 작업</h2><div class="panel-actions"><a class="btn-sm" href="17_policy_document_register.html">보험 문서 등록</a><a class="btn-sm" href="18_claim_document_register.html">청구 서류 등록</a><a class="btn-sm" href="09_claim_reference_result.html">보험 찾기</a><a class="btn-sm" href="05_document_box.html">문서함</a></div></div></section>
+  <section class="panel meta"><dl><dt>화면 목적</dt><dd>보험 문서와 청구 서류의 진입 출처, 문서 목적, 연결 대상을 구분해 OCR 후보값과 사용자 확정값을 확인한다.</dd><dt>입력값</dt><dd>후보값 승인, 수정, 제외, 사용자 확인 상태</dd><dt>저장값</dt><dd>확정된 OCR 후보, 사용자 확정값, 문서 목적, 연결 대상</dd><dt>조회값</dt><dd>문서 후보, OCR 후보값</dd><dt>민감정보 여부</dt><dd>있음. 문서와 진료/보험 관련 후보값은 민감정보다.</dd><dt>다음 이동</dt><dd>보험 문서 등록, 청구 서류 등록, 보험 찾기, 문서함</dd></dl></section>
+</main>
+</body>
+</html>

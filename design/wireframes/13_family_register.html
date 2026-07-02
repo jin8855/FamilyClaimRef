@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>가족 등록/편집</title>
+<style>
+body{margin:0;background:#f3f4f6;color:#1f2933;font-family:Arial,"Noto Sans KR",sans-serif}header{padding:12px 20px;background:#fff;border-bottom:1px solid #cfd6dd}.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px}h1{margin:0;font-size:22px}.subtitle{margin:4px 0 0;color:#53616f;font-size:13px}.breadcrumb{font-size:13px;color:#53616f;white-space:nowrap}.breadcrumb a{color:#1f2933;text-decoration:none}main{max-width:900px;margin:0 auto;padding:24px 18px}.panel{background:#fff;border:1px solid #cfd6dd;border-radius:6px;padding:14px;margin-bottom:14px}.panel h2{margin:0 0 8px;font-size:17px;line-height:1.3}.panel-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap}.form-actions{padding:10px 14px}.box,.btn-sm{border:1px dashed #9aa5b1;border-radius:4px;padding:10px;background:#fbfcfd;margin:8px 0}.btn-sm{display:inline-block;border-style:solid;padding:4px 7px;font-size:12px;color:#1f2933;text-decoration:none}.notice{border-left:4px solid #6b7280;background:#fbfcfd;padding:12px}.meta dl{display:grid;grid-template-columns:130px 1fr;gap:8px;margin:0}.meta dt{font-weight:700}.meta dd{margin:0}@media(max-width:800px){.meta dl{grid-template-columns:1fr}.topbar{display:block}.breadcrumb{margin-top:6px;white-space:normal}.panel-actions{justify-content:flex-start}}
+</style>
+</head>
+<body>
+<header>
+  <div class="topbar"><h1>가족 등록/편집</h1><nav class="breadcrumb"><a href="index.html">홈</a> &gt; <a href="15_manage_home.html">관리하기</a> &gt; <a href="02_family_members.html">가족 관리</a> &gt; 가족 등록/편집</nav></div>
+  <p class="subtitle">실명 대신 표시명 기준으로 가족 후보를 등록하거나 편집한다.</p>
+</header>
+<main>
+  <section class="panel form-actions"><div class="panel-actions"><span class="btn-sm">저장</span><span class="btn-sm">삭제</span><span class="btn-sm">사용 중지</span><span class="btn-sm">취소</span><a class="btn-sm" href="02_family_members.html">닫기</a></div></section>
+  <section class="panel"><h2>가족 등록/편집 입력</h2><div class="box">표시명</div><div class="box">관계 후보</div><div class="box">메모</div><div class="box">사용 여부</div></section>
+  <section class="panel notice">실명, 주민번호, 계좌번호는 저장하지 않는다. 가족 표시명은 사용자가 알아볼 수 있는 별칭으로 입력한다.</section>
+  <section class="panel notice">삭제는 실제 구현 시 연결된 보험, 문서, 청구 이력이 있는 경우 제한되어야 한다.</section>
+  <section class="panel meta"><dl><dt>화면 목적</dt><dd>가족 표시명을 등록하거나 편집한다.</dd><dt>입력값</dt><dd>표시명, 관계 후보, 메모, 사용 여부</dd><dt>저장값</dt><dd>가족 등록/편집 후보</dd><dt>조회값</dt><dd>없음</dd><dt>민감정보 여부</dt><dd>있음. 실명과 고유식별정보는 저장하지 않는다.</dd><dt>다음 이동</dt><dd>가족 관리</dd></dl></section>
+</main>
+</body>
+</html>

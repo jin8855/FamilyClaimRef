@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>청구 완료</title>
+<style>
+body{margin:0;background:#f3f4f6;color:#1f2933;font-family:Arial,"Noto Sans KR",sans-serif}
+header{padding:12px 20px;background:#fff;border-bottom:1px solid #cfd6dd}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px}
+h1{margin:0;font-size:22px}
+.subtitle{margin:4px 0 0;color:#53616f;font-size:13px}
+.breadcrumb{font-size:13px;color:#53616f;white-space:nowrap}
+.breadcrumb a{color:#1f2933;text-decoration:none}
+main{max-width:1120px;margin:0 auto;padding:24px 18px}
+.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px}
+.steps a{border:1px solid #cfd6dd;border-radius:4px;padding:9px;background:#fff;text-decoration:none;color:#1f2933;text-align:center;font-size:13px}
+.panel{background:#fff;border:1px solid #cfd6dd;border-radius:6px;padding:14px;margin-bottom:14px}
+.panel h2{margin:0 0 8px;font-size:17px;line-height:1.3}
+.panel-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.panel-title h2{margin:0;font-size:17px}
+.panel-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap}
+.next-panel .panel-title{margin-bottom:0}
+.btn-sm{display:inline-block;border:1px solid #cfd6dd;border-radius:4px;padding:4px 7px;font-size:12px;background:#fbfcfd;color:#1f2933;text-decoration:none}
+.box{border:1px dashed #9aa5b1;border-radius:4px;padding:10px;background:#fbfcfd;margin:8px 0}
+.meta dl{display:grid;grid-template-columns:130px 1fr;gap:8px;margin:0}
+.meta dt{font-weight:700}
+.meta dd{margin:0}
+@media(max-width:900px){.steps,.meta dl{grid-template-columns:1fr}}
+@media(max-width:800px){.topbar,.panel-title{display:block}.breadcrumb{margin-top:6px;white-space:normal}.panel-actions{justify-content:flex-start;margin-top:8px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="topbar">
+    <h1>청구 완료</h1>
+    <nav class="breadcrumb"><a href="index.html">홈</a> &gt; <a href="07_claim_case.html">보험 청구하기</a> &gt; 청구 완료</nav>
+  </div>
+  <p class="subtitle">보험 청구하기의 마지막 단계이며, 홈의 이력 보기와 분리된 완료 확인 화면이다.</p>
+</header>
+<main>
+  <nav class="steps">
+    <a href="07_claim_case.html">1. 청구 시작(서류/이미지 추가)</a>
+    <a href="06_ocr_review.html">2. OCR 확인</a>
+    <a href="09_claim_reference_result.html">3. 보험 찾기</a>
+    <a href="08_claim_submission.html">4. 진행 현황</a>
+    <a href="14_claim_complete.html">5. 청구 완료</a>
+  </nav>
+
+  <section class="panel">
+    <h2>완료 요약</h2>
+    <div class="box">청구 사건 후보 저장</div>
+    <div class="box">보험사 A 진행 기록 연결</div>
+    <div class="box">지급 결과는 추후 진행 현황 또는 이력 보기에서 확인</div>
+  </section>
+
+  <section class="panel next-panel">
+    <div class="panel-title">
+      <h2>다음 행동</h2>
+      <div class="panel-actions">
+        <a class="btn-sm" href="07_claim_case.html">새 청구 시작</a>
+        <a class="btn-sm" href="10_history_view.html">이력 보기</a>
+        <a class="btn-sm" href="index.html">홈</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel meta">
+    <dl>
+      <dt>화면 목적</dt><dd>청구 흐름의 완료 상태와 후속 이동을 확인한다.</dd>
+      <dt>입력값</dt><dd>완료 메모 후보</dd>
+      <dt>저장값</dt><dd>청구 완료 후보 정보</dd>
+      <dt>조회값</dt><dd>저장 요약, 다음 행동</dd>
+      <dt>민감정보 여부</dt><dd>있음. 청구 완료 정보는 민감정보로 취급한다.</dd>
+      <dt>다음 이동</dt><dd>새 청구 시작, 이력 보기, 홈</dd>
+    </dl>
+  </section>
+</main>
+</body>
+</html>

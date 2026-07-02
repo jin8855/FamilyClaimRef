@@ -1,0 +1,28 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>홈 대시보드</title>
+<style>
+body{margin:0;background:#f3f4f6;color:#1f2933;font-family:Arial,"Noto Sans KR",sans-serif}header{padding:12px 20px;background:#fff;border-bottom:1px solid #cfd6dd}.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px}h1{margin:0;font-size:22px}.subtitle{margin:4px 0 0;color:#53616f;font-size:13px}.breadcrumb{font-size:13px;color:#53616f;white-space:nowrap}.breadcrumb a{color:#1f2933;text-decoration:none}main{max-width:1120px;margin:0 auto;padding:24px 18px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.panel{background:#fff;border:1px solid #cfd6dd;border-radius:6px;padding:16px;margin-bottom:14px}.card{display:block;border:1px dashed #9aa5b1;border-radius:4px;padding:12px;background:#fbfcfd;color:#1f2933;text-decoration:none}.meta dl{display:grid;grid-template-columns:130px 1fr;gap:8px;margin:0}.meta dt{font-weight:700}.meta dd{margin:0}@media(max-width:900px){.grid,.meta dl{grid-template-columns:1fr}}
+@media(max-width:800px){.topbar{display:block}.breadcrumb{margin-top:6px;white-space:normal}}
+</style>
+</head>
+<body>
+<header>
+  <div class="topbar"><h1>홈 대시보드</h1><nav class="breadcrumb"><a href="index.html">홈</a> &gt; 홈 대시보드</nav></div>
+  <p class="subtitle">청구 준비, 진행 현황, 최근 이력을 한눈에 확인한다.</p>
+</header>
+<main>
+  <section class="grid">
+    <a class="card" href="07_claim_case.html">보험 청구하기</a>
+    <a class="card" href="03_policy_list.html">보험 검색</a>
+    <a class="card" href="10_history_view.html">이력 보기</a>
+    <a class="card" href="15_manage_home.html">관리하기</a>
+  </section>
+  <section class="panel"><h2>진행 요약</h2><div class="card">진행 중 청구 2건 후보</div><div class="card">OCR 확인 필요 문서 3건 후보</div><div class="card">최근 지급 결과 1건 후보</div></section>
+  <section class="panel meta"><dl><dt>화면 목적</dt><dd>주요 메뉴와 진행 요약을 제공한다.</dd><dt>입력값</dt><dd>없음</dd><dt>저장값</dt><dd>없음</dd><dt>조회값</dt><dd>진행 요약, 최근 이력</dd><dt>민감정보 여부</dt><dd>있음. 청구 및 문서 상태는 민감정보 단서가 될 수 있다.</dd><dt>다음 이동</dt><dd>보험 청구하기, 보험 검색, 이력 보기, 관리하기</dd></dl></section>
+</main>
+</body>
+</html>
