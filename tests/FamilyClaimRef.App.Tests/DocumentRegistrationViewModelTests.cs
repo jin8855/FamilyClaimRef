@@ -13,7 +13,8 @@ public sealed class DocumentRegistrationViewModelTests
     {
         var exception = Record.Exception(() => new DocumentRegistrationViewModel(
             null!,
-            new FakeFilePickerService(null)));
+            new FakeFilePickerService(null),
+            new FakePolicyClaimStorageService()));
 
         Assert.NotNull(exception);
         Assert.IsType<ArgumentNullException>(exception);
@@ -24,7 +25,24 @@ public sealed class DocumentRegistrationViewModelTests
     {
         var workflow = CreateWorkflow(new SpyDocumentStorageService(), new SpyFileAttachmentService());
 
-        var exception = Record.Exception(() => new DocumentRegistrationViewModel(workflow, null!));
+        var exception = Record.Exception(() => new DocumentRegistrationViewModel(
+            workflow,
+            null!,
+            new FakePolicyClaimStorageService()));
+
+        Assert.NotNull(exception);
+        Assert.IsType<ArgumentNullException>(exception);
+    }
+
+    [Fact]
+    public void Constructor_rejects_null_policy_claim_storage()
+    {
+        var workflow = CreateWorkflow(new SpyDocumentStorageService(), new SpyFileAttachmentService());
+
+        var exception = Record.Exception(() => new DocumentRegistrationViewModel(
+            workflow,
+            new FakeFilePickerService(null),
+            null!));
 
         Assert.NotNull(exception);
         Assert.IsType<ArgumentNullException>(exception);
@@ -36,7 +54,8 @@ public sealed class DocumentRegistrationViewModelTests
         var workflow = CreateWorkflow(new SpyDocumentStorageService(), new SpyFileAttachmentService());
         var viewModel = new DocumentRegistrationViewModel(
             workflow,
-            new FakeFilePickerService(new FilePickerResult("C:\\Temp\\dummy.pdf", "dummy.pdf")));
+            new FakeFilePickerService(new FilePickerResult("C:\\Temp\\dummy.pdf", "dummy.pdf")),
+            new FakePolicyClaimStorageService());
 
         await viewModel.SelectFileAsync();
 
@@ -52,7 +71,8 @@ public sealed class DocumentRegistrationViewModelTests
         var workflow = CreateWorkflow(new SpyDocumentStorageService(), new SpyFileAttachmentService());
         var viewModel = new DocumentRegistrationViewModel(
             workflow,
-            new FakeFilePickerService(null))
+            new FakeFilePickerService(null),
+            new FakePolicyClaimStorageService())
         {
             SelectedSourceFilePath = "C:\\Temp\\previous.pdf",
             SelectedSourceFileDisplayName = "previous.pdf"
@@ -67,13 +87,164 @@ public sealed class DocumentRegistrationViewModelTests
     }
 
     [Fact]
+    public async Task LoadTargetOptionsAsync_loads_active_policy_and_claim_options()
+    {
+        var viewModel = CreateTargetSelectionViewModel(new FakePolicyClaimStorageService(
+            ["policy_demo_001"],
+            ["claim_demo_001"]));
+
+        await viewModel.LoadTargetOptionsAsync();
+
+        var policy = Assert.Single(viewModel.AvailablePolicies);
+        var claim = Assert.Single(viewModel.AvailableClaims);
+        Assert.Equal("policy_demo_001", policy.Id);
+        Assert.Equal("claim_demo_001", claim.Id);
+        Assert.True(viewModel.HasAvailablePolicies);
+        Assert.True(viewModel.HasAvailableClaims);
+        Assert.Null(viewModel.TargetSelectionMessage);
+    }
+
+    [Fact]
+    public async Task LoadTargetOptionsAsync_does_not_expose_disabled_policy_or_claim_records()
+    {
+        await UsingTempRootsAsync(async (metadataRoot, _) =>
+        {
+            var service = new JsonPolicyClaimStorageService(metadataRoot);
+            var activePolicy = await service.AddPolicyAsync(new PolicyDraft(
+                "Policy Active",
+                new DateOnly(2026, 7, 1)));
+            var disabledPolicy = await service.AddPolicyAsync(new PolicyDraft(
+                "Policy Disabled",
+                new DateOnly(2026, 7, 1)));
+            var activeClaim = await service.AddClaimAsync(new ClaimDraft(
+                activePolicy.Id,
+                "Claim Active",
+                new DateOnly(2026, 7, 1)));
+            var disabledClaim = await service.AddClaimAsync(new ClaimDraft(
+                activePolicy.Id,
+                "Claim Disabled",
+                new DateOnly(2026, 7, 1)));
+            await service.DisablePolicyAsync(disabledPolicy.Id);
+            await service.DisableClaimAsync(disabledClaim.Id);
+            var viewModel = CreateTargetSelectionViewModel(service);
+
+            await viewModel.LoadTargetOptionsAsync();
+
+            var policy = Assert.Single(viewModel.AvailablePolicies);
+            var claim = Assert.Single(viewModel.AvailableClaims);
+            Assert.Equal(activePolicy.Id, policy.Id);
+            Assert.Equal(activeClaim.Id, claim.Id);
+            Assert.DoesNotContain(viewModel.AvailablePolicies, item => item.Id == disabledPolicy.Id);
+            Assert.DoesNotContain(viewModel.AvailableClaims, item => item.Id == disabledClaim.Id);
+        });
+    }
+
+    [Fact]
+    public async Task Selecting_policy_sets_target_kind_and_id_for_registration_contract()
+    {
+        var viewModel = CreateTargetSelectionViewModel(new FakePolicyClaimStorageService(
+            ["policy_demo_001"],
+            ["claim_demo_001"]));
+
+        await viewModel.LoadTargetOptionsAsync();
+        viewModel.TargetKind = DocumentRegistrationViewModel.PolicyTargetKind;
+        viewModel.SelectedPolicyId = "policy_demo_001";
+
+        Assert.Equal(DocumentRegistrationViewModel.PolicyTargetKind, viewModel.TargetKind);
+        Assert.Equal("policy_demo_001", viewModel.TargetId);
+    }
+
+    [Fact]
+    public async Task Selecting_claim_sets_target_kind_and_id_for_registration_contract()
+    {
+        var viewModel = CreateTargetSelectionViewModel(new FakePolicyClaimStorageService(
+            ["policy_demo_001"],
+            ["claim_demo_001"]));
+
+        await viewModel.LoadTargetOptionsAsync();
+        viewModel.TargetKind = DocumentRegistrationViewModel.ClaimTargetKind;
+        viewModel.SelectedClaimId = "claim_demo_001";
+
+        Assert.Equal(DocumentRegistrationViewModel.ClaimTargetKind, viewModel.TargetKind);
+        Assert.Equal("claim_demo_001", viewModel.TargetId);
+    }
+
+    [Fact]
+    public async Task LoadTargetOptionsAsync_no_active_policy_shows_empty_state_message()
+    {
+        var viewModel = CreateTargetSelectionViewModel(new FakePolicyClaimStorageService(
+            [],
+            ["claim_demo_001"]));
+
+        await viewModel.LoadTargetOptionsAsync();
+
+        Assert.False(viewModel.HasAvailablePolicies);
+        Assert.Equal("No active policy is available for selection.", viewModel.TargetSelectionMessage);
+    }
+
+    [Fact]
+    public async Task LoadTargetOptionsAsync_no_active_claim_shows_empty_state_message()
+    {
+        var viewModel = CreateTargetSelectionViewModel(new FakePolicyClaimStorageService(
+            ["policy_demo_001"],
+            []));
+        viewModel.TargetKind = DocumentRegistrationViewModel.ClaimTargetKind;
+
+        await viewModel.LoadTargetOptionsAsync();
+
+        Assert.False(viewModel.HasAvailableClaims);
+        Assert.Equal("No active claim is available for selection.", viewModel.TargetSelectionMessage);
+    }
+
+    [Fact]
+    public async Task RegisterAsync_without_selected_policy_target_is_blocked()
+    {
+        await UsingTempRootsAsync(async (_, attachmentRoot) =>
+        {
+            var sourcePath = await CreateDummySourceFileAsync(attachmentRoot, "source.pdf");
+            var fileAttachment = new SpyFileAttachmentService();
+            var viewModel = CreateReadyPolicyViewModel(fileAttachment);
+            viewModel.SelectedSourceFilePath = sourcePath;
+            viewModel.TargetId = null;
+            await viewModel.LoadTargetOptionsAsync();
+
+            await viewModel.RegisterAsync();
+
+            Assert.Equal("Select a policy before registering this document.", viewModel.ValidationMessage);
+            Assert.False(fileAttachment.CopyCalled);
+        });
+    }
+
+    [Fact]
+    public async Task RegisterAsync_without_selected_claim_target_is_blocked()
+    {
+        await UsingTempRootsAsync(async (_, attachmentRoot) =>
+        {
+            var sourcePath = await CreateDummySourceFileAsync(attachmentRoot, "source.pdf");
+            var fileAttachment = new SpyFileAttachmentService();
+            var viewModel = CreateReadyClaimViewModel(CreateWorkflow(
+                new SpyDocumentStorageService(),
+                fileAttachment));
+            viewModel.SelectedSourceFilePath = sourcePath;
+            viewModel.TargetId = null;
+            await viewModel.LoadTargetOptionsAsync();
+
+            await viewModel.RegisterAsync();
+
+            Assert.Equal("Select a claim before registering this document.", viewModel.ValidationMessage);
+            Assert.False(fileAttachment.CopyCalled);
+        });
+    }
+
+    [Fact]
     public async Task RegisterAsync_missing_source_path_rejects_before_workflow_success()
     {
         var storage = new SpyDocumentStorageService();
         var fileAttachment = new SpyFileAttachmentService();
         var viewModel = new DocumentRegistrationViewModel(
             CreateWorkflow(storage, fileAttachment),
-            new FakeFilePickerService(null))
+            new FakeFilePickerService(null),
+            new FakePolicyClaimStorageService())
         {
             TargetId = "policy_001",
             DocumentType = "terms",
@@ -295,10 +466,26 @@ public sealed class DocumentRegistrationViewModelTests
             fileAttachment ?? new SpyFileAttachmentService()));
     }
 
+    private static DocumentRegistrationViewModel CreateTargetSelectionViewModel(
+        IPolicyClaimStorageService policyClaimStorageService)
+    {
+        return new DocumentRegistrationViewModel(
+            CreateWorkflow(
+                new SpyDocumentStorageService(),
+                new SpyFileAttachmentService()),
+            new FakeFilePickerService(null),
+            policyClaimStorageService);
+    }
+
     private static DocumentRegistrationViewModel CreateReadyPolicyViewModel(
         DocumentRegistrationWorkflow workflow)
     {
-        return new DocumentRegistrationViewModel(workflow, new FakeFilePickerService(null))
+        return new DocumentRegistrationViewModel(
+            workflow,
+            new FakeFilePickerService(null),
+            new FakePolicyClaimStorageService(
+                ["policy_001"],
+                ["claim_001"]))
         {
             TargetKind = DocumentRegistrationViewModel.PolicyTargetKind,
             TargetId = "policy_001",
@@ -311,7 +498,12 @@ public sealed class DocumentRegistrationViewModelTests
     private static DocumentRegistrationViewModel CreateReadyClaimViewModel(
         DocumentRegistrationWorkflow workflow)
     {
-        return new DocumentRegistrationViewModel(workflow, new FakeFilePickerService(null))
+        return new DocumentRegistrationViewModel(
+            workflow,
+            new FakeFilePickerService(null),
+            new FakePolicyClaimStorageService(
+                ["policy_001"],
+                ["claim_001"]))
         {
             TargetKind = DocumentRegistrationViewModel.ClaimTargetKind,
             TargetId = "claim_001",
@@ -623,14 +815,18 @@ public sealed class DocumentRegistrationViewModelTests
         public Task<IReadOnlyList<PolicyRecord>> GetPoliciesAsync(
             CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            return Task.FromResult<IReadOnlyList<PolicyRecord>>(
+                activePolicyIds.Select(CreatePolicyRecord).ToList());
         }
 
         public Task<PolicyRecord?> GetPolicyAsync(
             string id,
             CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(
+                activePolicyIds.Contains(id)
+                    ? CreatePolicyRecord(id)
+                    : null);
         }
 
         public Task<PolicyRecord> AddPolicyAsync(
@@ -650,21 +846,29 @@ public sealed class DocumentRegistrationViewModelTests
         public Task<IReadOnlyList<ClaimRecord>> GetClaimsAsync(
             CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            return Task.FromResult<IReadOnlyList<ClaimRecord>>(
+                activeClaimIds.Select(CreateClaimRecord).ToList());
         }
 
         public Task<IReadOnlyList<ClaimRecord>> GetClaimsByPolicyIdAsync(
             string policyId,
             CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            return Task.FromResult<IReadOnlyList<ClaimRecord>>(
+                activeClaimIds
+                    .Select(CreateClaimRecord)
+                    .Where(claim => claim.PolicyId == policyId)
+                    .ToList());
         }
 
         public Task<ClaimRecord?> GetClaimAsync(
             string id,
             CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(
+                activeClaimIds.Contains(id)
+                    ? CreateClaimRecord(id)
+                    : null);
         }
 
         public Task<ClaimRecord> AddClaimAsync(
@@ -693,6 +897,31 @@ public sealed class DocumentRegistrationViewModelTests
             CancellationToken cancellationToken = default)
         {
             return Task.FromResult(activeClaimIds.Contains(id));
+        }
+
+        private static PolicyRecord CreatePolicyRecord(string id)
+        {
+            var timestamp = DateTimeOffset.UtcNow;
+            return new PolicyRecord(
+                id,
+                id,
+                new DateOnly(2026, 7, 1),
+                timestamp,
+                timestamp,
+                null);
+        }
+
+        private static ClaimRecord CreateClaimRecord(string id)
+        {
+            var timestamp = DateTimeOffset.UtcNow;
+            return new ClaimRecord(
+                id,
+                "policy_demo_001",
+                id,
+                new DateOnly(2026, 7, 1),
+                timestamp,
+                timestamp,
+                null);
         }
     }
 }

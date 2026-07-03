@@ -52,7 +52,8 @@ public sealed class AppServices
         IFilePickerService filePickerService = new WpfFilePickerService();
         var documentRegistrationViewModel = new DocumentRegistrationViewModel(
             registrationWorkflow,
-            filePickerService);
+            filePickerService,
+            policyClaimStorageService);
 
         return new AppServices(
             documentRegistrationViewModel,

@@ -13,6 +13,14 @@ public partial class MainWindow : Window
         InitializeComponent();
     }
 
+    private async void Window_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is DocumentRegistrationViewModel viewModel)
+        {
+            await viewModel.LoadTargetOptionsAsync();
+        }
+    }
+
     private async void SelectFileButton_Click(object sender, RoutedEventArgs e)
     {
         if (DataContext is DocumentRegistrationViewModel viewModel)

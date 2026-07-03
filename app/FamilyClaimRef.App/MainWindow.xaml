@@ -4,7 +4,8 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="FamilyClaimRef" Height="620" Width="820">
+        Title="FamilyClaimRef" Height="620" Width="820"
+        Loaded="Window_Loaded">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="18">
             <TextBlock Text="FamilyClaimRef"
@@ -29,13 +30,15 @@
                 </StackPanel>
             </GroupBox>
 
-            <GroupBox Header="Target" Margin="0,0,0,12">
+            <GroupBox Header="Target selection" Margin="0,0,0,12">
                 <Grid Margin="10">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="160" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
@@ -56,12 +59,78 @@
 
                     <TextBlock Grid.Row="1"
                                Grid.Column="0"
-                               Text="Target id"
+                               Text="Policy target"
                                VerticalAlignment="Center"
-                               Margin="0,0,10,0" />
-                    <TextBox Grid.Row="1"
-                             Grid.Column="1"
-                             Text="{Binding TargetId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                               Margin="0,0,10,8">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding TargetKind}" Value="policy">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <ComboBox Grid.Row="1"
+                              Grid.Column="1"
+                              ItemsSource="{Binding AvailablePolicies}"
+                              DisplayMemberPath="DisplayTitle"
+                              SelectedValuePath="Id"
+                              SelectedValue="{Binding SelectedPolicyId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                              Margin="0,0,0,8">
+                        <ComboBox.Style>
+                            <Style TargetType="ComboBox">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding TargetKind}" Value="policy">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ComboBox.Style>
+                    </ComboBox>
+
+                    <TextBlock Grid.Row="2"
+                               Grid.Column="0"
+                               Text="Claim target"
+                               VerticalAlignment="Center"
+                               Margin="0,0,10,8">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding TargetKind}" Value="claim">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <ComboBox Grid.Row="2"
+                              Grid.Column="1"
+                              ItemsSource="{Binding AvailableClaims}"
+                              DisplayMemberPath="DisplayTitle"
+                              SelectedValuePath="Id"
+                              SelectedValue="{Binding SelectedClaimId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                              Margin="0,0,0,8">
+                        <ComboBox.Style>
+                            <Style TargetType="ComboBox">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding TargetKind}" Value="claim">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ComboBox.Style>
+                    </ComboBox>
+
+                    <TextBlock Grid.Row="3"
+                               Grid.Column="1"
+                               Text="{Binding TargetSelectionMessage}"
+                               TextWrapping="Wrap" />
                 </Grid>
             </GroupBox>
 
