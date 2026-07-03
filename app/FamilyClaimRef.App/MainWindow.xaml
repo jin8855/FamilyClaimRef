@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="FamilyClaimRef" Height="620" Width="820"
+        Title="FamilyClaimRef" Height="760" Width="900"
         Loaded="Window_Loaded">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="18">
@@ -12,208 +12,304 @@
                        FontSize="22"
                        FontWeight="SemiBold"
                        Margin="0,0,0,6" />
-            <TextBlock Text="로컬 MVP 확인용 화면입니다. 실제 개인정보, 보험사명, 병원명, 진단명, 진단코드는 사용하지 마세요."
+            <TextBlock Text="Local MVP validation screen. Do not use real personal, insurer, hospital, diagnosis, policy number, or claim number samples."
                        TextWrapping="Wrap"
                        Margin="0,0,0,18" />
 
-            <GroupBox Header="Source file" Margin="0,0,0,12">
-                <StackPanel Margin="10">
-                    <Button Content="Select file"
+            <StackPanel DataContext="{Binding DocumentRegistration}">
+                <GroupBox Header="Source file" Margin="0,0,0,12">
+                    <StackPanel Margin="10">
+                        <Button Content="Select file"
+                                Width="120"
+                                HorizontalAlignment="Left"
+                                Click="SelectFileButton_Click" />
+                        <TextBlock Text="Selected file"
+                                   FontWeight="SemiBold"
+                                   Margin="0,10,0,3" />
+                        <TextBlock Text="{Binding SelectedSourceFileDisplayName}"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </GroupBox>
+
+                <GroupBox Header="Target selection" Margin="0,0,0,12">
+                    <Grid Margin="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="160" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0"
+                                   Grid.Column="0"
+                                   Text="Target kind"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,10,8" />
+                        <ComboBox Grid.Row="0"
+                                  Grid.Column="1"
+                                  SelectedValuePath="Content"
+                                  SelectedValue="{Binding TargetKind, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                  Margin="0,0,0,8">
+                            <ComboBoxItem Content="policy" />
+                            <ComboBoxItem Content="claim" />
+                        </ComboBox>
+
+                        <TextBlock Grid.Row="1"
+                                   Grid.Column="0"
+                                   Text="Policy target"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,10,8">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding TargetKind}" Value="policy">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <ComboBox Grid.Row="1"
+                                  Grid.Column="1"
+                                  ItemsSource="{Binding AvailablePolicies}"
+                                  DisplayMemberPath="DisplayTitle"
+                                  SelectedValuePath="Id"
+                                  SelectedValue="{Binding SelectedPolicyId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                  Margin="0,0,0,8">
+                            <ComboBox.Style>
+                                <Style TargetType="ComboBox">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding TargetKind}" Value="policy">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ComboBox.Style>
+                        </ComboBox>
+
+                        <TextBlock Grid.Row="2"
+                                   Grid.Column="0"
+                                   Text="Claim target"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,10,8">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding TargetKind}" Value="claim">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <ComboBox Grid.Row="2"
+                                  Grid.Column="1"
+                                  ItemsSource="{Binding AvailableClaims}"
+                                  DisplayMemberPath="DisplayTitle"
+                                  SelectedValuePath="Id"
+                                  SelectedValue="{Binding SelectedClaimId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                  Margin="0,0,0,8">
+                            <ComboBox.Style>
+                                <Style TargetType="ComboBox">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding TargetKind}" Value="claim">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ComboBox.Style>
+                        </ComboBox>
+
+                        <TextBlock Grid.Row="3"
+                                   Grid.Column="1"
+                                   Text="{Binding TargetSelectionMessage}"
+                                   TextWrapping="Wrap" />
+                    </Grid>
+                </GroupBox>
+
+                <GroupBox Header="Document metadata" Margin="0,0,0,12">
+                    <Grid Margin="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="160" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0"
+                                   Grid.Column="0"
+                                   Text="Document type"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,10,8" />
+                        <ComboBox Grid.Row="0"
+                                  Grid.Column="1"
+                                  SelectedValuePath="Content"
+                                  SelectedValue="{Binding DocumentType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                  Margin="0,0,0,8">
+                            <ComboBoxItem Content="policy" />
+                            <ComboBoxItem Content="terms" />
+                            <ComboBoxItem Content="contract" />
+                            <ComboBoxItem Content="capture" />
+                            <ComboBoxItem Content="receipt" />
+                            <ComboBoxItem Content="diagnosis" />
+                            <ComboBoxItem Content="medicine" />
+                            <ComboBoxItem Content="visit" />
+                            <ComboBoxItem Content="admission" />
+                            <ComboBoxItem Content="surgery" />
+                            <ComboBoxItem Content="etc" />
+                        </ComboBox>
+
+                        <TextBlock Grid.Row="1"
+                                   Grid.Column="0"
+                                   Text="Display title"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,10,8" />
+                        <TextBox Grid.Row="1"
+                                 Grid.Column="1"
+                                 Text="{Binding DisplayTitle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 Margin="0,0,0,8" />
+
+                        <TextBlock Grid.Row="2"
+                                   Grid.Column="0"
+                                   Text="Reference date"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,10,0" />
+                        <DatePicker Grid.Row="2"
+                                    Grid.Column="1"
+                                    SelectedDate="{Binding ReferenceDate, Mode=TwoWay}" />
+                    </Grid>
+                </GroupBox>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                    <Button Content="Register"
                             Width="120"
-                            HorizontalAlignment="Left"
-                            Click="SelectFileButton_Click" />
-                    <TextBlock Text="Selected file"
-                               FontWeight="SemiBold"
-                               Margin="0,10,0,3" />
-                    <TextBlock Text="{Binding SelectedSourceFileDisplayName}"
-                               TextWrapping="Wrap" />
+                            Click="RegisterButton_Click" />
+                    <TextBlock Text="{Binding IsBusy, StringFormat=Is busy: {0}}"
+                               VerticalAlignment="Center"
+                               Margin="14,0,0,0" />
                 </StackPanel>
-            </GroupBox>
 
-            <GroupBox Header="Target selection" Margin="0,0,0,12">
-                <Grid Margin="10">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="160" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-
-                    <TextBlock Grid.Row="0"
-                               Grid.Column="0"
-                               Text="Target kind"
-                               VerticalAlignment="Center"
-                               Margin="0,0,10,8" />
-                    <ComboBox Grid.Row="0"
-                              Grid.Column="1"
-                              SelectedValuePath="Content"
-                              SelectedValue="{Binding TargetKind, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                              Margin="0,0,0,8">
-                        <ComboBoxItem Content="policy" />
-                        <ComboBoxItem Content="claim" />
-                    </ComboBox>
-
-                    <TextBlock Grid.Row="1"
-                               Grid.Column="0"
-                               Text="Policy target"
-                               VerticalAlignment="Center"
-                               Margin="0,0,10,8">
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Visibility" Value="Collapsed" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding TargetKind}" Value="policy">
-                                        <Setter Property="Visibility" Value="Visible" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
-                    <ComboBox Grid.Row="1"
-                              Grid.Column="1"
-                              ItemsSource="{Binding AvailablePolicies}"
-                              DisplayMemberPath="DisplayTitle"
-                              SelectedValuePath="Id"
-                              SelectedValue="{Binding SelectedPolicyId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                              Margin="0,0,0,8">
-                        <ComboBox.Style>
-                            <Style TargetType="ComboBox">
-                                <Setter Property="Visibility" Value="Collapsed" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding TargetKind}" Value="policy">
-                                        <Setter Property="Visibility" Value="Visible" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </ComboBox.Style>
-                    </ComboBox>
-
-                    <TextBlock Grid.Row="2"
-                               Grid.Column="0"
-                               Text="Claim target"
-                               VerticalAlignment="Center"
-                               Margin="0,0,10,8">
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Visibility" Value="Collapsed" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding TargetKind}" Value="claim">
-                                        <Setter Property="Visibility" Value="Visible" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
-                    <ComboBox Grid.Row="2"
-                              Grid.Column="1"
-                              ItemsSource="{Binding AvailableClaims}"
-                              DisplayMemberPath="DisplayTitle"
-                              SelectedValuePath="Id"
-                              SelectedValue="{Binding SelectedClaimId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                              Margin="0,0,0,8">
-                        <ComboBox.Style>
-                            <Style TargetType="ComboBox">
-                                <Setter Property="Visibility" Value="Collapsed" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding TargetKind}" Value="claim">
-                                        <Setter Property="Visibility" Value="Visible" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </ComboBox.Style>
-                    </ComboBox>
-
-                    <TextBlock Grid.Row="3"
-                               Grid.Column="1"
-                               Text="{Binding TargetSelectionMessage}"
-                               TextWrapping="Wrap" />
-                </Grid>
-            </GroupBox>
-
-            <GroupBox Header="Document metadata" Margin="0,0,0,12">
-                <Grid Margin="10">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="160" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-
-                    <TextBlock Grid.Row="0"
-                               Grid.Column="0"
-                               Text="Document type"
-                               VerticalAlignment="Center"
-                               Margin="0,0,10,8" />
-                    <ComboBox Grid.Row="0"
-                              Grid.Column="1"
-                              SelectedValuePath="Content"
-                              SelectedValue="{Binding DocumentType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                              Margin="0,0,0,8">
-                        <ComboBoxItem Content="policy" />
-                        <ComboBoxItem Content="terms" />
-                        <ComboBoxItem Content="contract" />
-                        <ComboBoxItem Content="capture" />
-                        <ComboBoxItem Content="receipt" />
-                        <ComboBoxItem Content="diagnosis" />
-                        <ComboBoxItem Content="medicine" />
-                        <ComboBoxItem Content="visit" />
-                        <ComboBoxItem Content="admission" />
-                        <ComboBoxItem Content="surgery" />
-                        <ComboBoxItem Content="etc" />
-                    </ComboBox>
-
-                    <TextBlock Grid.Row="1"
-                               Grid.Column="0"
-                               Text="Display title"
-                               VerticalAlignment="Center"
-                               Margin="0,0,10,8" />
-                    <TextBox Grid.Row="1"
-                             Grid.Column="1"
-                             Text="{Binding DisplayTitle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                             Margin="0,0,0,8" />
-
-                    <TextBlock Grid.Row="2"
-                               Grid.Column="0"
-                               Text="Reference date"
-                               VerticalAlignment="Center"
-                               Margin="0,0,10,0" />
-                    <DatePicker Grid.Row="2"
-                                Grid.Column="1"
-                                SelectedDate="{Binding ReferenceDate, Mode=TwoWay}" />
-                </Grid>
-            </GroupBox>
-
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                <Button Content="Register"
-                        Width="120"
-                        Click="RegisterButton_Click" />
-                <TextBlock Text="{Binding IsBusy, StringFormat=Is busy: {0}}"
-                           VerticalAlignment="Center"
-                           Margin="14,0,0,0" />
+                <GroupBox Header="Registration status" Margin="0,0,0,12">
+                    <StackPanel Margin="10">
+                        <TextBlock Text="Validation"
+                                   FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding ValidationMessage}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,3,0,8" />
+                        <TextBlock Text="Status"
+                                   FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding StatusMessage}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,3,0,8" />
+                        <TextBlock Text="Last registration summary"
+                                   FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding LastRegistrationSummary}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,3,0,0" />
+                    </StackPanel>
+                </GroupBox>
             </StackPanel>
 
-            <GroupBox Header="Status">
+            <GroupBox Header="Policy/Claim Management"
+                      DataContext="{Binding PolicyClaimManagement}">
                 <StackPanel Margin="10">
-                    <TextBlock Text="Validation"
-                               FontWeight="SemiBold" />
-                    <TextBlock Text="{Binding ValidationMessage}"
+                    <TextBlock Text="Create and disable local policy/claim targets with synthetic-safe titles only."
                                TextWrapping="Wrap"
-                               Margin="0,3,0,8" />
-                    <TextBlock Text="Status"
+                               Margin="0,0,0,12" />
+
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <GroupBox Grid.Column="0"
+                                  Header="Policy Management"
+                                  Margin="0,0,8,0">
+                            <StackPanel Margin="10">
+                                <TextBlock Text="Active policy targets"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,4" />
+                                <ListBox ItemsSource="{Binding AvailablePolicies}"
+                                         DisplayMemberPath="DisplayTitle"
+                                         SelectedValuePath="Id"
+                                         SelectedValue="{Binding SelectedPolicyId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         Height="96"
+                                         Margin="0,0,0,8" />
+                                <TextBlock Text="New policy title"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,4" />
+                                <TextBox Text="{Binding NewPolicyDisplayTitle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         Margin="0,0,0,8" />
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="Create policy"
+                                            Width="110"
+                                            IsEnabled="{Binding CanCreatePolicy}"
+                                            Click="CreatePolicyButton_Click" />
+                                    <Button Content="Disable policy"
+                                            Width="110"
+                                            Margin="8,0,0,0"
+                                            IsEnabled="{Binding CanDisablePolicy}"
+                                            Click="DisablePolicyButton_Click" />
+                                </StackPanel>
+                            </StackPanel>
+                        </GroupBox>
+
+                        <GroupBox Grid.Column="1"
+                                  Header="Claim Management"
+                                  Margin="8,0,0,0">
+                            <StackPanel Margin="10">
+                                <TextBlock Text="Policy for new claim"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,4" />
+                                <ComboBox ItemsSource="{Binding AvailablePolicies}"
+                                          DisplayMemberPath="DisplayTitle"
+                                          SelectedValuePath="Id"
+                                          SelectedValue="{Binding SelectedPolicyForClaimId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          Margin="0,0,0,8" />
+                                <TextBlock Text="Active claim targets"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,4" />
+                                <ListBox ItemsSource="{Binding AvailableClaims}"
+                                         DisplayMemberPath="DisplayTitle"
+                                         SelectedValuePath="Id"
+                                         SelectedValue="{Binding SelectedClaimId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         Height="96"
+                                         Margin="0,0,0,8" />
+                                <TextBlock Text="New claim title"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,4" />
+                                <TextBox Text="{Binding NewClaimDisplayTitle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         Margin="0,0,0,8" />
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="Create claim"
+                                            Width="110"
+                                            IsEnabled="{Binding CanCreateClaim}"
+                                            Click="CreateClaimButton_Click" />
+                                    <Button Content="Disable claim"
+                                            Width="110"
+                                            Margin="8,0,0,0"
+                                            IsEnabled="{Binding CanDisableClaim}"
+                                            Click="DisableClaimButton_Click" />
+                                </StackPanel>
+                            </StackPanel>
+                        </GroupBox>
+                    </Grid>
+
+                    <TextBlock Text="Management message"
                                FontWeight="SemiBold" />
-                    <TextBlock Text="{Binding StatusMessage}"
-                               TextWrapping="Wrap"
-                               Margin="0,3,0,8" />
-                    <TextBlock Text="Last registration summary"
-                               FontWeight="SemiBold" />
-                    <TextBlock Text="{Binding LastRegistrationSummary}"
+                    <TextBlock Text="{Binding ManagementMessage}"
                                TextWrapping="Wrap"
                                Margin="0,3,0,0" />
                 </StackPanel>

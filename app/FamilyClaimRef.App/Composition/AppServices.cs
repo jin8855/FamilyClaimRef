@@ -10,19 +10,19 @@ public sealed class AppServices
     private const string AppDataFolderName = "FamilyClaimRef";
 
     private AppServices(
-        DocumentRegistrationViewModel documentRegistrationViewModel,
+        MainWindowViewModel mainWindowViewModel,
         string metadataRootPath,
         string attachmentRootPath)
     {
-        DocumentRegistrationViewModel = documentRegistrationViewModel
-            ?? throw new ArgumentNullException(nameof(documentRegistrationViewModel));
+        MainWindowViewModel = mainWindowViewModel
+            ?? throw new ArgumentNullException(nameof(mainWindowViewModel));
         MetadataRootPath = metadataRootPath
             ?? throw new ArgumentNullException(nameof(metadataRootPath));
         AttachmentRootPath = attachmentRootPath
             ?? throw new ArgumentNullException(nameof(attachmentRootPath));
     }
 
-    public DocumentRegistrationViewModel DocumentRegistrationViewModel { get; }
+    public MainWindowViewModel MainWindowViewModel { get; }
 
     public string MetadataRootPath { get; }
 
@@ -54,9 +54,13 @@ public sealed class AppServices
             registrationWorkflow,
             filePickerService,
             policyClaimStorageService);
+        var policyClaimManagementViewModel = new PolicyClaimManagementViewModel(policyClaimStorageService);
+        var mainWindowViewModel = new MainWindowViewModel(
+            documentRegistrationViewModel,
+            policyClaimManagementViewModel);
 
         return new AppServices(
-            documentRegistrationViewModel,
+            mainWindowViewModel,
             metadataRootPath,
             attachmentRootPath);
     }

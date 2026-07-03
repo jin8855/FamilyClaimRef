@@ -17,7 +17,7 @@ public partial class App : Application
         var services = AppServices.CreateDefault();
         var window = new MainWindow
         {
-            DataContext = services.DocumentRegistrationViewModel
+            DataContext = services.MainWindowViewModel
         };
 
         MainWindow = window;
