@@ -1,6 +1,7 @@
 ﻿using System.Configuration;
 using System.Data;
 using System.Windows;
+using FamilyClaimRef.App.Composition;
 
 namespace FamilyClaimRef.App;
 
@@ -9,5 +10,18 @@ namespace FamilyClaimRef.App;
 /// </summary>
 public partial class App : Application
 {
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        base.OnStartup(e);
+
+        var services = AppServices.CreateDefault();
+        var window = new MainWindow
+        {
+            DataContext = services.DocumentRegistrationViewModel
+        };
+
+        MainWindow = window;
+        window.Show();
+    }
 }
 
