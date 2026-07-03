@@ -36,11 +36,14 @@ public sealed class AppServices
         var attachmentRootPath = Path.Combine(appDataRoot, "attachments");
 
         IDocumentStorageService documentStorageService = new JsonDocumentStorageService(metadataRootPath);
+        IPolicyClaimStorageService policyClaimStorageService = new JsonPolicyClaimStorageService(metadataRootPath);
         IFileAttachmentService fileAttachmentService = new LocalFileAttachmentService(attachmentRootPath);
         var attachmentCoordinator = new DocumentAttachmentCoordinator(
             documentStorageService,
             fileAttachmentService);
-        var linkCoordinator = new DocumentLinkCoordinator(documentStorageService);
+        var linkCoordinator = new DocumentLinkCoordinator(
+            documentStorageService,
+            policyClaimStorageService);
         var registrationWorkflow = new DocumentRegistrationWorkflow(
             attachmentCoordinator,
             linkCoordinator,

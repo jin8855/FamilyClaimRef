@@ -327,7 +327,11 @@ public sealed class DocumentRegistrationViewModelTests
     {
         return new DocumentRegistrationWorkflow(
             new DocumentAttachmentCoordinator(storage, fileAttachment),
-            new DocumentLinkCoordinator(storage),
+            new DocumentLinkCoordinator(
+                storage,
+                new FakePolicyClaimStorageService(
+                    ["policy_001"],
+                    ["claim_001"])),
             storage,
             fileAttachment);
     }
@@ -600,6 +604,95 @@ public sealed class DocumentRegistrationViewModelTests
             CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
+        }
+    }
+
+    private sealed class FakePolicyClaimStorageService : IPolicyClaimStorageService
+    {
+        private readonly HashSet<string> activePolicyIds;
+        private readonly HashSet<string> activeClaimIds;
+
+        public FakePolicyClaimStorageService(
+            IEnumerable<string>? activePolicyIds = null,
+            IEnumerable<string>? activeClaimIds = null)
+        {
+            this.activePolicyIds = (activePolicyIds ?? []).ToHashSet(StringComparer.Ordinal);
+            this.activeClaimIds = (activeClaimIds ?? []).ToHashSet(StringComparer.Ordinal);
+        }
+
+        public Task<IReadOnlyList<PolicyRecord>> GetPoliciesAsync(
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<PolicyRecord?> GetPolicyAsync(
+            string id,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<PolicyRecord> AddPolicyAsync(
+            PolicyDraft draft,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<PolicyRecord> DisablePolicyAsync(
+            string id,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IReadOnlyList<ClaimRecord>> GetClaimsAsync(
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IReadOnlyList<ClaimRecord>> GetClaimsByPolicyIdAsync(
+            string policyId,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<ClaimRecord?> GetClaimAsync(
+            string id,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<ClaimRecord> AddClaimAsync(
+            ClaimDraft draft,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<ClaimRecord> DisableClaimAsync(
+            string id,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> PolicyExistsAsync(
+            string id,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(activePolicyIds.Contains(id));
+        }
+
+        public Task<bool> ClaimExistsAsync(
+            string id,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(activeClaimIds.Contains(id));
         }
     }
 }

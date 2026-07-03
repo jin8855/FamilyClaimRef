@@ -244,6 +244,68 @@ public sealed class DocumentRegistrationWorkflowTests
     }
 
     [Fact]
+    public async Task RegisterPolicyDocumentAsync_missing_policy_target_rolls_back_attachment_without_link()
+    {
+        await UsingTempRootsAsync(async (_, attachmentRoot) =>
+        {
+            var storage = new SpyDocumentStorageService();
+            var fileAttachment = new SpyFileAttachmentService();
+            var workflow = CreateWorkflow(
+                storage,
+                fileAttachment,
+                new FakePolicyClaimStorageService(activePolicyIds: [], activeClaimIds: ["claim_001"]));
+            var sourcePath = await CreateDummySourceFileAsync(attachmentRoot, "source.pdf", "dummy content");
+
+            var exception = await Record.ExceptionAsync(() => workflow.RegisterPolicyDocumentAsync(
+                new PolicyDocumentRegistrationRequest(
+                    sourcePath,
+                    "policy_missing",
+                    "terms",
+                    "Document A",
+                    new DateOnly(2026, 7, 1))));
+
+            Assert.NotNull(exception);
+            Assert.IsType<InvalidOperationException>(exception);
+            Assert.False(storage.AddPolicyDocumentCalled);
+            Assert.True(fileAttachment.DeleteCalled);
+            Assert.True(storage.DisableDocumentCalled);
+            Assert.Empty(fileAttachment.CopiedRelativePaths);
+            Assert.All(storage.Documents, document => Assert.NotNull(document.DisabledAt));
+        });
+    }
+
+    [Fact]
+    public async Task RegisterClaimDocumentAsync_missing_claim_target_rolls_back_attachment_without_link()
+    {
+        await UsingTempRootsAsync(async (_, attachmentRoot) =>
+        {
+            var storage = new SpyDocumentStorageService();
+            var fileAttachment = new SpyFileAttachmentService();
+            var workflow = CreateWorkflow(
+                storage,
+                fileAttachment,
+                new FakePolicyClaimStorageService(activePolicyIds: ["policy_001"], activeClaimIds: []));
+            var sourcePath = await CreateDummySourceFileAsync(attachmentRoot, "source.pdf", "dummy content");
+
+            var exception = await Record.ExceptionAsync(() => workflow.RegisterClaimDocumentAsync(
+                new ClaimDocumentRegistrationRequest(
+                    sourcePath,
+                    "claim_missing",
+                    "receipt",
+                    "Document A",
+                    new DateOnly(2026, 7, 1))));
+
+            Assert.NotNull(exception);
+            Assert.IsType<InvalidOperationException>(exception);
+            Assert.False(storage.AddClaimDocumentCalled);
+            Assert.True(fileAttachment.DeleteCalled);
+            Assert.True(storage.DisableDocumentCalled);
+            Assert.Empty(fileAttachment.CopiedRelativePaths);
+            Assert.All(storage.Documents, document => Assert.NotNull(document.DisabledAt));
+        });
+    }
+
+    [Fact]
     public async Task RegisterPolicyDocumentAsync_link_failure_deletes_copied_file_and_disables_document()
     {
         await UsingTempRootsAsync(async (_, attachmentRoot) =>
@@ -407,9 +469,22 @@ public sealed class DocumentRegistrationWorkflowTests
         IDocumentStorageService storage,
         IFileAttachmentService fileAttachment)
     {
+        return CreateWorkflow(
+            storage,
+            fileAttachment,
+            new FakePolicyClaimStorageService(
+                ["policy_001"],
+                ["claim_001"]));
+    }
+
+    private static DocumentRegistrationWorkflow CreateWorkflow(
+        IDocumentStorageService storage,
+        IFileAttachmentService fileAttachment,
+        IPolicyClaimStorageService policyClaimStorageService)
+    {
         return new DocumentRegistrationWorkflow(
             CreateAttachmentCoordinator(storage, fileAttachment),
-            CreateLinkCoordinator(storage),
+            CreateLinkCoordinator(storage, policyClaimStorageService),
             storage,
             fileAttachment);
     }
@@ -423,7 +498,18 @@ public sealed class DocumentRegistrationWorkflowTests
 
     private static DocumentLinkCoordinator CreateLinkCoordinator(IDocumentStorageService storage)
     {
-        return new DocumentLinkCoordinator(storage);
+        return new DocumentLinkCoordinator(
+            storage,
+            new FakePolicyClaimStorageService(
+                ["policy_001"],
+                ["claim_001"]));
+    }
+
+    private static DocumentLinkCoordinator CreateLinkCoordinator(
+        IDocumentStorageService storage,
+        IPolicyClaimStorageService policyClaimStorageService)
+    {
+        return new DocumentLinkCoordinator(storage, policyClaimStorageService);
     }
 
     private static async Task<string> CreateDummySourceFileAsync(string rootPath, string fileName, string content)
@@ -566,6 +652,8 @@ public sealed class DocumentRegistrationWorkflowTests
 
         public IReadOnlyList<DocumentRecord> Documents => documents;
 
+        public bool AddPolicyDocumentCalled { get; private set; }
+
         public bool AddClaimDocumentCalled { get; private set; }
 
         public bool GetPolicyDocumentsCalled { get; private set; }
@@ -644,6 +732,7 @@ public sealed class DocumentRegistrationWorkflowTests
             PolicyDocumentDraft draft,
             CancellationToken cancellationToken = default)
         {
+            AddPolicyDocumentCalled = true;
             if (failAddPolicyDocument)
             {
                 throw new InvalidOperationException("Policy link failed.");
@@ -711,6 +800,95 @@ public sealed class DocumentRegistrationWorkflowTests
             CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
+        }
+    }
+
+    private sealed class FakePolicyClaimStorageService : IPolicyClaimStorageService
+    {
+        private readonly HashSet<string> activePolicyIds;
+        private readonly HashSet<string> activeClaimIds;
+
+        public FakePolicyClaimStorageService(
+            IEnumerable<string>? activePolicyIds = null,
+            IEnumerable<string>? activeClaimIds = null)
+        {
+            this.activePolicyIds = (activePolicyIds ?? []).ToHashSet(StringComparer.Ordinal);
+            this.activeClaimIds = (activeClaimIds ?? []).ToHashSet(StringComparer.Ordinal);
+        }
+
+        public Task<IReadOnlyList<PolicyRecord>> GetPoliciesAsync(
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<PolicyRecord?> GetPolicyAsync(
+            string id,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<PolicyRecord> AddPolicyAsync(
+            PolicyDraft draft,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<PolicyRecord> DisablePolicyAsync(
+            string id,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IReadOnlyList<ClaimRecord>> GetClaimsAsync(
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IReadOnlyList<ClaimRecord>> GetClaimsByPolicyIdAsync(
+            string policyId,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<ClaimRecord?> GetClaimAsync(
+            string id,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<ClaimRecord> AddClaimAsync(
+            ClaimDraft draft,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<ClaimRecord> DisableClaimAsync(
+            string id,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> PolicyExistsAsync(
+            string id,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(activePolicyIds.Contains(id));
+        }
+
+        public Task<bool> ClaimExistsAsync(
+            string id,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(activeClaimIds.Contains(id));
         }
     }
 }

@@ -9,7 +9,20 @@ public sealed class DocumentLinkCoordinatorTests
     [Fact]
     public void Constructor_rejects_null_document_storage_service()
     {
-        var exception = Record.Exception(() => new DocumentLinkCoordinator(null!));
+        var exception = Record.Exception(() => new DocumentLinkCoordinator(
+            null!,
+            new FakePolicyClaimStorageService()));
+
+        Assert.NotNull(exception);
+        Assert.IsType<ArgumentNullException>(exception);
+    }
+
+    [Fact]
+    public void Constructor_rejects_null_policy_claim_storage_service()
+    {
+        var exception = Record.Exception(() => new DocumentLinkCoordinator(
+            new JsonDocumentStorageService(Path.GetTempPath()),
+            null!));
 
         Assert.NotNull(exception);
         Assert.IsType<ArgumentNullException>(exception);
@@ -20,7 +33,7 @@ public sealed class DocumentLinkCoordinatorTests
     {
         await UsingTempRootAsync(async rootPath =>
         {
-            var coordinator = new DocumentLinkCoordinator(new JsonDocumentStorageService(rootPath));
+            var coordinator = CreateCoordinator(new JsonDocumentStorageService(rootPath));
 
             var exception = await Record.ExceptionAsync(() => coordinator.LinkPolicyDocumentAsync(null!));
 
@@ -34,7 +47,7 @@ public sealed class DocumentLinkCoordinatorTests
     {
         await UsingTempRootAsync(async rootPath =>
         {
-            var coordinator = new DocumentLinkCoordinator(new JsonDocumentStorageService(rootPath));
+            var coordinator = CreateCoordinator(new JsonDocumentStorageService(rootPath));
 
             var exception = await Record.ExceptionAsync(() => coordinator.LinkClaimDocumentAsync(null!));
 
@@ -60,7 +73,7 @@ public sealed class DocumentLinkCoordinatorTests
     {
         await UsingTempRootAsync(async rootPath =>
         {
-            var coordinator = new DocumentLinkCoordinator(new JsonDocumentStorageService(rootPath));
+            var coordinator = CreateCoordinator(new JsonDocumentStorageService(rootPath));
 
             var exception = await Record.ExceptionAsync(() => coordinator.LinkPolicyDocumentAsync(
                 new PolicyDocumentLinkRequest(policyId!, documentId!, documentType!)));
@@ -87,7 +100,7 @@ public sealed class DocumentLinkCoordinatorTests
     {
         await UsingTempRootAsync(async rootPath =>
         {
-            var coordinator = new DocumentLinkCoordinator(new JsonDocumentStorageService(rootPath));
+            var coordinator = CreateCoordinator(new JsonDocumentStorageService(rootPath));
 
             var exception = await Record.ExceptionAsync(() => coordinator.LinkClaimDocumentAsync(
                 new ClaimDocumentLinkRequest(claimId!, documentId!, documentType!)));
@@ -104,7 +117,7 @@ public sealed class DocumentLinkCoordinatorTests
         {
             var storage = new JsonDocumentStorageService(rootPath);
             var document = await storage.AddDocumentAsync(CreateDocumentDraft());
-            var coordinator = new DocumentLinkCoordinator(storage);
+            var coordinator = CreateCoordinator(storage);
 
             var result = await coordinator.LinkPolicyDocumentAsync(new PolicyDocumentLinkRequest(
                 "policy_001",
@@ -126,7 +139,7 @@ public sealed class DocumentLinkCoordinatorTests
         {
             var storage = new JsonDocumentStorageService(rootPath);
             var document = await storage.AddDocumentAsync(CreateDocumentDraft());
-            var coordinator = new DocumentLinkCoordinator(storage);
+            var coordinator = CreateCoordinator(storage);
 
             var result = await coordinator.LinkClaimDocumentAsync(new ClaimDocumentLinkRequest(
                 "claim_001",
@@ -142,11 +155,100 @@ public sealed class DocumentLinkCoordinatorTests
     }
 
     [Fact]
+    public async Task LinkPolicyDocumentAsync_rejects_missing_policy_before_link_is_persisted()
+    {
+        await UsingTempRootAsync(async rootPath =>
+        {
+            var storage = new JsonDocumentStorageService(rootPath);
+            var document = await storage.AddDocumentAsync(CreateDocumentDraft());
+            var coordinator = CreateCoordinator(
+                storage,
+                activePolicyIds: [],
+                activeClaimIds: ["claim_001"]);
+
+            var exception = await Record.ExceptionAsync(() => coordinator.LinkPolicyDocumentAsync(
+                new PolicyDocumentLinkRequest("policy_missing", document.Id, "terms")));
+
+            Assert.NotNull(exception);
+            Assert.IsType<InvalidOperationException>(exception);
+            Assert.Empty(await storage.GetPolicyDocumentsAsync("policy_missing"));
+            Assert.False(File.Exists(Path.Combine(rootPath, "policy-documents.json")));
+        });
+    }
+
+    [Fact]
+    public async Task LinkPolicyDocumentAsync_rejects_disabled_policy_before_link_is_persisted()
+    {
+        await UsingTempRootAsync(async rootPath =>
+        {
+            var documentStorage = new JsonDocumentStorageService(rootPath);
+            var policyClaimStorage = new JsonPolicyClaimStorageService(rootPath);
+            var policy = await policyClaimStorage.AddPolicyAsync(CreatePolicyDraft());
+            await policyClaimStorage.DisablePolicyAsync(policy.Id);
+            var document = await documentStorage.AddDocumentAsync(CreateDocumentDraft());
+            var coordinator = new DocumentLinkCoordinator(documentStorage, policyClaimStorage);
+
+            var exception = await Record.ExceptionAsync(() => coordinator.LinkPolicyDocumentAsync(
+                new PolicyDocumentLinkRequest(policy.Id, document.Id, "terms")));
+
+            Assert.NotNull(exception);
+            Assert.IsType<InvalidOperationException>(exception);
+            Assert.Empty(await documentStorage.GetPolicyDocumentsAsync(policy.Id));
+            Assert.False(File.Exists(Path.Combine(rootPath, "policy-documents.json")));
+        });
+    }
+
+    [Fact]
+    public async Task LinkClaimDocumentAsync_rejects_missing_claim_before_link_is_persisted()
+    {
+        await UsingTempRootAsync(async rootPath =>
+        {
+            var storage = new JsonDocumentStorageService(rootPath);
+            var document = await storage.AddDocumentAsync(CreateDocumentDraft());
+            var coordinator = CreateCoordinator(
+                storage,
+                activePolicyIds: ["policy_001"],
+                activeClaimIds: []);
+
+            var exception = await Record.ExceptionAsync(() => coordinator.LinkClaimDocumentAsync(
+                new ClaimDocumentLinkRequest("claim_missing", document.Id, "receipt")));
+
+            Assert.NotNull(exception);
+            Assert.IsType<InvalidOperationException>(exception);
+            Assert.Empty(await storage.GetClaimDocumentsAsync("claim_missing"));
+            Assert.False(File.Exists(Path.Combine(rootPath, "claim-documents.json")));
+        });
+    }
+
+    [Fact]
+    public async Task LinkClaimDocumentAsync_rejects_disabled_claim_before_link_is_persisted()
+    {
+        await UsingTempRootAsync(async rootPath =>
+        {
+            var documentStorage = new JsonDocumentStorageService(rootPath);
+            var policyClaimStorage = new JsonPolicyClaimStorageService(rootPath);
+            var policy = await policyClaimStorage.AddPolicyAsync(CreatePolicyDraft());
+            var claim = await policyClaimStorage.AddClaimAsync(CreateClaimDraft(policy.Id));
+            await policyClaimStorage.DisableClaimAsync(claim.Id);
+            var document = await documentStorage.AddDocumentAsync(CreateDocumentDraft());
+            var coordinator = new DocumentLinkCoordinator(documentStorage, policyClaimStorage);
+
+            var exception = await Record.ExceptionAsync(() => coordinator.LinkClaimDocumentAsync(
+                new ClaimDocumentLinkRequest(claim.Id, document.Id, "receipt")));
+
+            Assert.NotNull(exception);
+            Assert.IsType<InvalidOperationException>(exception);
+            Assert.Empty(await documentStorage.GetClaimDocumentsAsync(claim.Id));
+            Assert.False(File.Exists(Path.Combine(rootPath, "claim-documents.json")));
+        });
+    }
+
+    [Fact]
     public async Task LinkPolicyDocumentAsync_passes_missing_document_validation_to_storage()
     {
         await UsingTempRootAsync(async rootPath =>
         {
-            var coordinator = new DocumentLinkCoordinator(new JsonDocumentStorageService(rootPath));
+            var coordinator = CreateCoordinator(new JsonDocumentStorageService(rootPath));
 
             var exception = await Record.ExceptionAsync(() => coordinator.LinkPolicyDocumentAsync(
                 new PolicyDocumentLinkRequest("policy_001", "doc_missing", "terms")));
@@ -161,7 +263,7 @@ public sealed class DocumentLinkCoordinatorTests
     {
         await UsingTempRootAsync(async rootPath =>
         {
-            var coordinator = new DocumentLinkCoordinator(new JsonDocumentStorageService(rootPath));
+            var coordinator = CreateCoordinator(new JsonDocumentStorageService(rootPath));
 
             var exception = await Record.ExceptionAsync(() => coordinator.LinkClaimDocumentAsync(
                 new ClaimDocumentLinkRequest("claim_001", "doc_missing", "receipt")));
@@ -179,7 +281,7 @@ public sealed class DocumentLinkCoordinatorTests
             var storage = new JsonDocumentStorageService(rootPath);
             var document = await storage.AddDocumentAsync(CreateDocumentDraft());
             await storage.DisableDocumentAsync(document.Id, DateTimeOffset.UtcNow);
-            var coordinator = new DocumentLinkCoordinator(storage);
+            var coordinator = CreateCoordinator(storage);
 
             var exception = await Record.ExceptionAsync(() => coordinator.LinkPolicyDocumentAsync(
                 new PolicyDocumentLinkRequest("policy_001", document.Id, "terms")));
@@ -197,7 +299,7 @@ public sealed class DocumentLinkCoordinatorTests
             var storage = new JsonDocumentStorageService(rootPath);
             var document = await storage.AddDocumentAsync(CreateDocumentDraft());
             await storage.DisableDocumentAsync(document.Id, DateTimeOffset.UtcNow);
-            var coordinator = new DocumentLinkCoordinator(storage);
+            var coordinator = CreateCoordinator(storage);
 
             var exception = await Record.ExceptionAsync(() => coordinator.LinkClaimDocumentAsync(
                 new ClaimDocumentLinkRequest("claim_001", document.Id, "receipt")));
@@ -214,7 +316,7 @@ public sealed class DocumentLinkCoordinatorTests
         {
             var storage = new JsonDocumentStorageService(rootPath);
             var document = await storage.AddDocumentAsync(CreateDocumentDraft());
-            var coordinator = new DocumentLinkCoordinator(storage);
+            var coordinator = CreateCoordinator(storage);
 
             var result = await coordinator.LinkPolicyDocumentAsync(new PolicyDocumentLinkRequest(
                 "policy_001",
@@ -232,7 +334,7 @@ public sealed class DocumentLinkCoordinatorTests
         {
             var storage = new JsonDocumentStorageService(rootPath);
             var document = await storage.AddDocumentAsync(CreateDocumentDraft());
-            var coordinator = new DocumentLinkCoordinator(storage);
+            var coordinator = CreateCoordinator(storage);
 
             var exception = await Record.ExceptionAsync(() => coordinator.LinkClaimDocumentAsync(
                 new ClaimDocumentLinkRequest("claim_001", document.Id, "capture")));
@@ -249,7 +351,7 @@ public sealed class DocumentLinkCoordinatorTests
         {
             var storage = new JsonDocumentStorageService(rootPath);
             var document = await storage.AddDocumentAsync(CreateDocumentDraft());
-            var coordinator = new DocumentLinkCoordinator(storage);
+            var coordinator = CreateCoordinator(storage);
 
             var exception = await Record.ExceptionAsync(() => coordinator.LinkPolicyDocumentAsync(
                 new PolicyDocumentLinkRequest("policy_001", document.Id, "receipt")));
@@ -266,7 +368,7 @@ public sealed class DocumentLinkCoordinatorTests
         {
             var storage = new JsonDocumentStorageService(rootPath);
             var document = await storage.AddDocumentAsync(CreateDocumentDraft());
-            var coordinator = new DocumentLinkCoordinator(storage);
+            var coordinator = CreateCoordinator(storage);
 
             var exception = await Record.ExceptionAsync(() => coordinator.LinkClaimDocumentAsync(
                 new ClaimDocumentLinkRequest("claim_001", document.Id, "terms")));
@@ -283,7 +385,7 @@ public sealed class DocumentLinkCoordinatorTests
         {
             var storage = new JsonDocumentStorageService(rootPath);
             var document = await storage.AddDocumentAsync(CreateDocumentDraft());
-            var coordinator = new DocumentLinkCoordinator(storage);
+            var coordinator = CreateCoordinator(storage);
             await coordinator.LinkPolicyDocumentAsync(new PolicyDocumentLinkRequest("policy_001", document.Id, "terms"));
 
             var exception = await Record.ExceptionAsync(() => coordinator.LinkPolicyDocumentAsync(
@@ -301,7 +403,7 @@ public sealed class DocumentLinkCoordinatorTests
         {
             var storage = new JsonDocumentStorageService(rootPath);
             var document = await storage.AddDocumentAsync(CreateDocumentDraft());
-            var coordinator = new DocumentLinkCoordinator(storage);
+            var coordinator = CreateCoordinator(storage);
             await coordinator.LinkClaimDocumentAsync(new ClaimDocumentLinkRequest("claim_001", document.Id, "receipt"));
 
             var exception = await Record.ExceptionAsync(() => coordinator.LinkClaimDocumentAsync(
@@ -324,7 +426,7 @@ public sealed class DocumentLinkCoordinatorTests
                 document.Id,
                 "terms"));
             await storage.DisablePolicyDocumentAsync(firstLink.Id, DateTimeOffset.UtcNow);
-            var coordinator = new DocumentLinkCoordinator(storage);
+            var coordinator = CreateCoordinator(storage);
 
             var result = await coordinator.LinkPolicyDocumentAsync(new PolicyDocumentLinkRequest(
                 "policy_001",
@@ -349,7 +451,7 @@ public sealed class DocumentLinkCoordinatorTests
                 document.Id,
                 "receipt"));
             await storage.DisableClaimDocumentAsync(firstLink.Id, DateTimeOffset.UtcNow);
-            var coordinator = new DocumentLinkCoordinator(storage);
+            var coordinator = CreateCoordinator(storage);
 
             var result = await coordinator.LinkClaimDocumentAsync(new ClaimDocumentLinkRequest(
                 "claim_001",
@@ -369,7 +471,7 @@ public sealed class DocumentLinkCoordinatorTests
         {
             var storage = new JsonDocumentStorageService(rootPath);
             var document = await storage.AddDocumentAsync(CreateDocumentDraft());
-            var coordinator = new DocumentLinkCoordinator(storage);
+            var coordinator = CreateCoordinator(storage);
             await coordinator.LinkPolicyDocumentAsync(new PolicyDocumentLinkRequest("policy_001", document.Id, "terms"));
 
             var result = await coordinator.LinkPolicyDocumentAsync(new PolicyDocumentLinkRequest(
@@ -389,7 +491,7 @@ public sealed class DocumentLinkCoordinatorTests
         {
             var storage = new JsonDocumentStorageService(rootPath);
             var document = await storage.AddDocumentAsync(CreateDocumentDraft());
-            var coordinator = new DocumentLinkCoordinator(storage);
+            var coordinator = CreateCoordinator(storage);
             await coordinator.LinkClaimDocumentAsync(new ClaimDocumentLinkRequest("claim_001", document.Id, "receipt"));
 
             var result = await coordinator.LinkClaimDocumentAsync(new ClaimDocumentLinkRequest(
@@ -413,7 +515,7 @@ public sealed class DocumentLinkCoordinatorTests
         {
             var storage = new JsonDocumentStorageService(rootPath);
             var document = await storage.AddDocumentAsync(CreateDocumentDraft());
-            var coordinator = new DocumentLinkCoordinator(storage);
+            var coordinator = CreateCoordinator(storage);
 
             await coordinator.LinkPolicyDocumentAsync(new PolicyDocumentLinkRequest("policy_001", document.Id, "terms"));
             await coordinator.LinkClaimDocumentAsync(new ClaimDocumentLinkRequest("claim_001", document.Id, "receipt"));
@@ -423,6 +525,28 @@ public sealed class DocumentLinkCoordinatorTests
         var dataLocalAfter = SnapshotFiles(Path.Combine(projectRoot, "data", "local"));
         Assert.Equal(attachmentsBefore, attachmentsAfter);
         Assert.Equal(dataLocalBefore, dataLocalAfter);
+    }
+
+    private static DocumentLinkCoordinator CreateCoordinator(
+        IDocumentStorageService documentStorageService,
+        IEnumerable<string>? activePolicyIds = null,
+        IEnumerable<string>? activeClaimIds = null)
+    {
+        return new DocumentLinkCoordinator(
+            documentStorageService,
+            new FakePolicyClaimStorageService(
+                activePolicyIds ?? ["policy_001", "policy_002"],
+                activeClaimIds ?? ["claim_001", "claim_002"]));
+    }
+
+    private static PolicyDraft CreatePolicyDraft()
+    {
+        return new PolicyDraft("Policy A", new DateOnly(2026, 7, 1));
+    }
+
+    private static ClaimDraft CreateClaimDraft(string policyId)
+    {
+        return new ClaimDraft(policyId, "Claim A", new DateOnly(2026, 7, 1));
     }
 
     private static DocumentDraft CreateDocumentDraft()
@@ -480,5 +604,94 @@ public sealed class DocumentLinkCoordinatorTests
             .Select(path => Path.GetRelativePath(directoryPath, path))
             .Order(StringComparer.Ordinal)
             .ToArray();
+    }
+
+    private sealed class FakePolicyClaimStorageService : IPolicyClaimStorageService
+    {
+        private readonly HashSet<string> activePolicyIds;
+        private readonly HashSet<string> activeClaimIds;
+
+        public FakePolicyClaimStorageService(
+            IEnumerable<string>? activePolicyIds = null,
+            IEnumerable<string>? activeClaimIds = null)
+        {
+            this.activePolicyIds = (activePolicyIds ?? []).ToHashSet(StringComparer.Ordinal);
+            this.activeClaimIds = (activeClaimIds ?? []).ToHashSet(StringComparer.Ordinal);
+        }
+
+        public Task<IReadOnlyList<PolicyRecord>> GetPoliciesAsync(
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<PolicyRecord?> GetPolicyAsync(
+            string id,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<PolicyRecord> AddPolicyAsync(
+            PolicyDraft draft,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<PolicyRecord> DisablePolicyAsync(
+            string id,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IReadOnlyList<ClaimRecord>> GetClaimsAsync(
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IReadOnlyList<ClaimRecord>> GetClaimsByPolicyIdAsync(
+            string policyId,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<ClaimRecord?> GetClaimAsync(
+            string id,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<ClaimRecord> AddClaimAsync(
+            ClaimDraft draft,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<ClaimRecord> DisableClaimAsync(
+            string id,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> PolicyExistsAsync(
+            string id,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(activePolicyIds.Contains(id));
+        }
+
+        public Task<bool> ClaimExistsAsync(
+            string id,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(activeClaimIds.Contains(id));
+        }
     }
 }

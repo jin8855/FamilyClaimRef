@@ -5,11 +5,16 @@ namespace FamilyClaimRef.App.Services.Storage;
 public sealed class DocumentLinkCoordinator
 {
     private readonly IDocumentStorageService documentStorageService;
+    private readonly IPolicyClaimStorageService policyClaimStorageService;
 
-    public DocumentLinkCoordinator(IDocumentStorageService documentStorageService)
+    public DocumentLinkCoordinator(
+        IDocumentStorageService documentStorageService,
+        IPolicyClaimStorageService policyClaimStorageService)
     {
         this.documentStorageService = documentStorageService
             ?? throw new ArgumentNullException(nameof(documentStorageService));
+        this.policyClaimStorageService = policyClaimStorageService
+            ?? throw new ArgumentNullException(nameof(policyClaimStorageService));
     }
 
     public async Task<PolicyDocumentLinkResult> LinkPolicyDocumentAsync(
@@ -23,6 +28,7 @@ public sealed class DocumentLinkCoordinator
         var documentId = NormalizeRequiredValue(request.DocumentId, nameof(request.DocumentId));
         var documentType = NormalizeRequiredValue(request.DocumentType, nameof(request.DocumentType));
 
+        await EnsureActivePolicyExistsAsync(policyId, cancellationToken);
         await EnsureNoActivePolicyDuplicateAsync(policyId, documentId, cancellationToken);
 
         var policyDocument = await documentStorageService.AddPolicyDocumentAsync(
@@ -43,6 +49,7 @@ public sealed class DocumentLinkCoordinator
         var documentId = NormalizeRequiredValue(request.DocumentId, nameof(request.DocumentId));
         var documentType = NormalizeRequiredValue(request.DocumentType, nameof(request.DocumentType));
 
+        await EnsureActiveClaimExistsAsync(claimId, cancellationToken);
         await EnsureNoActiveClaimDuplicateAsync(claimId, documentId, cancellationToken);
 
         var claimDocument = await documentStorageService.AddClaimDocumentAsync(
@@ -50,6 +57,26 @@ public sealed class DocumentLinkCoordinator
             cancellationToken);
 
         return new ClaimDocumentLinkResult(claimDocument);
+    }
+
+    private async Task EnsureActivePolicyExistsAsync(
+        string policyId,
+        CancellationToken cancellationToken)
+    {
+        if (!await policyClaimStorageService.PolicyExistsAsync(policyId, cancellationToken))
+        {
+            throw new InvalidOperationException("Referenced policy was not found or is disabled.");
+        }
+    }
+
+    private async Task EnsureActiveClaimExistsAsync(
+        string claimId,
+        CancellationToken cancellationToken)
+    {
+        if (!await policyClaimStorageService.ClaimExistsAsync(claimId, cancellationToken))
+        {
+            throw new InvalidOperationException("Referenced claim was not found or is disabled.");
+        }
     }
 
     private async Task EnsureNoActivePolicyDuplicateAsync(
