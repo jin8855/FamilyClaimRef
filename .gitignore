@@ -2,6 +2,9 @@
 attachments/
 data/local/
 
+# Local real-document artifacts
+/data/claimdoc/
+
 # .NET build outputs
 bin/
 obj/
