@@ -5,6 +5,9 @@ data/local/
 # Local real-document artifacts
 /data/claimdoc/
 
+# Local operational instruction packs
+/docs/nightwork_*/
+
 # .NET build outputs
 bin/
 obj/
