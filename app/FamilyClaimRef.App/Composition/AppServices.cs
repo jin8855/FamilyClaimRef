@@ -1,4 +1,4 @@
-using System.IO;
+using FamilyClaimRef.App.Services.Runtime;
 using FamilyClaimRef.App.Services.Storage;
 using FamilyClaimRef.App.Services.UI;
 using FamilyClaimRef.App.ViewModels;
@@ -7,15 +7,16 @@ namespace FamilyClaimRef.App.Composition;
 
 public sealed class AppServices
 {
-    private const string AppDataFolderName = "FamilyClaimRef";
-
     private AppServices(
         MainWindowViewModel mainWindowViewModel,
+        string runtimeRootPath,
         string metadataRootPath,
         string attachmentRootPath)
     {
         MainWindowViewModel = mainWindowViewModel
             ?? throw new ArgumentNullException(nameof(mainWindowViewModel));
+        RuntimeRootPath = runtimeRootPath
+            ?? throw new ArgumentNullException(nameof(runtimeRootPath));
         MetadataRootPath = metadataRootPath
             ?? throw new ArgumentNullException(nameof(metadataRootPath));
         AttachmentRootPath = attachmentRootPath
@@ -24,16 +25,24 @@ public sealed class AppServices
 
     public MainWindowViewModel MainWindowViewModel { get; }
 
+    public string RuntimeRootPath { get; }
+
     public string MetadataRootPath { get; }
 
     public string AttachmentRootPath { get; }
 
     public static AppServices CreateDefault()
     {
-        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        var appDataRoot = Path.Combine(localAppData, AppDataFolderName);
-        var metadataRootPath = Path.Combine(appDataRoot, "data", "local");
-        var attachmentRootPath = Path.Combine(appDataRoot, "attachments");
+        return Create(new EnvironmentRuntimeRootProvider());
+    }
+
+    public static AppServices Create(IRuntimeRootProvider runtimeRootProvider)
+    {
+        ArgumentNullException.ThrowIfNull(runtimeRootProvider);
+
+        var runtimeRootPaths = runtimeRootProvider.GetRuntimeRootPaths();
+        var metadataRootPath = runtimeRootPaths.MetadataRootPath;
+        var attachmentRootPath = runtimeRootPaths.AttachmentRootPath;
 
         IDocumentStorageService documentStorageService = new JsonDocumentStorageService(metadataRootPath);
         IPolicyClaimStorageService policyClaimStorageService = new JsonPolicyClaimStorageService(metadataRootPath);
@@ -61,6 +70,7 @@ public sealed class AppServices
 
         return new AppServices(
             mainWindowViewModel,
+            runtimeRootPaths.RuntimeRootPath,
             metadataRootPath,
             attachmentRootPath);
     }
