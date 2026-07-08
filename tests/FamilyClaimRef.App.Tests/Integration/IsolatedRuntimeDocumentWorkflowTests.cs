@@ -6,6 +6,7 @@ using Xunit;
 
 namespace FamilyClaimRef.App.Tests.Integration;
 
+[Collection(RuntimeEnvironmentCollectionName.Value)]
 public sealed class IsolatedRuntimeDocumentWorkflowTests
 {
     private const string RuntimeOverrideEnabledVariable = "FAMILYCLAIMREF_ENABLE_DEV_RUNTIME_ROOT_OVERRIDE";
