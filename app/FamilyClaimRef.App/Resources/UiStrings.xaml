@@ -1,0 +1,9 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    <sys:String x:Key="Ui.App.Title">FamilyClaimRef</sys:String>
+    <sys:String x:Key="Ui.Document.SourceFileSection">Source file</sys:String>
+    <sys:String x:Key="Ui.Action.SelectFile">Select file</sys:String>
+    <sys:String x:Key="Ui.Status.RegistrationSection">Registration status</sys:String>
+    <sys:String x:Key="Ui.DevHarness.Warning.LocalMvpValidation">Local MVP validation screen. Do not use real personal, insurer, hospital, diagnosis, policy number, or claim number samples.</sys:String>
+</ResourceDictionary>
