@@ -221,10 +221,10 @@
                 </GroupBox>
             </StackPanel>
 
-            <GroupBox Header="Policy/Claim Management"
+            <GroupBox Header="{StaticResource Ui.Management.PolicyClaimSection}"
                       DataContext="{Binding PolicyClaimManagement}">
                 <StackPanel Margin="10">
-                    <TextBlock Text="Create and disable local policy/claim targets with synthetic-safe titles only."
+                    <TextBlock Text="{StaticResource Ui.DevHarness.ManagementWarning}"
                                TextWrapping="Wrap"
                                Margin="0,0,0,12" />
 
@@ -235,10 +235,10 @@
                         </Grid.ColumnDefinitions>
 
                         <GroupBox Grid.Column="0"
-                                  Header="Policy Management"
+                                  Header="{StaticResource Ui.Management.PolicySection}"
                                   Margin="0,0,8,0">
                             <StackPanel Margin="10">
-                                <TextBlock Text="Active policy targets"
+                                <TextBlock Text="{StaticResource Ui.Policy.ActiveTargetsLabel}"
                                            FontWeight="SemiBold"
                                            Margin="0,0,0,4" />
                                 <ListBox ItemsSource="{Binding AvailablePolicies}"
@@ -247,17 +247,17 @@
                                          SelectedValue="{Binding SelectedPolicyId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                          Height="96"
                                          Margin="0,0,0,8" />
-                                <TextBlock Text="New policy title"
+                                <TextBlock Text="{StaticResource Ui.Policy.NewTitleLabel}"
                                            FontWeight="SemiBold"
                                            Margin="0,0,0,4" />
                                 <TextBox Text="{Binding NewPolicyDisplayTitle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                          Margin="0,0,0,8" />
                                 <StackPanel Orientation="Horizontal">
-                                    <Button Content="Create policy"
+                                    <Button Content="{StaticResource Ui.Action.CreatePolicy}"
                                             Width="110"
                                             IsEnabled="{Binding CanCreatePolicy}"
                                             Click="CreatePolicyButton_Click" />
-                                    <Button Content="Disable policy"
+                                    <Button Content="{StaticResource Ui.Action.DisablePolicy}"
                                             Width="110"
                                             Margin="8,0,0,0"
                                             IsEnabled="{Binding CanDisablePolicy}"
@@ -267,10 +267,10 @@
                         </GroupBox>
 
                         <GroupBox Grid.Column="1"
-                                  Header="Claim Management"
+                                  Header="{StaticResource Ui.Management.ClaimSection}"
                                   Margin="8,0,0,0">
                             <StackPanel Margin="10">
-                                <TextBlock Text="Policy for new claim"
+                                <TextBlock Text="{StaticResource Ui.Claim.PolicyForNewClaimLabel}"
                                            FontWeight="SemiBold"
                                            Margin="0,0,0,4" />
                                 <ComboBox ItemsSource="{Binding AvailablePolicies}"
@@ -278,7 +278,7 @@
                                           SelectedValuePath="Id"
                                           SelectedValue="{Binding SelectedPolicyForClaimId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                           Margin="0,0,0,8" />
-                                <TextBlock Text="Active claim targets"
+                                <TextBlock Text="{StaticResource Ui.Claim.ActiveTargetsLabel}"
                                            FontWeight="SemiBold"
                                            Margin="0,0,0,4" />
                                 <ListBox ItemsSource="{Binding AvailableClaims}"
@@ -287,17 +287,17 @@
                                          SelectedValue="{Binding SelectedClaimId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                          Height="96"
                                          Margin="0,0,0,8" />
-                                <TextBlock Text="New claim title"
+                                <TextBlock Text="{StaticResource Ui.Claim.NewTitleLabel}"
                                            FontWeight="SemiBold"
                                            Margin="0,0,0,4" />
                                 <TextBox Text="{Binding NewClaimDisplayTitle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                          Margin="0,0,0,8" />
                                 <StackPanel Orientation="Horizontal">
-                                    <Button Content="Create claim"
+                                    <Button Content="{StaticResource Ui.Action.CreateClaim}"
                                             Width="110"
                                             IsEnabled="{Binding CanCreateClaim}"
                                             Click="CreateClaimButton_Click" />
-                                    <Button Content="Disable claim"
+                                    <Button Content="{StaticResource Ui.Action.DisableClaim}"
                                             Width="110"
                                             Margin="8,0,0,0"
                                             IsEnabled="{Binding CanDisableClaim}"
@@ -307,7 +307,7 @@
                         </GroupBox>
                     </Grid>
 
-                    <TextBlock Text="Management message"
+                    <TextBlock Text="{StaticResource Ui.Management.MessageLabel}"
                                FontWeight="SemiBold" />
                     <TextBlock Text="{Binding ManagementMessage}"
                                TextWrapping="Wrap"

@@ -11,12 +11,26 @@
     <sys:String x:Key="Ui.Target.SelectionSection">Target selection</sys:String>
     <sys:String x:Key="Ui.Target.KindLabel">Target kind</sys:String>
     <sys:String x:Key="Ui.Policy.TargetLabel">Policy target</sys:String>
+    <sys:String x:Key="Ui.Policy.ActiveTargetsLabel">Active policy targets</sys:String>
+    <sys:String x:Key="Ui.Policy.NewTitleLabel">New policy title</sys:String>
     <sys:String x:Key="Ui.Claim.TargetLabel">Claim target</sys:String>
+    <sys:String x:Key="Ui.Claim.PolicyForNewClaimLabel">Policy for new claim</sys:String>
+    <sys:String x:Key="Ui.Claim.ActiveTargetsLabel">Active claim targets</sys:String>
+    <sys:String x:Key="Ui.Claim.NewTitleLabel">New claim title</sys:String>
+    <sys:String x:Key="Ui.Management.PolicyClaimSection">Policy/Claim Management</sys:String>
+    <sys:String x:Key="Ui.Management.PolicySection">Policy Management</sys:String>
+    <sys:String x:Key="Ui.Management.ClaimSection">Claim Management</sys:String>
+    <sys:String x:Key="Ui.Management.MessageLabel">Management message</sys:String>
     <sys:String x:Key="Ui.Action.SelectFile">Select file</sys:String>
     <sys:String x:Key="Ui.Action.RegisterDocument">Register</sys:String>
+    <sys:String x:Key="Ui.Action.CreatePolicy">Create policy</sys:String>
+    <sys:String x:Key="Ui.Action.DisablePolicy">Disable policy</sys:String>
+    <sys:String x:Key="Ui.Action.CreateClaim">Create claim</sys:String>
+    <sys:String x:Key="Ui.Action.DisableClaim">Disable claim</sys:String>
     <sys:String x:Key="Ui.Validation.SectionLabel">Validation</sys:String>
     <sys:String x:Key="Ui.Status.RegistrationSection">Registration status</sys:String>
     <sys:String x:Key="Ui.Status.Label">Status</sys:String>
     <sys:String x:Key="Ui.Status.LastRegistrationSummaryLabel">Last registration summary</sys:String>
     <sys:String x:Key="Ui.DevHarness.Warning.LocalMvpValidation">Local MVP validation screen. Do not use real personal, insurer, hospital, diagnosis, policy number, or claim number samples.</sys:String>
+    <sys:String x:Key="Ui.DevHarness.ManagementWarning">Create and disable local policy/claim targets with synthetic-safe titles only.</sys:String>
 </ResourceDictionary>
