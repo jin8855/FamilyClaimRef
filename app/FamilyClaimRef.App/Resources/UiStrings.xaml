@@ -3,7 +3,20 @@
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
     <sys:String x:Key="Ui.App.Title">FamilyClaimRef</sys:String>
     <sys:String x:Key="Ui.Document.SourceFileSection">Source file</sys:String>
+    <sys:String x:Key="Ui.Document.SelectedFileLabel">Selected file</sys:String>
+    <sys:String x:Key="Ui.Document.MetadataSection">Document metadata</sys:String>
+    <sys:String x:Key="Ui.Document.TypeLabel">Document type</sys:String>
+    <sys:String x:Key="Ui.Document.DisplayTitleLabel">Display title</sys:String>
+    <sys:String x:Key="Ui.Document.ReferenceDateLabel">Reference date</sys:String>
+    <sys:String x:Key="Ui.Target.SelectionSection">Target selection</sys:String>
+    <sys:String x:Key="Ui.Target.KindLabel">Target kind</sys:String>
+    <sys:String x:Key="Ui.Policy.TargetLabel">Policy target</sys:String>
+    <sys:String x:Key="Ui.Claim.TargetLabel">Claim target</sys:String>
     <sys:String x:Key="Ui.Action.SelectFile">Select file</sys:String>
+    <sys:String x:Key="Ui.Action.RegisterDocument">Register</sys:String>
+    <sys:String x:Key="Ui.Validation.SectionLabel">Validation</sys:String>
     <sys:String x:Key="Ui.Status.RegistrationSection">Registration status</sys:String>
+    <sys:String x:Key="Ui.Status.Label">Status</sys:String>
+    <sys:String x:Key="Ui.Status.LastRegistrationSummaryLabel">Last registration summary</sys:String>
     <sys:String x:Key="Ui.DevHarness.Warning.LocalMvpValidation">Local MVP validation screen. Do not use real personal, insurer, hospital, diagnosis, policy number, or claim number samples.</sys:String>
 </ResourceDictionary>
