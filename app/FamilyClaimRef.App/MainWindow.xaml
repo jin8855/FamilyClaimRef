@@ -4,22 +4,22 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="FamilyClaimRef" Height="760" Width="900"
+        Title="{StaticResource Ui.App.Title}" Height="760" Width="900"
         Loaded="Window_Loaded">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="18">
-            <TextBlock Text="FamilyClaimRef"
+            <TextBlock Text="{StaticResource Ui.App.Title}"
                        FontSize="22"
                        FontWeight="SemiBold"
                        Margin="0,0,0,6" />
-            <TextBlock Text="Local MVP validation screen. Do not use real personal, insurer, hospital, diagnosis, policy number, or claim number samples."
+            <TextBlock Text="{StaticResource Ui.DevHarness.Warning.LocalMvpValidation}"
                        TextWrapping="Wrap"
                        Margin="0,0,0,18" />
 
             <StackPanel DataContext="{Binding DocumentRegistration}">
-                <GroupBox Header="Source file" Margin="0,0,0,12">
+                <GroupBox Header="{StaticResource Ui.Document.SourceFileSection}" Margin="0,0,0,12">
                     <StackPanel Margin="10">
-                        <Button Content="Select file"
+                        <Button Content="{StaticResource Ui.Action.SelectFile}"
                                 Width="120"
                                 HorizontalAlignment="Left"
                                 Click="SelectFileButton_Click" />
@@ -200,7 +200,7 @@
                                Margin="14,0,0,0" />
                 </StackPanel>
 
-                <GroupBox Header="Registration status" Margin="0,0,0,12">
+                <GroupBox Header="{StaticResource Ui.Status.RegistrationSection}" Margin="0,0,0,12">
                     <StackPanel Margin="10">
                         <TextBlock Text="Validation"
                                    FontWeight="SemiBold" />
