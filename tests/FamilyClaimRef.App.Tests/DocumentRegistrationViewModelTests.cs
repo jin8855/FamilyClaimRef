@@ -1,4 +1,5 @@
 using FamilyClaimRef.App.Models.Storage;
+using FamilyClaimRef.App.Services.Localization;
 using FamilyClaimRef.App.Services.Storage;
 using FamilyClaimRef.App.Services.UI;
 using FamilyClaimRef.App.ViewModels;
@@ -14,7 +15,8 @@ public sealed class DocumentRegistrationViewModelTests
         var exception = Record.Exception(() => new DocumentRegistrationViewModel(
             null!,
             new FakeFilePickerService(null),
-            new FakePolicyClaimStorageService()));
+            new FakePolicyClaimStorageService(),
+            CreateUiTextProvider()));
 
         Assert.NotNull(exception);
         Assert.IsType<ArgumentNullException>(exception);
@@ -28,7 +30,8 @@ public sealed class DocumentRegistrationViewModelTests
         var exception = Record.Exception(() => new DocumentRegistrationViewModel(
             workflow,
             null!,
-            new FakePolicyClaimStorageService()));
+            new FakePolicyClaimStorageService(),
+            CreateUiTextProvider()));
 
         Assert.NotNull(exception);
         Assert.IsType<ArgumentNullException>(exception);
@@ -42,6 +45,22 @@ public sealed class DocumentRegistrationViewModelTests
         var exception = Record.Exception(() => new DocumentRegistrationViewModel(
             workflow,
             new FakeFilePickerService(null),
+            null!,
+            CreateUiTextProvider()));
+
+        Assert.NotNull(exception);
+        Assert.IsType<ArgumentNullException>(exception);
+    }
+
+    [Fact]
+    public void Constructor_rejects_null_ui_text_provider()
+    {
+        var workflow = CreateWorkflow(new SpyDocumentStorageService(), new SpyFileAttachmentService());
+
+        var exception = Record.Exception(() => new DocumentRegistrationViewModel(
+            workflow,
+            new FakeFilePickerService(null),
+            new FakePolicyClaimStorageService(),
             null!));
 
         Assert.NotNull(exception);
@@ -55,7 +74,8 @@ public sealed class DocumentRegistrationViewModelTests
         var viewModel = new DocumentRegistrationViewModel(
             workflow,
             new FakeFilePickerService(new FilePickerResult("C:\\Temp\\dummy.pdf", "dummy.pdf")),
-            new FakePolicyClaimStorageService());
+            new FakePolicyClaimStorageService(),
+            CreateUiTextProvider());
 
         await viewModel.SelectFileAsync();
 
@@ -72,7 +92,8 @@ public sealed class DocumentRegistrationViewModelTests
         var viewModel = new DocumentRegistrationViewModel(
             workflow,
             new FakeFilePickerService(null),
-            new FakePolicyClaimStorageService())
+            new FakePolicyClaimStorageService(),
+            CreateUiTextProvider())
         {
             SelectedSourceFilePath = "C:\\Temp\\previous.pdf",
             SelectedSourceFileDisplayName = "previous.pdf"
@@ -244,7 +265,8 @@ public sealed class DocumentRegistrationViewModelTests
         var viewModel = new DocumentRegistrationViewModel(
             CreateWorkflow(storage, fileAttachment),
             new FakeFilePickerService(null),
-            new FakePolicyClaimStorageService())
+            new FakePolicyClaimStorageService(),
+            CreateUiTextProvider())
         {
             TargetId = "policy_001",
             DocumentType = "terms",
@@ -474,7 +496,8 @@ public sealed class DocumentRegistrationViewModelTests
                 new SpyDocumentStorageService(),
                 new SpyFileAttachmentService()),
             new FakeFilePickerService(null),
-            policyClaimStorageService);
+            policyClaimStorageService,
+            CreateUiTextProvider());
     }
 
     private static DocumentRegistrationViewModel CreateReadyPolicyViewModel(
@@ -485,7 +508,8 @@ public sealed class DocumentRegistrationViewModelTests
             new FakeFilePickerService(null),
             new FakePolicyClaimStorageService(
                 ["policy_001"],
-                ["claim_001"]))
+                ["claim_001"]),
+            CreateUiTextProvider())
         {
             TargetKind = DocumentRegistrationViewModel.PolicyTargetKind,
             TargetId = "policy_001",
@@ -503,7 +527,8 @@ public sealed class DocumentRegistrationViewModelTests
             new FakeFilePickerService(null),
             new FakePolicyClaimStorageService(
                 ["policy_001"],
-                ["claim_001"]))
+                ["claim_001"]),
+            CreateUiTextProvider())
         {
             TargetKind = DocumentRegistrationViewModel.ClaimTargetKind,
             TargetId = "claim_001",
@@ -526,6 +551,30 @@ public sealed class DocumentRegistrationViewModelTests
                     ["claim_001"])),
             storage,
             fileAttachment);
+    }
+
+    private static IUiTextProvider CreateUiTextProvider()
+    {
+        return new ResourceUiTextProvider(new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            [UiTextKeys.DocumentRegistrationStatusCleanupFailed] =
+                "등록 중 일부 정리가 실패했습니다. 다시 시도하거나 관리자에게 문의하세요.",
+            [UiTextKeys.DocumentRegistrationMessageNoActiveClaim] = "No active claim is available for selection.",
+            [UiTextKeys.DocumentRegistrationMessageNoActivePolicy] = "No active policy is available for selection.",
+            [UiTextKeys.DocumentRegistrationStatusFailed] = "문서 등록에 실패했습니다.",
+            [UiTextKeys.DocumentRegistrationStatusCompleted] = "문서 등록이 완료되었습니다.",
+            [UiTextKeys.DocumentRegistrationValidationSelectClaimBeforeRegister] =
+                "Select a claim before registering this document.",
+            [UiTextKeys.DocumentRegistrationValidationSelectPolicyBeforeRegister] =
+                "Select a policy before registering this document.",
+            [UiTextKeys.DocumentRegistrationStatusFileSelected] = "파일을 선택했습니다.",
+            [UiTextKeys.DocumentRegistrationValidationSelectFile] = "파일을 선택해 주세요.",
+            [UiTextKeys.DocumentRegistrationValidationSelectTargetKind] = "저장할 대상 유형을 선택해 주세요.",
+            [UiTextKeys.DocumentRegistrationValidationSelectTarget] = "저장할 대상을 입력해 주세요.",
+            [UiTextKeys.DocumentRegistrationValidationSelectDocumentType] = "문서 유형을 선택해 주세요.",
+            [UiTextKeys.DocumentRegistrationValidationEnterDisplayTitle] = "표시 제목을 입력해 주세요.",
+            [UiTextKeys.DocumentRegistrationValidationSelectReferenceDate] = "기준일을 선택해 주세요."
+        });
     }
 
     private static async Task<string> CreateDummySourceFileAsync(string rootPath, string fileName)

@@ -1,4 +1,5 @@
 using FamilyClaimRef.App.Models.Storage;
+using FamilyClaimRef.App.Services.Localization;
 using FamilyClaimRef.App.Services.Storage;
 using FamilyClaimRef.App.Services.UI;
 using FamilyClaimRef.App.ViewModels;
@@ -11,7 +12,17 @@ public sealed class PolicyClaimManagementViewModelTests
     [Fact]
     public void Constructor_rejects_null_storage()
     {
-        var exception = Record.Exception(() => new PolicyClaimManagementViewModel(null!));
+        var exception = Record.Exception(() => new PolicyClaimManagementViewModel(null!, CreateUiTextProvider()));
+
+        Assert.IsType<ArgumentNullException>(exception);
+    }
+
+    [Fact]
+    public void Constructor_rejects_null_ui_text_provider()
+    {
+        var exception = Record.Exception(() => new PolicyClaimManagementViewModel(
+            new FakePolicyClaimStorageService(),
+            null!));
 
         Assert.IsType<ArgumentNullException>(exception);
     }
@@ -24,7 +35,7 @@ public sealed class PolicyClaimManagementViewModelTests
             var service = new JsonPolicyClaimStorageService(rootPath);
             var policy = await service.AddPolicyAsync(CreatePolicyDraft("policy_title_demo"));
             var claim = await service.AddClaimAsync(CreateClaimDraft(policy.Id, "claim_title_demo"));
-            var viewModel = new PolicyClaimManagementViewModel(service);
+            var viewModel = new PolicyClaimManagementViewModel(service, CreateUiTextProvider());
 
             await viewModel.LoadAsync();
 
@@ -42,7 +53,7 @@ public sealed class PolicyClaimManagementViewModelTests
         await UsingTempRootAsync(async rootPath =>
         {
             var service = new JsonPolicyClaimStorageService(rootPath);
-            var viewModel = new PolicyClaimManagementViewModel(service)
+            var viewModel = new PolicyClaimManagementViewModel(service, CreateUiTextProvider())
             {
                 NewPolicyDisplayTitle = " policy_title_demo "
             };
@@ -65,7 +76,7 @@ public sealed class PolicyClaimManagementViewModelTests
         await UsingTempRootAsync(async rootPath =>
         {
             var service = new JsonPolicyClaimStorageService(rootPath);
-            var viewModel = new PolicyClaimManagementViewModel(service)
+            var viewModel = new PolicyClaimManagementViewModel(service, CreateUiTextProvider())
             {
                 NewPolicyDisplayTitle = " "
             };
@@ -85,7 +96,7 @@ public sealed class PolicyClaimManagementViewModelTests
         {
             var service = new JsonPolicyClaimStorageService(rootPath);
             var policy = await service.AddPolicyAsync(CreatePolicyDraft("policy_title_demo"));
-            var viewModel = new PolicyClaimManagementViewModel(service)
+            var viewModel = new PolicyClaimManagementViewModel(service, CreateUiTextProvider())
             {
                 SelectedPolicyId = policy.Id
             };
@@ -108,7 +119,7 @@ public sealed class PolicyClaimManagementViewModelTests
             var service = new JsonPolicyClaimStorageService(rootPath);
             var policy = await service.AddPolicyAsync(CreatePolicyDraft("policy_title_demo"));
             await service.AddClaimAsync(CreateClaimDraft(policy.Id, "claim_title_demo"));
-            var viewModel = new PolicyClaimManagementViewModel(service)
+            var viewModel = new PolicyClaimManagementViewModel(service, CreateUiTextProvider())
             {
                 SelectedPolicyId = policy.Id
             };
@@ -131,7 +142,7 @@ public sealed class PolicyClaimManagementViewModelTests
         await UsingTempRootAsync(async rootPath =>
         {
             var service = new JsonPolicyClaimStorageService(rootPath);
-            var viewModel = new PolicyClaimManagementViewModel(service)
+            var viewModel = new PolicyClaimManagementViewModel(service, CreateUiTextProvider())
             {
                 NewClaimDisplayTitle = "claim_title_demo"
             };
@@ -151,7 +162,7 @@ public sealed class PolicyClaimManagementViewModelTests
         {
             var service = new JsonPolicyClaimStorageService(rootPath);
             var policy = await service.AddPolicyAsync(CreatePolicyDraft("policy_title_demo"));
-            var viewModel = new PolicyClaimManagementViewModel(service);
+            var viewModel = new PolicyClaimManagementViewModel(service, CreateUiTextProvider());
             await viewModel.LoadAsync();
             viewModel.SelectedPolicyForClaimId = policy.Id;
             viewModel.NewClaimDisplayTitle = " claim_title_demo ";
@@ -175,7 +186,7 @@ public sealed class PolicyClaimManagementViewModelTests
         {
             var service = new JsonPolicyClaimStorageService(rootPath);
             var policy = await service.AddPolicyAsync(CreatePolicyDraft("policy_title_demo"));
-            var viewModel = new PolicyClaimManagementViewModel(service);
+            var viewModel = new PolicyClaimManagementViewModel(service, CreateUiTextProvider());
             await viewModel.LoadAsync();
             viewModel.SelectedPolicyForClaimId = policy.Id;
             viewModel.NewClaimDisplayTitle = " ";
@@ -196,7 +207,7 @@ public sealed class PolicyClaimManagementViewModelTests
             var service = new JsonPolicyClaimStorageService(rootPath);
             var policy = await service.AddPolicyAsync(CreatePolicyDraft("policy_title_demo"));
             var claim = await service.AddClaimAsync(CreateClaimDraft(policy.Id, "claim_title_demo"));
-            var viewModel = new PolicyClaimManagementViewModel(service);
+            var viewModel = new PolicyClaimManagementViewModel(service, CreateUiTextProvider());
             await viewModel.LoadAsync();
             viewModel.SelectedClaimId = claim.Id;
 
@@ -218,7 +229,7 @@ public sealed class PolicyClaimManagementViewModelTests
             var claim = await service.AddClaimAsync(CreateClaimDraft(policy.Id, "claim_title_demo"));
             await service.DisableClaimAsync(claim.Id);
             await service.DisablePolicyAsync(policy.Id);
-            var viewModel = new PolicyClaimManagementViewModel(service)
+            var viewModel = new PolicyClaimManagementViewModel(service, CreateUiTextProvider())
             {
                 SelectedPolicyId = policy.Id,
                 SelectedClaimId = claim.Id,
@@ -242,7 +253,7 @@ public sealed class PolicyClaimManagementViewModelTests
         {
             var service = new JsonPolicyClaimStorageService(rootPath);
             var documentRegistration = CreateDocumentRegistrationViewModel(rootPath, service);
-            var management = new PolicyClaimManagementViewModel(service)
+            var management = new PolicyClaimManagementViewModel(service, CreateUiTextProvider())
             {
                 NewPolicyDisplayTitle = "policy_title_demo"
             };
@@ -270,7 +281,7 @@ public sealed class PolicyClaimManagementViewModelTests
         await UsingTempRootAsync(async rootPath =>
         {
             var service = new JsonPolicyClaimStorageService(rootPath);
-            var viewModel = new PolicyClaimManagementViewModel(service)
+            var viewModel = new PolicyClaimManagementViewModel(service, CreateUiTextProvider())
             {
                 NewPolicyDisplayTitle = "policy_title_demo"
             };
@@ -315,7 +326,51 @@ public sealed class PolicyClaimManagementViewModelTests
         return new DocumentRegistrationViewModel(
             workflow,
             new FakeFilePickerService(),
-            policyClaimStorage);
+            policyClaimStorage,
+            CreateDocumentRegistrationUiTextProvider());
+    }
+
+    private static IUiTextProvider CreateUiTextProvider()
+    {
+        return new ResourceUiTextProvider(new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            [UiTextKeys.ClaimManagementMessageCreated] = "Claim target was created.",
+            [UiTextKeys.ClaimManagementMessageDisabled] = "Claim target was disabled.",
+            [UiTextKeys.ClaimManagementValidationTitleRequired] = "Claim target title is required.",
+            [UiTextKeys.PolicyManagementMessageCreated] = "Policy target was created.",
+            [UiTextKeys.PolicyManagementMessageDisabled] = "Policy target was disabled.",
+            [UiTextKeys.PolicyManagementValidationDisableBlockedByActiveClaims] =
+                "Policy target has active claim targets. Disable claim targets first.",
+            [UiTextKeys.ClaimManagementValidationSelectPolicyBeforeCreate] =
+                "Select an active policy target before creating a claim target.",
+            [UiTextKeys.PolicyManagementValidationTitleRequired] = "Policy target title is required.",
+            [UiTextKeys.ClaimManagementValidationSelectClaimTarget] = "Select a claim target.",
+            [UiTextKeys.PolicyManagementValidationSelectPolicyTarget] = "Select a policy target."
+        });
+    }
+
+    private static IUiTextProvider CreateDocumentRegistrationUiTextProvider()
+    {
+        return new ResourceUiTextProvider(new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            [UiTextKeys.DocumentRegistrationStatusCleanupFailed] =
+                "등록 중 일부 정리가 실패했습니다. 다시 시도하거나 관리자에게 문의하세요.",
+            [UiTextKeys.DocumentRegistrationMessageNoActiveClaim] = "No active claim is available for selection.",
+            [UiTextKeys.DocumentRegistrationMessageNoActivePolicy] = "No active policy is available for selection.",
+            [UiTextKeys.DocumentRegistrationStatusFailed] = "문서 등록에 실패했습니다.",
+            [UiTextKeys.DocumentRegistrationStatusCompleted] = "문서 등록이 완료되었습니다.",
+            [UiTextKeys.DocumentRegistrationValidationSelectClaimBeforeRegister] =
+                "Select a claim before registering this document.",
+            [UiTextKeys.DocumentRegistrationValidationSelectPolicyBeforeRegister] =
+                "Select a policy before registering this document.",
+            [UiTextKeys.DocumentRegistrationStatusFileSelected] = "파일을 선택했습니다.",
+            [UiTextKeys.DocumentRegistrationValidationSelectFile] = "파일을 선택해 주세요.",
+            [UiTextKeys.DocumentRegistrationValidationSelectTargetKind] = "저장할 대상 유형을 선택해 주세요.",
+            [UiTextKeys.DocumentRegistrationValidationSelectTarget] = "저장할 대상을 입력해 주세요.",
+            [UiTextKeys.DocumentRegistrationValidationSelectDocumentType] = "문서 유형을 선택해 주세요.",
+            [UiTextKeys.DocumentRegistrationValidationEnterDisplayTitle] = "표시 제목을 입력해 주세요.",
+            [UiTextKeys.DocumentRegistrationValidationSelectReferenceDate] = "기준일을 선택해 주세요."
+        });
     }
 
     private static async Task UsingTempRootAsync(Func<string, Task> action)
@@ -364,6 +419,66 @@ public sealed class PolicyClaimManagementViewModelTests
             .Select(path => Path.GetRelativePath(directoryPath, path))
             .Order(StringComparer.Ordinal)
             .ToArray();
+    }
+
+    private sealed class FakePolicyClaimStorageService : IPolicyClaimStorageService
+    {
+        public Task<IReadOnlyList<PolicyRecord>> GetPoliciesAsync(CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<PolicyRecord?> GetPolicyAsync(string id, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<PolicyRecord> AddPolicyAsync(PolicyDraft draft, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<PolicyRecord> DisablePolicyAsync(string id, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IReadOnlyList<ClaimRecord>> GetClaimsAsync(CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IReadOnlyList<ClaimRecord>> GetClaimsByPolicyIdAsync(
+            string policyId,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<ClaimRecord?> GetClaimAsync(string id, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<ClaimRecord> AddClaimAsync(ClaimDraft draft, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<ClaimRecord> DisableClaimAsync(string id, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> PolicyExistsAsync(string id, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> ClaimExistsAsync(string id, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     private sealed class FakeFilePickerService : IFilePickerService

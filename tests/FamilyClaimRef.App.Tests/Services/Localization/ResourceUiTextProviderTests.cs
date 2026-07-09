@@ -71,6 +71,25 @@ public sealed class ResourceUiTextProviderTests
     }
 
     [Fact]
+    public void Runtime_message_keys_exist_in_UiTextKeys()
+    {
+        var keys = RuntimeMessageKeys;
+
+        Assert.All(keys, key => Assert.False(string.IsNullOrWhiteSpace(key)));
+        Assert.Equal(24, keys.Length);
+        Assert.Equal(keys.Length, keys.Distinct(StringComparer.Ordinal).Count());
+    }
+
+    [Fact]
+    public void Runtime_message_keys_resolve_from_UiStrings()
+    {
+        var resources = LoadUiStrings();
+        var provider = new ResourceUiTextProvider(resources);
+
+        Assert.All(RuntimeMessageKeys, key => Assert.False(string.IsNullOrWhiteSpace(provider.Get(key))));
+    }
+
+    [Fact]
     public void ResourceDictionary_source_returns_string_values()
     {
         var resources = new ResourceDictionary
@@ -110,4 +129,63 @@ public sealed class ResourceUiTextProviderTests
             [UiTextKeys.DevHarnessWarningLocalMvpValidation] = "Local MVP validation screen."
         });
     }
+
+    private static IReadOnlyDictionary<string, string> LoadUiStrings()
+    {
+        var path = Path.Combine(FindProjectRoot(), "app", "FamilyClaimRef.App", "Resources", "UiStrings.xaml");
+        var document = System.Xml.Linq.XDocument.Load(path);
+        var keyName = System.Xml.Linq.XName.Get("Key", "http://schemas.microsoft.com/winfx/2006/xaml");
+
+        return document
+            .Descendants()
+            .Where(element => element.Attribute(keyName) is not null)
+            .ToDictionary(
+                element => element.Attribute(keyName)!.Value,
+                element => element.Value,
+                StringComparer.Ordinal);
+    }
+
+    private static string FindProjectRoot()
+    {
+        var currentDirectory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (currentDirectory is not null)
+        {
+            if (File.Exists(Path.Combine(currentDirectory.FullName, "FamilyClaimRef.sln")))
+            {
+                return currentDirectory.FullName;
+            }
+
+            currentDirectory = currentDirectory.Parent;
+        }
+
+        throw new InvalidOperationException("Project root was not found.");
+    }
+
+    private static string[] RuntimeMessageKeys =>
+    [
+        UiTextKeys.DocumentRegistrationStatusCleanupFailed,
+        UiTextKeys.DocumentRegistrationMessageNoActiveClaim,
+        UiTextKeys.DocumentRegistrationMessageNoActivePolicy,
+        UiTextKeys.DocumentRegistrationStatusFailed,
+        UiTextKeys.DocumentRegistrationStatusCompleted,
+        UiTextKeys.DocumentRegistrationValidationSelectClaimBeforeRegister,
+        UiTextKeys.DocumentRegistrationValidationSelectPolicyBeforeRegister,
+        UiTextKeys.DocumentRegistrationStatusFileSelected,
+        UiTextKeys.DocumentRegistrationValidationSelectFile,
+        UiTextKeys.DocumentRegistrationValidationSelectTargetKind,
+        UiTextKeys.DocumentRegistrationValidationSelectTarget,
+        UiTextKeys.DocumentRegistrationValidationSelectDocumentType,
+        UiTextKeys.DocumentRegistrationValidationEnterDisplayTitle,
+        UiTextKeys.DocumentRegistrationValidationSelectReferenceDate,
+        UiTextKeys.ClaimManagementMessageCreated,
+        UiTextKeys.ClaimManagementMessageDisabled,
+        UiTextKeys.ClaimManagementValidationTitleRequired,
+        UiTextKeys.PolicyManagementMessageCreated,
+        UiTextKeys.PolicyManagementMessageDisabled,
+        UiTextKeys.PolicyManagementValidationDisableBlockedByActiveClaims,
+        UiTextKeys.ClaimManagementValidationSelectPolicyBeforeCreate,
+        UiTextKeys.PolicyManagementValidationTitleRequired,
+        UiTextKeys.ClaimManagementValidationSelectClaimTarget,
+        UiTextKeys.PolicyManagementValidationSelectPolicyTarget
+    ];
 }

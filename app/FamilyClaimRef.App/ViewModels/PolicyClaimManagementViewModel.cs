@@ -1,25 +1,15 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using FamilyClaimRef.App.Models.Storage;
+using FamilyClaimRef.App.Services.Localization;
 using FamilyClaimRef.App.Services.Storage;
 
 namespace FamilyClaimRef.App.ViewModels;
 
 public sealed class PolicyClaimManagementViewModel : INotifyPropertyChanged
 {
-    private const string ClaimCreatedMessage = "Claim target was created.";
-    private const string ClaimDisabledMessage = "Claim target was disabled.";
-    private const string ClaimTitleRequiredMessage = "Claim target title is required.";
-    private const string PolicyCreatedMessage = "Policy target was created.";
-    private const string PolicyDisabledMessage = "Policy target was disabled.";
-    private const string PolicyDisableBlockedMessage =
-        "Policy target has active claim targets. Disable claim targets first.";
-    private const string PolicyRequiredForClaimMessage = "Select an active policy target before creating a claim target.";
-    private const string PolicyTitleRequiredMessage = "Policy target title is required.";
-    private const string SelectClaimMessage = "Select a claim target.";
-    private const string SelectPolicyMessage = "Select a policy target.";
-
     private readonly IPolicyClaimStorageService policyClaimStorageService;
+    private readonly IUiTextProvider uiTextProvider;
 
     private IReadOnlyList<PolicyRecord> availablePolicies = [];
     private IReadOnlyList<ClaimRecord> availableClaims = [];
@@ -30,10 +20,14 @@ public sealed class PolicyClaimManagementViewModel : INotifyPropertyChanged
     private string? newClaimDisplayTitle;
     private string? managementMessage;
 
-    public PolicyClaimManagementViewModel(IPolicyClaimStorageService policyClaimStorageService)
+    public PolicyClaimManagementViewModel(
+        IPolicyClaimStorageService policyClaimStorageService,
+        IUiTextProvider uiTextProvider)
     {
         this.policyClaimStorageService = policyClaimStorageService
             ?? throw new ArgumentNullException(nameof(policyClaimStorageService));
+        this.uiTextProvider = uiTextProvider
+            ?? throw new ArgumentNullException(nameof(uiTextProvider));
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -172,7 +166,7 @@ public sealed class PolicyClaimManagementViewModel : INotifyPropertyChanged
         var title = NormalizeOptionalTitle(NewPolicyDisplayTitle);
         if (title is null)
         {
-            ManagementMessage = PolicyTitleRequiredMessage;
+            ManagementMessage = uiTextProvider.Get(UiTextKeys.PolicyManagementValidationTitleRequired);
             return false;
         }
 
@@ -184,7 +178,7 @@ public sealed class PolicyClaimManagementViewModel : INotifyPropertyChanged
         await LoadAsync(cancellationToken);
         SelectedPolicyId = policy.Id;
         SelectedPolicyForClaimId = policy.Id;
-        ManagementMessage = PolicyCreatedMessage;
+        ManagementMessage = uiTextProvider.Get(UiTextKeys.PolicyManagementMessageCreated);
 
         return true;
     }
@@ -194,14 +188,14 @@ public sealed class PolicyClaimManagementViewModel : INotifyPropertyChanged
         var title = NormalizeOptionalTitle(NewClaimDisplayTitle);
         if (title is null)
         {
-            ManagementMessage = ClaimTitleRequiredMessage;
+            ManagementMessage = uiTextProvider.Get(UiTextKeys.ClaimManagementValidationTitleRequired);
             return false;
         }
 
         if (string.IsNullOrWhiteSpace(SelectedPolicyForClaimId)
             || !AvailablePolicies.Any(policy => string.Equals(policy.Id, SelectedPolicyForClaimId, StringComparison.Ordinal)))
         {
-            ManagementMessage = PolicyRequiredForClaimMessage;
+            ManagementMessage = uiTextProvider.Get(UiTextKeys.ClaimManagementValidationSelectPolicyBeforeCreate);
             return false;
         }
 
@@ -215,7 +209,7 @@ public sealed class PolicyClaimManagementViewModel : INotifyPropertyChanged
         NewClaimDisplayTitle = null;
         await LoadAsync(cancellationToken);
         SelectedClaimId = claim.Id;
-        ManagementMessage = ClaimCreatedMessage;
+        ManagementMessage = uiTextProvider.Get(UiTextKeys.ClaimManagementMessageCreated);
 
         return true;
     }
@@ -224,7 +218,7 @@ public sealed class PolicyClaimManagementViewModel : INotifyPropertyChanged
     {
         if (string.IsNullOrWhiteSpace(SelectedPolicyId))
         {
-            ManagementMessage = SelectPolicyMessage;
+            ManagementMessage = uiTextProvider.Get(UiTextKeys.PolicyManagementValidationSelectPolicyTarget);
             return false;
         }
 
@@ -233,13 +227,13 @@ public sealed class PolicyClaimManagementViewModel : INotifyPropertyChanged
             cancellationToken);
         if (activeClaims.Count > 0)
         {
-            ManagementMessage = PolicyDisableBlockedMessage;
+            ManagementMessage = uiTextProvider.Get(UiTextKeys.PolicyManagementValidationDisableBlockedByActiveClaims);
             return false;
         }
 
         await policyClaimStorageService.DisablePolicyAsync(SelectedPolicyId, cancellationToken);
         await LoadAsync(cancellationToken);
-        ManagementMessage = PolicyDisabledMessage;
+        ManagementMessage = uiTextProvider.Get(UiTextKeys.PolicyManagementMessageDisabled);
 
         return true;
     }
@@ -248,13 +242,13 @@ public sealed class PolicyClaimManagementViewModel : INotifyPropertyChanged
     {
         if (string.IsNullOrWhiteSpace(SelectedClaimId))
         {
-            ManagementMessage = SelectClaimMessage;
+            ManagementMessage = uiTextProvider.Get(UiTextKeys.ClaimManagementValidationSelectClaimTarget);
             return false;
         }
 
         await policyClaimStorageService.DisableClaimAsync(SelectedClaimId, cancellationToken);
         await LoadAsync(cancellationToken);
-        ManagementMessage = ClaimDisabledMessage;
+        ManagementMessage = uiTextProvider.Get(UiTextKeys.ClaimManagementMessageDisabled);
 
         return true;
     }

@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using FamilyClaimRef.App.Models.Storage;
+using FamilyClaimRef.App.Services.Localization;
 using FamilyClaimRef.App.Services.Storage;
 using FamilyClaimRef.App.Services.UI;
 
@@ -11,18 +12,10 @@ public sealed class DocumentRegistrationViewModel : INotifyPropertyChanged
     public const string ClaimTargetKind = "claim";
     public const string PolicyTargetKind = "policy";
 
-    private const string CleanupFailureMessage =
-        "등록 중 일부 정리가 실패했습니다. 다시 시도하거나 관리자에게 문의하세요.";
-    private const string NoActiveClaimMessage = "No active claim is available for selection.";
-    private const string NoActivePolicyMessage = "No active policy is available for selection.";
-    private const string RegistrationFailureMessage = "문서 등록에 실패했습니다.";
-    private const string RegistrationSuccessMessage = "문서 등록이 완료되었습니다.";
-    private const string SelectClaimMessage = "Select a claim before registering this document.";
-    private const string SelectPolicyMessage = "Select a policy before registering this document.";
-
     private readonly DocumentRegistrationWorkflow registrationWorkflow;
     private readonly IFilePickerService filePickerService;
     private readonly IPolicyClaimStorageService policyClaimStorageService;
+    private readonly IUiTextProvider uiTextProvider;
 
     private IReadOnlyList<PolicyRecord> availablePolicies = [];
     private IReadOnlyList<ClaimRecord> availableClaims = [];
@@ -45,7 +38,8 @@ public sealed class DocumentRegistrationViewModel : INotifyPropertyChanged
     public DocumentRegistrationViewModel(
         DocumentRegistrationWorkflow registrationWorkflow,
         IFilePickerService filePickerService,
-        IPolicyClaimStorageService policyClaimStorageService)
+        IPolicyClaimStorageService policyClaimStorageService,
+        IUiTextProvider uiTextProvider)
     {
         this.registrationWorkflow = registrationWorkflow
             ?? throw new ArgumentNullException(nameof(registrationWorkflow));
@@ -53,6 +47,8 @@ public sealed class DocumentRegistrationViewModel : INotifyPropertyChanged
             ?? throw new ArgumentNullException(nameof(filePickerService));
         this.policyClaimStorageService = policyClaimStorageService
             ?? throw new ArgumentNullException(nameof(policyClaimStorageService));
+        this.uiTextProvider = uiTextProvider
+            ?? throw new ArgumentNullException(nameof(uiTextProvider));
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -232,7 +228,7 @@ public sealed class DocumentRegistrationViewModel : INotifyPropertyChanged
         SelectedSourceFilePath = result.SourceFilePath;
         SelectedSourceFileDisplayName = result.SafeDisplayName;
         ValidationMessage = null;
-        StatusMessage = "파일을 선택했습니다.";
+        StatusMessage = uiTextProvider.Get(UiTextKeys.DocumentRegistrationStatusFileSelected);
     }
 
     public async Task RegisterAsync(CancellationToken cancellationToken = default)
@@ -275,16 +271,16 @@ public sealed class DocumentRegistrationViewModel : INotifyPropertyChanged
                 LastRegistrationSummary = CreateClaimSummary(result);
             }
 
-            StatusMessage = RegistrationSuccessMessage;
+            StatusMessage = uiTextProvider.Get(UiTextKeys.DocumentRegistrationStatusCompleted);
             ValidationMessage = null;
         }
         catch (AggregateException)
         {
-            StatusMessage = CleanupFailureMessage;
+            StatusMessage = uiTextProvider.Get(UiTextKeys.DocumentRegistrationStatusCleanupFailed);
         }
         catch (Exception)
         {
-            StatusMessage = RegistrationFailureMessage;
+            StatusMessage = uiTextProvider.Get(UiTextKeys.DocumentRegistrationStatusFailed);
         }
         finally
         {
@@ -296,14 +292,14 @@ public sealed class DocumentRegistrationViewModel : INotifyPropertyChanged
     {
         if (string.IsNullOrWhiteSpace(SelectedSourceFilePath))
         {
-            ValidationMessage = "파일을 선택해 주세요.";
+            ValidationMessage = uiTextProvider.Get(UiTextKeys.DocumentRegistrationValidationSelectFile);
             StatusMessage = null;
             return false;
         }
 
         if (!IsSupportedTargetKind(TargetKind))
         {
-            ValidationMessage = "저장할 대상 유형을 선택해 주세요.";
+            ValidationMessage = uiTextProvider.Get(UiTextKeys.DocumentRegistrationValidationSelectTargetKind);
             StatusMessage = null;
             return false;
         }
@@ -316,28 +312,28 @@ public sealed class DocumentRegistrationViewModel : INotifyPropertyChanged
 
         if (string.IsNullOrWhiteSpace(TargetId))
         {
-            ValidationMessage = "저장할 대상을 입력해 주세요.";
+            ValidationMessage = uiTextProvider.Get(UiTextKeys.DocumentRegistrationValidationSelectTarget);
             StatusMessage = null;
             return false;
         }
 
         if (string.IsNullOrWhiteSpace(DocumentType))
         {
-            ValidationMessage = "문서 유형을 선택해 주세요.";
+            ValidationMessage = uiTextProvider.Get(UiTextKeys.DocumentRegistrationValidationSelectDocumentType);
             StatusMessage = null;
             return false;
         }
 
         if (string.IsNullOrWhiteSpace(DisplayTitle))
         {
-            ValidationMessage = "표시 제목을 입력해 주세요.";
+            ValidationMessage = uiTextProvider.Get(UiTextKeys.DocumentRegistrationValidationEnterDisplayTitle);
             StatusMessage = null;
             return false;
         }
 
         if (ReferenceDate == default)
         {
-            ValidationMessage = "기준일을 선택해 주세요.";
+            ValidationMessage = uiTextProvider.Get(UiTextKeys.DocumentRegistrationValidationSelectReferenceDate);
             StatusMessage = null;
             return false;
         }
@@ -356,13 +352,14 @@ public sealed class DocumentRegistrationViewModel : INotifyPropertyChanged
         {
             if (!HasAvailablePolicies)
             {
-                ValidationMessage = NoActivePolicyMessage;
+                ValidationMessage = uiTextProvider.Get(UiTextKeys.DocumentRegistrationMessageNoActivePolicy);
                 return false;
             }
 
             if (string.IsNullOrWhiteSpace(TargetId))
             {
-                ValidationMessage = SelectPolicyMessage;
+                ValidationMessage = uiTextProvider.Get(
+                    UiTextKeys.DocumentRegistrationValidationSelectPolicyBeforeRegister);
                 return false;
             }
         }
@@ -371,13 +368,14 @@ public sealed class DocumentRegistrationViewModel : INotifyPropertyChanged
         {
             if (!HasAvailableClaims)
             {
-                ValidationMessage = NoActiveClaimMessage;
+                ValidationMessage = uiTextProvider.Get(UiTextKeys.DocumentRegistrationMessageNoActiveClaim);
                 return false;
             }
 
             if (string.IsNullOrWhiteSpace(TargetId))
             {
-                ValidationMessage = SelectClaimMessage;
+                ValidationMessage = uiTextProvider.Get(
+                    UiTextKeys.DocumentRegistrationValidationSelectClaimBeforeRegister);
                 return false;
             }
         }
@@ -412,13 +410,17 @@ public sealed class DocumentRegistrationViewModel : INotifyPropertyChanged
 
         if (string.Equals(TargetKind, PolicyTargetKind, StringComparison.Ordinal))
         {
-            TargetSelectionMessage = HasAvailablePolicies ? null : NoActivePolicyMessage;
+            TargetSelectionMessage = HasAvailablePolicies
+                ? null
+                : uiTextProvider.Get(UiTextKeys.DocumentRegistrationMessageNoActivePolicy);
             return;
         }
 
         if (string.Equals(TargetKind, ClaimTargetKind, StringComparison.Ordinal))
         {
-            TargetSelectionMessage = HasAvailableClaims ? null : NoActiveClaimMessage;
+            TargetSelectionMessage = HasAvailableClaims
+                ? null
+                : uiTextProvider.Get(UiTextKeys.DocumentRegistrationMessageNoActiveClaim);
             return;
         }
 
