@@ -94,13 +94,45 @@ public sealed class ResourceUiTextProviderTests
     {
         var resources = new ResourceDictionary
         {
-            [UiTextKeys.ActionSelectFile] = "Select file"
+            [UiTextKeys.ActionSelectFile] = "파일 선택"
         };
         var provider = new ResourceUiTextProvider(resources);
 
         var text = provider.Get(UiTextKeys.ActionSelectFile);
 
-        Assert.Equal("Select file", text);
+        Assert.Equal("파일 선택", text);
+    }
+
+    [Theory]
+    [InlineData(UiTextKeys.DocumentSourceFileSection, "원본 파일")]
+    [InlineData(UiTextKeys.DocumentSelectedFileLabel, "선택한 파일")]
+    [InlineData(UiTextKeys.DocumentMetadataSection, "문서 정보")]
+    [InlineData(UiTextKeys.DocumentTypeLabel, "문서 유형")]
+    [InlineData(UiTextKeys.DocumentDisplayTitleLabel, "표시 제목")]
+    [InlineData(UiTextKeys.DocumentReferenceDateLabel, "기준일")]
+    [InlineData(UiTextKeys.TargetSelectionSection, "저장 대상 선택")]
+    [InlineData(UiTextKeys.TargetKindLabel, "대상 유형")]
+    [InlineData(UiTextKeys.PolicyTargetLabel, "보험 대상")]
+    [InlineData(UiTextKeys.ClaimTargetLabel, "청구 대상")]
+    [InlineData(UiTextKeys.ActionSelectFile, "파일 선택")]
+    [InlineData(UiTextKeys.ActionRegisterDocument, "등록")]
+    [InlineData(UiTextKeys.ValidationSectionLabel, "입력 확인")]
+    [InlineData(UiTextKeys.StatusRegistrationSection, "등록 상태")]
+    [InlineData(UiTextKeys.StatusLabel, "상태")]
+    [InlineData(UiTextKeys.StatusLastRegistrationSummaryLabel, "마지막 등록 요약")]
+    [InlineData(UiTextKeys.DocumentRegistrationMessageNoActiveClaim, "선택할 수 있는 활성 청구 대상이 없습니다.")]
+    [InlineData(UiTextKeys.DocumentRegistrationMessageNoActivePolicy, "선택할 수 있는 활성 보험 대상이 없습니다.")]
+    [InlineData(UiTextKeys.DocumentRegistrationValidationSelectClaimBeforeRegister, "문서를 등록하기 전에 청구 대상을 선택해 주세요.")]
+    [InlineData(UiTextKeys.DocumentRegistrationValidationSelectPolicyBeforeRegister, "문서를 등록하기 전에 보험 대상을 선택해 주세요.")]
+    [InlineData(UiTextKeys.DocumentRegistrationValidationSelectTarget, "저장할 대상을 선택해 주세요.")]
+    public void Approved_korean_copy_values_resolve_from_UiStrings(string key, string expected)
+    {
+        var resources = LoadUiStrings();
+        var provider = new ResourceUiTextProvider(resources);
+
+        var text = provider.Get(key);
+
+        Assert.Equal(expected, text);
     }
 
     [Fact]
@@ -123,9 +155,9 @@ public sealed class ResourceUiTextProviderTests
         return new ResourceUiTextProvider(new Dictionary<string, string>(StringComparer.Ordinal)
         {
             [UiTextKeys.AppTitle] = "FamilyClaimRef",
-            [UiTextKeys.DocumentSourceFileSection] = "Source file",
-            [UiTextKeys.ActionSelectFile] = "Select file",
-            [UiTextKeys.StatusRegistrationSection] = "Registration status",
+            [UiTextKeys.DocumentSourceFileSection] = "원본 파일",
+            [UiTextKeys.ActionSelectFile] = "파일 선택",
+            [UiTextKeys.StatusRegistrationSection] = "등록 상태",
             [UiTextKeys.DevHarnessWarningLocalMvpValidation] = "Local MVP validation screen."
         });
     }
