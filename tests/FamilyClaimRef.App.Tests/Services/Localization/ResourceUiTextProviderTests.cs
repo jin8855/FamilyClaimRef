@@ -17,6 +17,49 @@ public sealed class ResourceUiTextProviderTests
     }
 
     [Fact]
+    public void Product_copy_resources_match_approved_contract()
+    {
+        var resources = LoadUiStrings();
+
+        Assert.Equal(64, resources.Count);
+        Assert.Equal(8, resources.Keys.Count(IsProductKey));
+        Assert.Equal(8, ExpectedProductResources.Count);
+        Assert.All(
+            ExpectedProductResources,
+            expected => Assert.Equal(expected.Value, resources[expected.Key]));
+    }
+
+    [Fact]
+    public void UiTextKeys_match_resource_keys_without_duplicates_or_gaps()
+    {
+        var resourceEntries = LoadUiStringEntries();
+        var resourceKeys = resourceEntries.Select(entry => entry.Key).ToArray();
+        var constantValues = LoadUiTextKeyConstants();
+
+        Assert.Equal(64, resourceEntries.Count);
+        Assert.Equal(resourceKeys.Length, resourceKeys.Distinct(StringComparer.Ordinal).Count());
+        Assert.Equal(64, constantValues.Count);
+        Assert.Equal(constantValues.Count, constantValues.Distinct(StringComparer.Ordinal).Count());
+        Assert.Equal(8, constantValues.Count(IsProductKey));
+        Assert.Equal(
+            resourceKeys.OrderBy(key => key, StringComparer.Ordinal),
+            constantValues.OrderBy(key => key, StringComparer.Ordinal));
+    }
+
+    [Fact]
+    public void Existing_resource_values_are_preserved()
+    {
+        var existingResources = LoadUiStrings()
+            .Where(resource => !IsProductKey(resource.Key))
+            .ToDictionary(resource => resource.Key, resource => resource.Value, StringComparer.Ordinal);
+
+        Assert.Equal(56, existingResources.Count);
+        Assert.Equal("보험 대상", existingResources[UiTextKeys.PolicyTargetLabel]);
+        Assert.Equal("청구 대상", existingResources[UiTextKeys.ClaimTargetLabel]);
+        Assert.Equal(ExistingResourceFingerprint, ComputeResourceFingerprint(existingResources));
+    }
+
+    [Fact]
     public void Get_missing_key_returns_deterministic_fallback()
     {
         var provider = CreateProvider();
@@ -164,6 +207,14 @@ public sealed class ResourceUiTextProviderTests
 
     private static IReadOnlyDictionary<string, string> LoadUiStrings()
     {
+        return LoadUiStringEntries().ToDictionary(
+            entry => entry.Key,
+            entry => entry.Value,
+            StringComparer.Ordinal);
+    }
+
+    private static IReadOnlyList<KeyValuePair<string, string>> LoadUiStringEntries()
+    {
         var path = Path.Combine(FindProjectRoot(), "app", "FamilyClaimRef.App", "Resources", "UiStrings.xaml");
         var document = System.Xml.Linq.XDocument.Load(path);
         var keyName = System.Xml.Linq.XName.Get("Key", "http://schemas.microsoft.com/winfx/2006/xaml");
@@ -171,10 +222,32 @@ public sealed class ResourceUiTextProviderTests
         return document
             .Descendants()
             .Where(element => element.Attribute(keyName) is not null)
-            .ToDictionary(
-                element => element.Attribute(keyName)!.Value,
-                element => element.Value,
-                StringComparer.Ordinal);
+            .Select(element => new KeyValuePair<string, string>(
+                element.Attribute(keyName)!.Value,
+                element.Value))
+            .ToArray();
+    }
+
+    private static IReadOnlyList<string> LoadUiTextKeyConstants()
+    {
+        return typeof(UiTextKeys)
+            .GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
+            .Where(field => field.IsLiteral && !field.IsInitOnly && field.FieldType == typeof(string))
+            .Select(field => (string)field.GetRawConstantValue()!)
+            .ToArray();
+    }
+
+    private static string ComputeResourceFingerprint(IReadOnlyDictionary<string, string> resources)
+    {
+        var snapshot = string.Join(
+            ((char)30).ToString(),
+            resources
+                .OrderBy(resource => resource.Key, StringComparer.Ordinal)
+                .Select(resource => $"{resource.Key}{(char)31}{resource.Value}"));
+        var bytes = System.Text.Encoding.UTF8.GetBytes(snapshot);
+
+        using var sha256 = System.Security.Cryptography.SHA256.Create();
+        return Convert.ToHexString(sha256.ComputeHash(bytes));
     }
 
     private static string FindProjectRoot()
@@ -220,4 +293,22 @@ public sealed class ResourceUiTextProviderTests
         UiTextKeys.ClaimManagementValidationSelectClaimTarget,
         UiTextKeys.PolicyManagementValidationSelectPolicyTarget
     ];
+
+    private static bool IsProductKey(string key) => key.StartsWith("Ui.Product.", StringComparison.Ordinal);
+
+    private static IReadOnlyDictionary<string, string> ExpectedProductResources { get; } =
+        new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            [UiTextKeys.ProductShellTitle] = "FamilyClaimRef",
+            [UiTextKeys.ProductNavigationHome] = "홈",
+            [UiTextKeys.ProductNavigationDocumentRegistration] = "문서 등록",
+            [UiTextKeys.ProductNavigationDocumentList] = "문서 목록",
+            [UiTextKeys.ProductHomeTitle] = "홈",
+            [UiTextKeys.ProductDocumentRegistrationTitle] = "문서 등록",
+            [UiTextKeys.ProductDocumentListTitle] = "문서 목록",
+            [UiTextKeys.ProductDocumentListEmptyMessage] = "등록된 문서가 없습니다."
+        };
+
+    private const string ExistingResourceFingerprint =
+        "B18C38D08632C4130B90F822229F0C7FA45039E90D780ABF09C2E37405A627CC";
 }

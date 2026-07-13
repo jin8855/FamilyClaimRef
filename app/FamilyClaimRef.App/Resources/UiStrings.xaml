@@ -2,6 +2,14 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
     <sys:String x:Key="Ui.App.Title">FamilyClaimRef</sys:String>
+    <sys:String x:Key="Ui.Product.Shell.Title">FamilyClaimRef</sys:String>
+    <sys:String x:Key="Ui.Product.Navigation.Home">홈</sys:String>
+    <sys:String x:Key="Ui.Product.Navigation.DocumentRegistration">문서 등록</sys:String>
+    <sys:String x:Key="Ui.Product.Navigation.DocumentList">문서 목록</sys:String>
+    <sys:String x:Key="Ui.Product.Home.Title">홈</sys:String>
+    <sys:String x:Key="Ui.Product.DocumentRegistration.Title">문서 등록</sys:String>
+    <sys:String x:Key="Ui.Product.DocumentList.Title">문서 목록</sys:String>
+    <sys:String x:Key="Ui.Product.DocumentList.EmptyMessage">등록된 문서가 없습니다.</sys:String>
     <sys:String x:Key="Ui.Document.SourceFileSection">원본 파일</sys:String>
     <sys:String x:Key="Ui.Document.SelectedFileLabel">선택한 파일</sys:String>
     <sys:String x:Key="Ui.Document.MetadataSection">문서 정보</sys:String>

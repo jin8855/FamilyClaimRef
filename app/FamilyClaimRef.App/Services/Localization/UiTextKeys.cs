@@ -3,6 +3,14 @@ namespace FamilyClaimRef.App.Services.Localization;
 public static class UiTextKeys
 {
     public const string AppTitle = "Ui.App.Title";
+    public const string ProductShellTitle = "Ui.Product.Shell.Title";
+    public const string ProductNavigationHome = "Ui.Product.Navigation.Home";
+    public const string ProductNavigationDocumentRegistration = "Ui.Product.Navigation.DocumentRegistration";
+    public const string ProductNavigationDocumentList = "Ui.Product.Navigation.DocumentList";
+    public const string ProductHomeTitle = "Ui.Product.Home.Title";
+    public const string ProductDocumentRegistrationTitle = "Ui.Product.DocumentRegistration.Title";
+    public const string ProductDocumentListTitle = "Ui.Product.DocumentList.Title";
+    public const string ProductDocumentListEmptyMessage = "Ui.Product.DocumentList.EmptyMessage";
     public const string DocumentSourceFileSection = "Ui.Document.SourceFileSection";
     public const string DocumentSelectedFileLabel = "Ui.Document.SelectedFileLabel";
     public const string DocumentMetadataSection = "Ui.Document.MetadataSection";
