@@ -10,6 +10,11 @@
             <views:ProductHomeView />
         </DataTemplate>
 
+        <DataTemplate x:Key="DocumentRegistrationContentTemplate">
+            <views:ProductDocumentRegistrationView
+                DataContext="{Binding DataContext.DocumentRegistration, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+        </DataTemplate>
+
         <DataTemplate x:Key="FallbackContentTemplate">
             <TextBlock Text="{Binding DisplayText}"
                        FontSize="18"
@@ -52,6 +57,11 @@
                                      Value="Home">
                             <Setter Property="ContentTemplate"
                                     Value="{StaticResource HomeContentTemplate}" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Content.Id, RelativeSource={RelativeSource Self}}"
+                                     Value="DocumentRegistration">
+                            <Setter Property="ContentTemplate"
+                                    Value="{StaticResource DocumentRegistrationContentTemplate}" />
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>

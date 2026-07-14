@@ -9,11 +9,15 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
 {
     private ProductNavigationItemViewModel selectedNavigationItem;
 
-    public ProductShellViewModel(IUiTextProvider uiTextProvider)
+    public ProductShellViewModel(
+        IUiTextProvider uiTextProvider,
+        DocumentRegistrationViewModel documentRegistration)
     {
         ArgumentNullException.ThrowIfNull(uiTextProvider);
+        ArgumentNullException.ThrowIfNull(documentRegistration);
 
         ShellTitle = uiTextProvider.Get(UiTextKeys.ProductShellTitle);
+        DocumentRegistration = documentRegistration;
         NavigationItems = Array.AsReadOnly(
         [
             new ProductNavigationItemViewModel(
@@ -32,6 +36,8 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public string ShellTitle { get; }
+
+    public DocumentRegistrationViewModel DocumentRegistration { get; }
 
     public ReadOnlyCollection<ProductNavigationItemViewModel> NavigationItems { get; }
 

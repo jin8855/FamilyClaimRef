@@ -8,6 +8,9 @@
     <sys:String x:Key="Ui.Product.Navigation.DocumentList">문서 목록</sys:String>
     <sys:String x:Key="Ui.Product.Home.Title">홈</sys:String>
     <sys:String x:Key="Ui.Product.DocumentRegistration.Title">문서 등록</sys:String>
+    <sys:String x:Key="Ui.Product.DocumentRegistration.TargetSelectionSection">연결 대상 선택</sys:String>
+    <sys:String x:Key="Ui.Product.DocumentRegistration.PolicyTargetLabel">보험 계약</sys:String>
+    <sys:String x:Key="Ui.Product.DocumentRegistration.ClaimTargetLabel">청구 건</sys:String>
     <sys:String x:Key="Ui.Product.DocumentList.Title">문서 목록</sys:String>
     <sys:String x:Key="Ui.Product.DocumentList.EmptyMessage">등록된 문서가 없습니다.</sys:String>
     <sys:String x:Key="Ui.Document.SourceFileSection">원본 파일</sys:String>

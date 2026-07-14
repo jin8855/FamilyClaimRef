@@ -1,4 +1,6 @@
 using FamilyClaimRef.App.Services.Localization;
+using FamilyClaimRef.App.Services.Storage;
+using FamilyClaimRef.App.Services.UI;
 using FamilyClaimRef.App.ViewModels;
 using Xunit;
 
@@ -9,7 +11,18 @@ public sealed class ProductShellViewModelTests
     [Fact]
     public void Constructor_rejects_null_ui_text_provider()
     {
-        var exception = Record.Exception(() => new ProductShellViewModel(null!));
+        var uiTextProvider = CreateUiTextProvider();
+        var documentRegistration = CreateDocumentRegistrationViewModel(uiTextProvider);
+
+        var exception = Record.Exception(() => new ProductShellViewModel(null!, documentRegistration));
+
+        Assert.IsType<ArgumentNullException>(exception);
+    }
+
+    [Fact]
+    public void Constructor_rejects_null_document_registration_view_model()
+    {
+        var exception = Record.Exception(() => new ProductShellViewModel(CreateUiTextProvider(), null!));
 
         Assert.IsType<ArgumentNullException>(exception);
     }
@@ -17,7 +30,7 @@ public sealed class ProductShellViewModelTests
     [Fact]
     public void Constructor_resolves_shell_title()
     {
-        var viewModel = new ProductShellViewModel(CreateUiTextProvider());
+        var viewModel = CreateViewModel();
 
         Assert.Equal("FamilyClaimRef", viewModel.ShellTitle);
     }
@@ -25,7 +38,7 @@ public sealed class ProductShellViewModelTests
     [Fact]
     public void Navigation_items_have_expected_count_order_ids_and_display_text()
     {
-        var viewModel = new ProductShellViewModel(CreateUiTextProvider());
+        var viewModel = CreateViewModel();
 
         Assert.Collection(
             viewModel.NavigationItems,
@@ -49,7 +62,7 @@ public sealed class ProductShellViewModelTests
     [Fact]
     public void Initial_selection_is_home()
     {
-        var viewModel = new ProductShellViewModel(CreateUiTextProvider());
+        var viewModel = CreateViewModel();
 
         Assert.Same(viewModel.NavigationItems[0], viewModel.SelectedNavigationItem);
         Assert.Equal("Home", viewModel.SelectedNavigationItem!.Id);
@@ -58,7 +71,7 @@ public sealed class ProductShellViewModelTests
     [Fact]
     public void Selection_change_raises_PropertyChanged()
     {
-        var viewModel = new ProductShellViewModel(CreateUiTextProvider());
+        var viewModel = CreateViewModel();
         var propertyNames = new List<string?>();
         viewModel.PropertyChanged += (_, args) => propertyNames.Add(args.PropertyName);
 
@@ -71,7 +84,7 @@ public sealed class ProductShellViewModelTests
     [Fact]
     public void Assigning_same_selection_does_not_raise_PropertyChanged()
     {
-        var viewModel = new ProductShellViewModel(CreateUiTextProvider());
+        var viewModel = CreateViewModel();
         var notificationCount = 0;
         viewModel.PropertyChanged += (_, _) => notificationCount++;
 
@@ -83,7 +96,7 @@ public sealed class ProductShellViewModelTests
     [Fact]
     public void Null_selection_is_ignored()
     {
-        var viewModel = new ProductShellViewModel(CreateUiTextProvider());
+        var viewModel = CreateViewModel();
         var initialSelection = viewModel.SelectedNavigationItem;
 
         viewModel.SelectedNavigationItem = null;
@@ -94,7 +107,7 @@ public sealed class ProductShellViewModelTests
     [Fact]
     public void Foreign_navigation_item_is_rejected()
     {
-        var viewModel = new ProductShellViewModel(CreateUiTextProvider());
+        var viewModel = CreateViewModel();
         var foreignItem = new ProductNavigationItemViewModel("Foreign", "Foreign display");
 
         var exception = Record.Exception(() => viewModel.SelectedNavigationItem = foreignItem);
@@ -104,12 +117,60 @@ public sealed class ProductShellViewModelTests
     }
 
     [Fact]
-    public void Constructor_dependency_is_ui_text_provider_only()
+    public void Constructor_dependencies_match_approved_composition_contract()
     {
         var constructor = Assert.Single(typeof(ProductShellViewModel).GetConstructors());
-        var parameter = Assert.Single(constructor.GetParameters());
+        var parameters = constructor.GetParameters();
 
-        Assert.Equal(typeof(IUiTextProvider), parameter.ParameterType);
+        Assert.Collection(
+            parameters,
+            parameter => Assert.Equal(typeof(IUiTextProvider), parameter.ParameterType),
+            parameter => Assert.Equal(typeof(DocumentRegistrationViewModel), parameter.ParameterType));
+    }
+
+    [Fact]
+    public void Document_registration_property_exposes_injected_instance()
+    {
+        var uiTextProvider = CreateUiTextProvider();
+        var documentRegistration = CreateDocumentRegistrationViewModel(uiTextProvider);
+
+        var viewModel = new ProductShellViewModel(uiTextProvider, documentRegistration);
+
+        Assert.Same(documentRegistration, viewModel.DocumentRegistration);
+    }
+
+    private static ProductShellViewModel CreateViewModel()
+    {
+        var uiTextProvider = CreateUiTextProvider();
+        return new ProductShellViewModel(
+            uiTextProvider,
+            CreateDocumentRegistrationViewModel(uiTextProvider));
+    }
+
+    private static DocumentRegistrationViewModel CreateDocumentRegistrationViewModel(
+        IUiTextProvider uiTextProvider)
+    {
+        var testRoot = Path.Combine(
+            Path.GetTempPath(),
+            "FamilyClaimRef.App.Tests",
+            "ProductShellViewModelTests",
+            Guid.NewGuid().ToString("N"));
+        var metadataRoot = Path.Combine(testRoot, "data", "local");
+        var attachmentRoot = Path.Combine(testRoot, "attachments");
+        var documentStorage = new JsonDocumentStorageService(metadataRoot);
+        var policyClaimStorage = new JsonPolicyClaimStorageService(metadataRoot);
+        var fileAttachment = new LocalFileAttachmentService(attachmentRoot);
+        var workflow = new DocumentRegistrationWorkflow(
+            new DocumentAttachmentCoordinator(documentStorage, fileAttachment),
+            new DocumentLinkCoordinator(documentStorage, policyClaimStorage),
+            documentStorage,
+            fileAttachment);
+
+        return new DocumentRegistrationViewModel(
+            workflow,
+            new WpfFilePickerService(),
+            policyClaimStorage,
+            uiTextProvider);
     }
 
     private static IUiTextProvider CreateUiTextProvider()

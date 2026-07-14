@@ -126,6 +126,51 @@ public sealed class DocumentRegistrationViewModelTests
     }
 
     [Fact]
+    public async Task LoadTargetOptionsAsync_repeated_load_replaces_snapshot_and_clears_invalid_selections()
+    {
+        var storage = new FakePolicyClaimStorageService(
+            ["policy_initial_001"],
+            ["claim_initial_001"]);
+        var filePicker = new FakeFilePickerService(null);
+        var fileAttachment = new SpyFileAttachmentService();
+        var viewModel = CreateTargetSelectionViewModel(storage, filePicker, fileAttachment);
+
+        await viewModel.LoadTargetOptionsAsync();
+        viewModel.TargetKind = DocumentRegistrationViewModel.PolicyTargetKind;
+        viewModel.SelectedPolicyId = "policy_initial_001";
+        viewModel.TargetKind = DocumentRegistrationViewModel.ClaimTargetKind;
+        viewModel.SelectedClaimId = "claim_initial_001";
+
+        storage.ReplaceActiveTargets(
+            ["policy_current_001", "policy_current_002"],
+            ["claim_current_001", "claim_current_002"]);
+
+        await viewModel.LoadTargetOptionsAsync();
+
+        Assert.Equal(
+            ["policy_current_001", "policy_current_002"],
+            viewModel.AvailablePolicies.Select(policy => policy.Id).Order(StringComparer.Ordinal));
+        Assert.Equal(
+            ["claim_current_001", "claim_current_002"],
+            viewModel.AvailableClaims.Select(claim => claim.Id).Order(StringComparer.Ordinal));
+        Assert.DoesNotContain(viewModel.AvailablePolicies, policy => policy.Id == "policy_initial_001");
+        Assert.DoesNotContain(viewModel.AvailableClaims, claim => claim.Id == "claim_initial_001");
+        Assert.Null(viewModel.SelectedPolicyId);
+        Assert.Null(viewModel.SelectedClaimId);
+        Assert.Null(viewModel.TargetId);
+        Assert.Equal(
+            viewModel.AvailablePolicies.Count,
+            viewModel.AvailablePolicies.Select(policy => policy.Id).Distinct(StringComparer.Ordinal).Count());
+        Assert.Equal(
+            viewModel.AvailableClaims.Count,
+            viewModel.AvailableClaims.Select(claim => claim.Id).Distinct(StringComparer.Ordinal).Count());
+        Assert.Equal(2, storage.GetPoliciesCallCount);
+        Assert.Equal(2, storage.GetClaimsCallCount);
+        Assert.Equal(0, filePicker.PickCallCount);
+        Assert.False(fileAttachment.CopyCalled);
+    }
+
+    [Fact]
     public async Task LoadTargetOptionsAsync_does_not_expose_disabled_policy_or_claim_records()
     {
         await UsingTempRootsAsync(async (metadataRoot, _) =>
@@ -489,13 +534,15 @@ public sealed class DocumentRegistrationViewModelTests
     }
 
     private static DocumentRegistrationViewModel CreateTargetSelectionViewModel(
-        IPolicyClaimStorageService policyClaimStorageService)
+        IPolicyClaimStorageService policyClaimStorageService,
+        FakeFilePickerService? filePickerService = null,
+        IFileAttachmentService? fileAttachmentService = null)
     {
         return new DocumentRegistrationViewModel(
             CreateWorkflow(
                 new SpyDocumentStorageService(),
-                new SpyFileAttachmentService()),
-            new FakeFilePickerService(null),
+                fileAttachmentService ?? new SpyFileAttachmentService()),
+            filePickerService ?? new FakeFilePickerService(null),
             policyClaimStorageService,
             CreateUiTextProvider());
     }
@@ -647,9 +694,12 @@ public sealed class DocumentRegistrationViewModelTests
             this.result = result;
         }
 
+        public int PickCallCount { get; private set; }
+
         public Task<FilePickerResult?> PickDocumentFileAsync(
             CancellationToken cancellationToken = default)
         {
+            PickCallCount++;
             return Task.FromResult(result);
         }
     }
@@ -861,9 +911,24 @@ public sealed class DocumentRegistrationViewModelTests
             this.activeClaimIds = (activeClaimIds ?? []).ToHashSet(StringComparer.Ordinal);
         }
 
+        public int GetPoliciesCallCount { get; private set; }
+
+        public int GetClaimsCallCount { get; private set; }
+
+        public void ReplaceActiveTargets(
+            IEnumerable<string> policyIds,
+            IEnumerable<string> claimIds)
+        {
+            activePolicyIds.Clear();
+            activePolicyIds.UnionWith(policyIds);
+            activeClaimIds.Clear();
+            activeClaimIds.UnionWith(claimIds);
+        }
+
         public Task<IReadOnlyList<PolicyRecord>> GetPoliciesAsync(
             CancellationToken cancellationToken = default)
         {
+            GetPoliciesCallCount++;
             return Task.FromResult<IReadOnlyList<PolicyRecord>>(
                 activePolicyIds.Select(CreatePolicyRecord).ToList());
         }
@@ -895,6 +960,7 @@ public sealed class DocumentRegistrationViewModelTests
         public Task<IReadOnlyList<ClaimRecord>> GetClaimsAsync(
             CancellationToken cancellationToken = default)
         {
+            GetClaimsCallCount++;
             return Task.FromResult<IReadOnlyList<ClaimRecord>>(
                 activeClaimIds.Select(CreateClaimRecord).ToList());
         }

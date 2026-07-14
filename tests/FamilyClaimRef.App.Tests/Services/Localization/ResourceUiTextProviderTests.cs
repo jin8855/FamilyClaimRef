@@ -21,9 +21,9 @@ public sealed class ResourceUiTextProviderTests
     {
         var resources = LoadUiStrings();
 
-        Assert.Equal(64, resources.Count);
-        Assert.Equal(8, resources.Keys.Count(IsProductKey));
-        Assert.Equal(8, ExpectedProductResources.Count);
+        Assert.Equal(67, resources.Count);
+        Assert.Equal(11, resources.Keys.Count(IsProductKey));
+        Assert.Equal(11, ExpectedProductResources.Count);
         Assert.All(
             ExpectedProductResources,
             expected => Assert.Equal(expected.Value, resources[expected.Key]));
@@ -36,11 +36,11 @@ public sealed class ResourceUiTextProviderTests
         var resourceKeys = resourceEntries.Select(entry => entry.Key).ToArray();
         var constantValues = LoadUiTextKeyConstants();
 
-        Assert.Equal(64, resourceEntries.Count);
+        Assert.Equal(67, resourceEntries.Count);
         Assert.Equal(resourceKeys.Length, resourceKeys.Distinct(StringComparer.Ordinal).Count());
-        Assert.Equal(64, constantValues.Count);
+        Assert.Equal(67, constantValues.Count);
         Assert.Equal(constantValues.Count, constantValues.Distinct(StringComparer.Ordinal).Count());
-        Assert.Equal(8, constantValues.Count(IsProductKey));
+        Assert.Equal(11, constantValues.Count(IsProductKey));
         Assert.Equal(
             resourceKeys.OrderBy(key => key, StringComparer.Ordinal),
             constantValues.OrderBy(key => key, StringComparer.Ordinal));
@@ -168,6 +168,9 @@ public sealed class ResourceUiTextProviderTests
     [InlineData(UiTextKeys.DocumentRegistrationValidationSelectClaimBeforeRegister, "문서를 등록하기 전에 청구 대상을 선택해 주세요.")]
     [InlineData(UiTextKeys.DocumentRegistrationValidationSelectPolicyBeforeRegister, "문서를 등록하기 전에 보험 대상을 선택해 주세요.")]
     [InlineData(UiTextKeys.DocumentRegistrationValidationSelectTarget, "저장할 대상을 선택해 주세요.")]
+    [InlineData(UiTextKeys.ProductDocumentRegistrationTargetSelectionSection, "연결 대상 선택")]
+    [InlineData(UiTextKeys.ProductDocumentRegistrationPolicyTargetLabel, "보험 계약")]
+    [InlineData(UiTextKeys.ProductDocumentRegistrationClaimTargetLabel, "청구 건")]
     public void Approved_korean_copy_values_resolve_from_UiStrings(string key, string expected)
     {
         var resources = LoadUiStrings();
@@ -305,6 +308,9 @@ public sealed class ResourceUiTextProviderTests
             [UiTextKeys.ProductNavigationDocumentList] = "문서 목록",
             [UiTextKeys.ProductHomeTitle] = "홈",
             [UiTextKeys.ProductDocumentRegistrationTitle] = "문서 등록",
+            [UiTextKeys.ProductDocumentRegistrationTargetSelectionSection] = "연결 대상 선택",
+            [UiTextKeys.ProductDocumentRegistrationPolicyTargetLabel] = "보험 계약",
+            [UiTextKeys.ProductDocumentRegistrationClaimTargetLabel] = "청구 건",
             [UiTextKeys.ProductDocumentListTitle] = "문서 목록",
             [UiTextKeys.ProductDocumentListEmptyMessage] = "등록된 문서가 없습니다."
         };
