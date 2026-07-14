@@ -102,7 +102,7 @@ public sealed class AppServices
                 "Select a policy before registering this document.",
             [UiTextKeys.DocumentRegistrationStatusFileSelected] = "파일을 선택했습니다.",
             [UiTextKeys.DocumentRegistrationValidationSelectFile] = "파일을 선택해 주세요.",
-            [UiTextKeys.DocumentRegistrationValidationSelectTargetKind] = "저장할 대상 유형을 선택해 주세요.",
+            [UiTextKeys.DocumentRegistrationValidationSelectTargetKind] = "연결 대상 유형을 선택해 주세요.",
             [UiTextKeys.DocumentRegistrationValidationSelectTarget] = "저장할 대상을 입력해 주세요.",
             [UiTextKeys.DocumentRegistrationValidationSelectDocumentType] = "문서 유형을 선택해 주세요.",
             [UiTextKeys.DocumentRegistrationValidationEnterDisplayTitle] = "표시 제목을 입력해 주세요.",

@@ -163,11 +163,12 @@ public sealed class ResourceUiTextProviderTests
     [InlineData(UiTextKeys.StatusRegistrationSection, "등록 상태")]
     [InlineData(UiTextKeys.StatusLabel, "상태")]
     [InlineData(UiTextKeys.StatusLastRegistrationSummaryLabel, "마지막 등록 요약")]
-    [InlineData(UiTextKeys.DocumentRegistrationMessageNoActiveClaim, "선택할 수 있는 활성 청구 대상이 없습니다.")]
-    [InlineData(UiTextKeys.DocumentRegistrationMessageNoActivePolicy, "선택할 수 있는 활성 보험 대상이 없습니다.")]
-    [InlineData(UiTextKeys.DocumentRegistrationValidationSelectClaimBeforeRegister, "문서를 등록하기 전에 청구 대상을 선택해 주세요.")]
-    [InlineData(UiTextKeys.DocumentRegistrationValidationSelectPolicyBeforeRegister, "문서를 등록하기 전에 보험 대상을 선택해 주세요.")]
-    [InlineData(UiTextKeys.DocumentRegistrationValidationSelectTarget, "저장할 대상을 선택해 주세요.")]
+    [InlineData(UiTextKeys.DocumentRegistrationMessageNoActiveClaim, "선택할 수 있는 청구 건이 없습니다.")]
+    [InlineData(UiTextKeys.DocumentRegistrationMessageNoActivePolicy, "선택할 수 있는 보험 계약이 없습니다.")]
+    [InlineData(UiTextKeys.DocumentRegistrationValidationSelectClaimBeforeRegister, "문서를 등록하기 전에 연결할 청구 건을 선택해 주세요.")]
+    [InlineData(UiTextKeys.DocumentRegistrationValidationSelectPolicyBeforeRegister, "문서를 등록하기 전에 연결할 보험 계약을 선택해 주세요.")]
+    [InlineData(UiTextKeys.DocumentRegistrationValidationSelectTargetKind, "연결 대상 유형을 선택해 주세요.")]
+    [InlineData(UiTextKeys.DocumentRegistrationValidationSelectTarget, "연결할 대상을 선택해 주세요.")]
     [InlineData(UiTextKeys.ProductDocumentRegistrationTargetSelectionSection, "연결 대상 선택")]
     [InlineData(UiTextKeys.ProductDocumentRegistrationPolicyTargetLabel, "보험 계약")]
     [InlineData(UiTextKeys.ProductDocumentRegistrationClaimTargetLabel, "청구 건")]
@@ -316,5 +317,5 @@ public sealed class ResourceUiTextProviderTests
         };
 
     private const string ExistingResourceFingerprint =
-        "B18C38D08632C4130B90F822229F0C7FA45039E90D780ABF09C2E37405A627CC";
+        "884AB8AD16C195E5A0411BA8A2B9BE3FCF4DC20B5F539FF048BC5CCCED75A97B";
 }

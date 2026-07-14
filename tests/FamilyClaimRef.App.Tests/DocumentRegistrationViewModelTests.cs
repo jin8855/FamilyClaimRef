@@ -245,7 +245,7 @@ public sealed class DocumentRegistrationViewModelTests
         await viewModel.LoadTargetOptionsAsync();
 
         Assert.False(viewModel.HasAvailablePolicies);
-        Assert.Equal("선택할 수 있는 활성 보험 대상이 없습니다.", viewModel.TargetSelectionMessage);
+        Assert.Equal("선택할 수 있는 보험 계약이 없습니다.", viewModel.TargetSelectionMessage);
     }
 
     [Fact]
@@ -259,7 +259,7 @@ public sealed class DocumentRegistrationViewModelTests
         await viewModel.LoadTargetOptionsAsync();
 
         Assert.False(viewModel.HasAvailableClaims);
-        Assert.Equal("선택할 수 있는 활성 청구 대상이 없습니다.", viewModel.TargetSelectionMessage);
+        Assert.Equal("선택할 수 있는 청구 건이 없습니다.", viewModel.TargetSelectionMessage);
     }
 
     [Fact]
@@ -276,7 +276,7 @@ public sealed class DocumentRegistrationViewModelTests
 
             await viewModel.RegisterAsync();
 
-            Assert.Equal("문서를 등록하기 전에 보험 대상을 선택해 주세요.", viewModel.ValidationMessage);
+            Assert.Equal("문서를 등록하기 전에 연결할 보험 계약을 선택해 주세요.", viewModel.ValidationMessage);
             Assert.False(fileAttachment.CopyCalled);
         });
     }
@@ -297,7 +297,7 @@ public sealed class DocumentRegistrationViewModelTests
 
             await viewModel.RegisterAsync();
 
-            Assert.Equal("문서를 등록하기 전에 청구 대상을 선택해 주세요.", viewModel.ValidationMessage);
+            Assert.Equal("문서를 등록하기 전에 연결할 청구 건을 선택해 주세요.", viewModel.ValidationMessage);
             Assert.False(fileAttachment.CopyCalled);
         });
     }
@@ -338,7 +338,7 @@ public sealed class DocumentRegistrationViewModelTests
 
             await viewModel.RegisterAsync();
 
-            Assert.Equal("저장할 대상을 선택해 주세요.", viewModel.ValidationMessage);
+            Assert.Equal("연결할 대상을 선택해 주세요.", viewModel.ValidationMessage);
             Assert.False(fileAttachment.CopyCalled);
         });
     }
@@ -392,7 +392,7 @@ public sealed class DocumentRegistrationViewModelTests
 
             await viewModel.RegisterAsync();
 
-            Assert.Equal("저장할 대상 유형을 선택해 주세요.", viewModel.ValidationMessage);
+            Assert.Equal("연결 대상 유형을 선택해 주세요.", viewModel.ValidationMessage);
             Assert.False(fileAttachment.CopyCalled);
         });
     }
@@ -606,18 +606,18 @@ public sealed class DocumentRegistrationViewModelTests
         {
             [UiTextKeys.DocumentRegistrationStatusCleanupFailed] =
                 "등록 중 일부 정리가 실패했습니다. 다시 시도하거나 관리자에게 문의하세요.",
-            [UiTextKeys.DocumentRegistrationMessageNoActiveClaim] = "선택할 수 있는 활성 청구 대상이 없습니다.",
-            [UiTextKeys.DocumentRegistrationMessageNoActivePolicy] = "선택할 수 있는 활성 보험 대상이 없습니다.",
+            [UiTextKeys.DocumentRegistrationMessageNoActiveClaim] = "선택할 수 있는 청구 건이 없습니다.",
+            [UiTextKeys.DocumentRegistrationMessageNoActivePolicy] = "선택할 수 있는 보험 계약이 없습니다.",
             [UiTextKeys.DocumentRegistrationStatusFailed] = "문서 등록에 실패했습니다.",
             [UiTextKeys.DocumentRegistrationStatusCompleted] = "문서 등록이 완료되었습니다.",
             [UiTextKeys.DocumentRegistrationValidationSelectClaimBeforeRegister] =
-                "문서를 등록하기 전에 청구 대상을 선택해 주세요.",
+                "문서를 등록하기 전에 연결할 청구 건을 선택해 주세요.",
             [UiTextKeys.DocumentRegistrationValidationSelectPolicyBeforeRegister] =
-                "문서를 등록하기 전에 보험 대상을 선택해 주세요.",
+                "문서를 등록하기 전에 연결할 보험 계약을 선택해 주세요.",
             [UiTextKeys.DocumentRegistrationStatusFileSelected] = "파일을 선택했습니다.",
             [UiTextKeys.DocumentRegistrationValidationSelectFile] = "파일을 선택해 주세요.",
-            [UiTextKeys.DocumentRegistrationValidationSelectTargetKind] = "저장할 대상 유형을 선택해 주세요.",
-            [UiTextKeys.DocumentRegistrationValidationSelectTarget] = "저장할 대상을 선택해 주세요.",
+            [UiTextKeys.DocumentRegistrationValidationSelectTargetKind] = "연결 대상 유형을 선택해 주세요.",
+            [UiTextKeys.DocumentRegistrationValidationSelectTarget] = "연결할 대상을 선택해 주세요.",
             [UiTextKeys.DocumentRegistrationValidationSelectDocumentType] = "문서 유형을 선택해 주세요.",
             [UiTextKeys.DocumentRegistrationValidationEnterDisplayTitle] = "표시 제목을 입력해 주세요.",
             [UiTextKeys.DocumentRegistrationValidationSelectReferenceDate] = "기준일을 선택해 주세요."
