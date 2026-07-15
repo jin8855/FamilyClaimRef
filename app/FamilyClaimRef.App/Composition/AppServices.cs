@@ -11,12 +11,15 @@ public sealed class AppServices
 {
     private AppServices(
         MainWindowViewModel mainWindowViewModel,
+        ProductShellViewModel productShellViewModel,
         string runtimeRootPath,
         string metadataRootPath,
         string attachmentRootPath)
     {
         MainWindowViewModel = mainWindowViewModel
             ?? throw new ArgumentNullException(nameof(mainWindowViewModel));
+        ProductShellViewModel = productShellViewModel
+            ?? throw new ArgumentNullException(nameof(productShellViewModel));
         RuntimeRootPath = runtimeRootPath
             ?? throw new ArgumentNullException(nameof(runtimeRootPath));
         MetadataRootPath = metadataRootPath
@@ -26,6 +29,8 @@ public sealed class AppServices
     }
 
     public MainWindowViewModel MainWindowViewModel { get; }
+
+    public ProductShellViewModel ProductShellViewModel { get; }
 
     public string RuntimeRootPath { get; }
 
@@ -62,7 +67,7 @@ public sealed class AppServices
             fileAttachmentService);
         IFilePickerService filePickerService = new WpfFilePickerService();
         var uiTextProvider = CreateUiTextProvider();
-        var documentRegistrationViewModel = new DocumentRegistrationViewModel(
+        var mainWindowDocumentRegistrationViewModel = new DocumentRegistrationViewModel(
             registrationWorkflow,
             filePickerService,
             policyClaimStorageService,
@@ -71,11 +76,24 @@ public sealed class AppServices
             policyClaimStorageService,
             uiTextProvider);
         var mainWindowViewModel = new MainWindowViewModel(
-            documentRegistrationViewModel,
+            mainWindowDocumentRegistrationViewModel,
             policyClaimManagementViewModel);
+        var productShellDocumentRegistrationViewModel = new DocumentRegistrationViewModel(
+            registrationWorkflow,
+            filePickerService,
+            policyClaimStorageService,
+            uiTextProvider);
+        var productDocumentListViewModel = new ProductDocumentListViewModel(
+            documentStorageService,
+            uiTextProvider);
+        var productShellViewModel = new ProductShellViewModel(
+            uiTextProvider,
+            productShellDocumentRegistrationViewModel,
+            productDocumentListViewModel);
 
         return new AppServices(
             mainWindowViewModel,
+            productShellViewModel,
             runtimeRootPaths.RuntimeRootPath,
             metadataRootPath,
             attachmentRootPath);
@@ -90,6 +108,13 @@ public sealed class AppServices
 
         return new ResourceUiTextProvider(new Dictionary<string, string>(StringComparer.Ordinal)
         {
+            [UiTextKeys.ProductShellTitle] = "FamilyClaimRef",
+            [UiTextKeys.ProductNavigationHome] = "홈",
+            [UiTextKeys.ProductNavigationDocumentRegistration] = "문서 등록",
+            [UiTextKeys.ProductNavigationDocumentList] = "문서 목록",
+            [UiTextKeys.ProductDocumentListTitle] = "문서 목록",
+            [UiTextKeys.ProductDocumentListEmptyMessage] = "등록된 문서가 없습니다.",
+            [UiTextKeys.ProductDocumentListLoadFailedMessage] = "문서 목록을 불러오지 못했습니다.",
             [UiTextKeys.DocumentRegistrationStatusCleanupFailed] =
                 "등록 중 일부 정리가 실패했습니다. 다시 시도하거나 관리자에게 문의하세요.",
             [UiTextKeys.DocumentRegistrationMessageNoActiveClaim] = "No active claim is available for selection.",

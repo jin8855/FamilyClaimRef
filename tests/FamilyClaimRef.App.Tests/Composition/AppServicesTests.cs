@@ -1,5 +1,6 @@
 using FamilyClaimRef.App.Composition;
 using FamilyClaimRef.App.Services.Runtime;
+using FamilyClaimRef.App.ViewModels;
 using Xunit;
 
 namespace FamilyClaimRef.App.Tests;
@@ -26,6 +27,51 @@ public sealed class AppServicesTests
     }
 
     [Fact]
+    public void Create_composes_separate_main_window_and_product_shell_view_model_graphs()
+    {
+        var services = CreateServices();
+
+        Assert.NotNull(services.MainWindowViewModel);
+        Assert.NotNull(services.ProductShellViewModel);
+        Assert.IsType<DocumentRegistrationViewModel>(services.MainWindowViewModel.DocumentRegistration);
+        Assert.IsType<DocumentRegistrationViewModel>(services.ProductShellViewModel.DocumentRegistration);
+        Assert.NotSame(
+            services.MainWindowViewModel.DocumentRegistration,
+            services.ProductShellViewModel.DocumentRegistration);
+        Assert.NotNull(services.ProductShellViewModel.DocumentList);
+    }
+
+    [Fact]
+    public void Create_uses_separate_view_model_graphs_for_separate_calls()
+    {
+        var first = CreateServices();
+        var second = CreateServices();
+
+        Assert.NotSame(first.MainWindowViewModel, second.MainWindowViewModel);
+        Assert.NotSame(first.ProductShellViewModel, second.ProductShellViewModel);
+        Assert.NotSame(
+            first.ProductShellViewModel.DocumentRegistration,
+            second.ProductShellViewModel.DocumentRegistration);
+        Assert.NotSame(first.ProductShellViewModel.DocumentList, second.ProductShellViewModel.DocumentList);
+    }
+
+    [Fact]
+    public void Create_resolves_product_shell_fallback_copy_without_application_resources()
+    {
+        var productShell = CreateServices().ProductShellViewModel;
+
+        Assert.Equal("FamilyClaimRef", productShell.ShellTitle);
+        Assert.Collection(
+            productShell.NavigationItems,
+            item => Assert.Equal("홈", item.DisplayText),
+            item => Assert.Equal("문서 등록", item.DisplayText),
+            item => Assert.Equal("문서 목록", item.DisplayText));
+        Assert.Equal("문서 목록", productShell.DocumentList.Title);
+        Assert.Equal("등록된 문서가 없습니다.", productShell.DocumentList.EmptyMessage);
+        Assert.Equal("문서 목록을 불러오지 못했습니다.", productShell.DocumentList.LoadFailedMessage);
+    }
+
+    [Fact]
     public void Create_does_not_create_project_root_attachment_or_data_files()
     {
         var projectRoot = FindProjectRoot();
@@ -43,6 +89,7 @@ public sealed class AppServicesTests
         var dataLocalAfter = SnapshotFiles(Path.Combine(projectRoot, "data", "local"));
         Assert.Equal(attachmentsBefore, attachmentsAfter);
         Assert.Equal(dataLocalBefore, dataLocalAfter);
+        Assert.False(Directory.Exists(runtimeRoot));
     }
 
     [Fact]
@@ -68,6 +115,18 @@ public sealed class AppServicesTests
         }
 
         throw new InvalidOperationException("Project root was not found.");
+    }
+
+    private static AppServices CreateServices()
+    {
+        var runtimeRoot = Path.Combine(
+            Path.GetTempPath(),
+            "FamilyClaimRef.App.Tests",
+            "composition",
+            Guid.NewGuid().ToString("N"));
+
+        return AppServices.Create(
+            new StubRuntimeRootProvider(RuntimeRootPaths.FromRuntimeRoot(runtimeRoot)));
     }
 
     private static string[] SnapshotFiles(string directoryPath)
