@@ -13,6 +13,7 @@
     <sys:String x:Key="Ui.Product.DocumentRegistration.ClaimTargetLabel">청구 건</sys:String>
     <sys:String x:Key="Ui.Product.DocumentList.Title">문서 목록</sys:String>
     <sys:String x:Key="Ui.Product.DocumentList.EmptyMessage">등록된 문서가 없습니다.</sys:String>
+    <sys:String x:Key="Ui.Product.DocumentList.LoadFailedMessage">문서 목록을 불러오지 못했습니다.</sys:String>
     <sys:String x:Key="Ui.Document.SourceFileSection">원본 파일</sys:String>
     <sys:String x:Key="Ui.Document.SelectedFileLabel">선택한 파일</sys:String>
     <sys:String x:Key="Ui.Document.MetadataSection">문서 정보</sys:String>

@@ -15,6 +15,11 @@
                 DataContext="{Binding DataContext.DocumentRegistration, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
         </DataTemplate>
 
+        <DataTemplate x:Key="DocumentListContentTemplate">
+            <views:ProductDocumentListView
+                DataContext="{Binding DataContext.DocumentList, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+        </DataTemplate>
+
         <DataTemplate x:Key="FallbackContentTemplate">
             <TextBlock Text="{Binding DisplayText}"
                        FontSize="18"
@@ -62,6 +67,11 @@
                                      Value="DocumentRegistration">
                             <Setter Property="ContentTemplate"
                                     Value="{StaticResource DocumentRegistrationContentTemplate}" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Content.Id, RelativeSource={RelativeSource Self}}"
+                                     Value="DocumentList">
+                            <Setter Property="ContentTemplate"
+                                    Value="{StaticResource DocumentListContentTemplate}" />
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>

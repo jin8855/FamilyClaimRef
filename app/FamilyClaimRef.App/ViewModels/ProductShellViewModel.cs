@@ -11,13 +11,16 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
 
     public ProductShellViewModel(
         IUiTextProvider uiTextProvider,
-        DocumentRegistrationViewModel documentRegistration)
+        DocumentRegistrationViewModel documentRegistration,
+        ProductDocumentListViewModel documentList)
     {
         ArgumentNullException.ThrowIfNull(uiTextProvider);
         ArgumentNullException.ThrowIfNull(documentRegistration);
+        ArgumentNullException.ThrowIfNull(documentList);
 
         ShellTitle = uiTextProvider.Get(UiTextKeys.ProductShellTitle);
         DocumentRegistration = documentRegistration;
+        DocumentList = documentList;
         NavigationItems = Array.AsReadOnly(
         [
             new ProductNavigationItemViewModel(
@@ -38,6 +41,8 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
     public string ShellTitle { get; }
 
     public DocumentRegistrationViewModel DocumentRegistration { get; }
+
+    public ProductDocumentListViewModel DocumentList { get; }
 
     public ReadOnlyCollection<ProductNavigationItemViewModel> NavigationItems { get; }
 

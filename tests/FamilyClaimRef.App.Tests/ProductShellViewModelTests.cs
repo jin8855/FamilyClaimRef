@@ -13,8 +13,10 @@ public sealed class ProductShellViewModelTests
     {
         var uiTextProvider = CreateUiTextProvider();
         var documentRegistration = CreateDocumentRegistrationViewModel(uiTextProvider);
+        var documentList = CreateDocumentListViewModel(uiTextProvider);
 
-        var exception = Record.Exception(() => new ProductShellViewModel(null!, documentRegistration));
+        var exception = Record.Exception(
+            () => new ProductShellViewModel(null!, documentRegistration, documentList));
 
         Assert.IsType<ArgumentNullException>(exception);
     }
@@ -22,7 +24,25 @@ public sealed class ProductShellViewModelTests
     [Fact]
     public void Constructor_rejects_null_document_registration_view_model()
     {
-        var exception = Record.Exception(() => new ProductShellViewModel(CreateUiTextProvider(), null!));
+        var uiTextProvider = CreateUiTextProvider();
+        var exception = Record.Exception(
+            () => new ProductShellViewModel(
+                uiTextProvider,
+                null!,
+                CreateDocumentListViewModel(uiTextProvider)));
+
+        Assert.IsType<ArgumentNullException>(exception);
+    }
+
+    [Fact]
+    public void Constructor_rejects_null_document_list_view_model()
+    {
+        var uiTextProvider = CreateUiTextProvider();
+        var exception = Record.Exception(
+            () => new ProductShellViewModel(
+                uiTextProvider,
+                CreateDocumentRegistrationViewModel(uiTextProvider),
+                null!));
 
         Assert.IsType<ArgumentNullException>(exception);
     }
@@ -125,7 +145,8 @@ public sealed class ProductShellViewModelTests
         Assert.Collection(
             parameters,
             parameter => Assert.Equal(typeof(IUiTextProvider), parameter.ParameterType),
-            parameter => Assert.Equal(typeof(DocumentRegistrationViewModel), parameter.ParameterType));
+            parameter => Assert.Equal(typeof(DocumentRegistrationViewModel), parameter.ParameterType),
+            parameter => Assert.Equal(typeof(ProductDocumentListViewModel), parameter.ParameterType));
     }
 
     [Fact]
@@ -133,10 +154,23 @@ public sealed class ProductShellViewModelTests
     {
         var uiTextProvider = CreateUiTextProvider();
         var documentRegistration = CreateDocumentRegistrationViewModel(uiTextProvider);
+        var documentList = CreateDocumentListViewModel(uiTextProvider);
 
-        var viewModel = new ProductShellViewModel(uiTextProvider, documentRegistration);
+        var viewModel = new ProductShellViewModel(uiTextProvider, documentRegistration, documentList);
 
         Assert.Same(documentRegistration, viewModel.DocumentRegistration);
+    }
+
+    [Fact]
+    public void Document_list_property_exposes_injected_instance()
+    {
+        var uiTextProvider = CreateUiTextProvider();
+        var documentRegistration = CreateDocumentRegistrationViewModel(uiTextProvider);
+        var documentList = CreateDocumentListViewModel(uiTextProvider);
+
+        var viewModel = new ProductShellViewModel(uiTextProvider, documentRegistration, documentList);
+
+        Assert.Same(documentList, viewModel.DocumentList);
     }
 
     private static ProductShellViewModel CreateViewModel()
@@ -144,7 +178,24 @@ public sealed class ProductShellViewModelTests
         var uiTextProvider = CreateUiTextProvider();
         return new ProductShellViewModel(
             uiTextProvider,
-            CreateDocumentRegistrationViewModel(uiTextProvider));
+            CreateDocumentRegistrationViewModel(uiTextProvider),
+            CreateDocumentListViewModel(uiTextProvider));
+    }
+
+    private static ProductDocumentListViewModel CreateDocumentListViewModel(
+        IUiTextProvider uiTextProvider)
+    {
+        var metadataRoot = Path.Combine(
+            Path.GetTempPath(),
+            "FamilyClaimRef.App.Tests",
+            "ProductShellViewModelTests",
+            Guid.NewGuid().ToString("N"),
+            "data",
+            "local");
+
+        return new ProductDocumentListViewModel(
+            new JsonDocumentStorageService(metadataRoot),
+            uiTextProvider);
     }
 
     private static DocumentRegistrationViewModel CreateDocumentRegistrationViewModel(
@@ -180,7 +231,10 @@ public sealed class ProductShellViewModelTests
             [UiTextKeys.ProductShellTitle] = "FamilyClaimRef",
             [UiTextKeys.ProductNavigationHome] = "Home display",
             [UiTextKeys.ProductNavigationDocumentRegistration] = "Registration display",
-            [UiTextKeys.ProductNavigationDocumentList] = "List display"
+            [UiTextKeys.ProductNavigationDocumentList] = "List display",
+            [UiTextKeys.ProductDocumentListTitle] = "List title",
+            [UiTextKeys.ProductDocumentListEmptyMessage] = "List empty",
+            [UiTextKeys.ProductDocumentListLoadFailedMessage] = "List failed"
         });
     }
 

@@ -17,6 +17,7 @@ public static class UiTextKeys
         "Ui.Product.DocumentRegistration.ClaimTargetLabel";
     public const string ProductDocumentListTitle = "Ui.Product.DocumentList.Title";
     public const string ProductDocumentListEmptyMessage = "Ui.Product.DocumentList.EmptyMessage";
+    public const string ProductDocumentListLoadFailedMessage = "Ui.Product.DocumentList.LoadFailedMessage";
     public const string DocumentSourceFileSection = "Ui.Document.SourceFileSection";
     public const string DocumentSelectedFileLabel = "Ui.Document.SelectedFileLabel";
     public const string DocumentMetadataSection = "Ui.Document.MetadataSection";

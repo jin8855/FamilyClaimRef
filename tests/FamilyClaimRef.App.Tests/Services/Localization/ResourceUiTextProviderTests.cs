@@ -21,9 +21,9 @@ public sealed class ResourceUiTextProviderTests
     {
         var resources = LoadUiStrings();
 
-        Assert.Equal(67, resources.Count);
-        Assert.Equal(11, resources.Keys.Count(IsProductKey));
-        Assert.Equal(11, ExpectedProductResources.Count);
+        Assert.Equal(68, resources.Count);
+        Assert.Equal(12, resources.Keys.Count(IsProductKey));
+        Assert.Equal(12, ExpectedProductResources.Count);
         Assert.All(
             ExpectedProductResources,
             expected => Assert.Equal(expected.Value, resources[expected.Key]));
@@ -36,11 +36,11 @@ public sealed class ResourceUiTextProviderTests
         var resourceKeys = resourceEntries.Select(entry => entry.Key).ToArray();
         var constantValues = LoadUiTextKeyConstants();
 
-        Assert.Equal(67, resourceEntries.Count);
+        Assert.Equal(68, resourceEntries.Count);
         Assert.Equal(resourceKeys.Length, resourceKeys.Distinct(StringComparer.Ordinal).Count());
-        Assert.Equal(67, constantValues.Count);
+        Assert.Equal(68, constantValues.Count);
         Assert.Equal(constantValues.Count, constantValues.Distinct(StringComparer.Ordinal).Count());
-        Assert.Equal(11, constantValues.Count(IsProductKey));
+        Assert.Equal(12, constantValues.Count(IsProductKey));
         Assert.Equal(
             resourceKeys.OrderBy(key => key, StringComparer.Ordinal),
             constantValues.OrderBy(key => key, StringComparer.Ordinal));
@@ -172,6 +172,7 @@ public sealed class ResourceUiTextProviderTests
     [InlineData(UiTextKeys.ProductDocumentRegistrationTargetSelectionSection, "연결 대상 선택")]
     [InlineData(UiTextKeys.ProductDocumentRegistrationPolicyTargetLabel, "보험 계약")]
     [InlineData(UiTextKeys.ProductDocumentRegistrationClaimTargetLabel, "청구 건")]
+    [InlineData(UiTextKeys.ProductDocumentListLoadFailedMessage, "문서 목록을 불러오지 못했습니다.")]
     public void Approved_korean_copy_values_resolve_from_UiStrings(string key, string expected)
     {
         var resources = LoadUiStrings();
@@ -313,7 +314,8 @@ public sealed class ResourceUiTextProviderTests
             [UiTextKeys.ProductDocumentRegistrationPolicyTargetLabel] = "보험 계약",
             [UiTextKeys.ProductDocumentRegistrationClaimTargetLabel] = "청구 건",
             [UiTextKeys.ProductDocumentListTitle] = "문서 목록",
-            [UiTextKeys.ProductDocumentListEmptyMessage] = "등록된 문서가 없습니다."
+            [UiTextKeys.ProductDocumentListEmptyMessage] = "등록된 문서가 없습니다.",
+            [UiTextKeys.ProductDocumentListLoadFailedMessage] = "문서 목록을 불러오지 못했습니다."
         };
 
     private const string ExistingResourceFingerprint =
