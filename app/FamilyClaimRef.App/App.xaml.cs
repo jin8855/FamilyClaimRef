@@ -2,6 +2,8 @@
 using System.Data;
 using System.Windows;
 using FamilyClaimRef.App.Composition;
+using FamilyClaimRef.App.ProductShell;
+using FamilyClaimRef.App.Startup;
 
 namespace FamilyClaimRef.App;
 
@@ -14,14 +16,24 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        var startupMode = StartupWindowModeSelector.Select(e.Args);
         var services = AppServices.CreateDefault();
-        var window = new MainWindow
+        Window selectedWindow = startupMode switch
         {
-            DataContext = services.MainWindowViewModel
+            StartupWindowMode.MainWindow => new MainWindow
+            {
+                DataContext = services.MainWindowViewModel
+            },
+            StartupWindowMode.ProductShellPreview =>
+                new ProductShellWindow(services.ProductShellViewModel),
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(startupMode),
+                startupMode,
+                null)
         };
 
-        MainWindow = window;
-        window.Show();
+        MainWindow = selectedWindow;
+        selectedWindow.Show();
     }
 }
 
