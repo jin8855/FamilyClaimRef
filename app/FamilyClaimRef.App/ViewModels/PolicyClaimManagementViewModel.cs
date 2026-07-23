@@ -10,6 +10,7 @@ public sealed class PolicyClaimManagementViewModel : INotifyPropertyChanged
 {
     private readonly IPolicyClaimStorageService policyClaimStorageService;
     private readonly IUiTextProvider uiTextProvider;
+    private readonly SemaphoreSlim operationGate = new(1, 1);
 
     private IReadOnlyList<PolicyRecord> availablePolicies = [];
     private IReadOnlyList<ClaimRecord> availableClaims = [];
@@ -137,120 +138,262 @@ public sealed class PolicyClaimManagementViewModel : INotifyPropertyChanged
 
     public bool CanDisableClaim => !string.IsNullOrWhiteSpace(SelectedClaimId);
 
-    public async Task LoadAsync(CancellationToken cancellationToken = default)
+    public void ClearManagementMessage()
     {
-        var policies = await policyClaimStorageService.GetPoliciesAsync(cancellationToken);
-        var claims = await policyClaimStorageService.GetClaimsAsync(cancellationToken);
+        ManagementMessage = null;
+    }
 
-        AvailablePolicies = policies.ToList();
-        AvailableClaims = claims.ToList();
-
-        if (!AvailablePolicies.Any(policy => string.Equals(policy.Id, SelectedPolicyId, StringComparison.Ordinal)))
+    public async Task<bool> LoadAsync(CancellationToken cancellationToken = default)
+    {
+        await operationGate.WaitAsync(cancellationToken);
+        try
         {
-            SelectedPolicyId = null;
+            return await LoadCoreAsync(cancellationToken);
         }
-
-        if (!AvailableClaims.Any(claim => string.Equals(claim.Id, SelectedClaimId, StringComparison.Ordinal)))
+        finally
         {
-            SelectedClaimId = null;
-        }
-
-        if (!AvailablePolicies.Any(policy => string.Equals(policy.Id, SelectedPolicyForClaimId, StringComparison.Ordinal)))
-        {
-            SelectedPolicyForClaimId = AvailablePolicies.FirstOrDefault()?.Id;
+            operationGate.Release();
         }
     }
 
     public async Task<bool> CreatePolicyAsync(CancellationToken cancellationToken = default)
     {
-        var title = NormalizeOptionalTitle(NewPolicyDisplayTitle);
-        if (title is null)
+        await operationGate.WaitAsync(cancellationToken);
+        try
         {
-            ManagementMessage = uiTextProvider.Get(UiTextKeys.PolicyManagementValidationTitleRequired);
+            var title = NormalizeOptionalTitle(NewPolicyDisplayTitle);
+            if (title is null)
+            {
+                ManagementMessage = uiTextProvider.Get(UiTextKeys.PolicyManagementValidationTitleRequired);
+                return false;
+            }
+
+            var activePolicies = await policyClaimStorageService.GetPoliciesAsync(cancellationToken);
+            if (activePolicies.Any(policy => string.Equals(
+                    policy.DisplayTitle,
+                    title,
+                    StringComparison.OrdinalIgnoreCase)))
+            {
+                ManagementMessage = uiTextProvider.Get(UiTextKeys.ProductPolicyContractsDuplicateTitleMessage);
+                return false;
+            }
+
+            var policy = await policyClaimStorageService.AddPolicyAsync(
+                new PolicyDraft(title, DateOnly.FromDateTime(DateTime.Today)),
+                cancellationToken);
+
+            NewPolicyDisplayTitle = null;
+            if (await LoadCoreAsync(cancellationToken))
+            {
+                SelectedPolicyId = policy.Id;
+                SelectedPolicyForClaimId = policy.Id;
+                ManagementMessage = uiTextProvider.Get(UiTextKeys.PolicyManagementMessageCreated);
+            }
+
+            return true;
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch
+        {
+            ManagementMessage = uiTextProvider.Get(UiTextKeys.ProductPolicyContractsOperationFailedMessage);
             return false;
         }
-
-        var policy = await policyClaimStorageService.AddPolicyAsync(
-            new PolicyDraft(title, DateOnly.FromDateTime(DateTime.Today)),
-            cancellationToken);
-
-        NewPolicyDisplayTitle = null;
-        await LoadAsync(cancellationToken);
-        SelectedPolicyId = policy.Id;
-        SelectedPolicyForClaimId = policy.Id;
-        ManagementMessage = uiTextProvider.Get(UiTextKeys.PolicyManagementMessageCreated);
-
-        return true;
+        finally
+        {
+            operationGate.Release();
+        }
     }
 
     public async Task<bool> CreateClaimAsync(CancellationToken cancellationToken = default)
     {
-        var title = NormalizeOptionalTitle(NewClaimDisplayTitle);
-        if (title is null)
+        await operationGate.WaitAsync(cancellationToken);
+        try
         {
-            ManagementMessage = uiTextProvider.Get(UiTextKeys.ClaimManagementValidationTitleRequired);
+            var title = NormalizeOptionalTitle(NewClaimDisplayTitle);
+            if (title is null)
+            {
+                ManagementMessage = uiTextProvider.Get(UiTextKeys.ClaimManagementValidationTitleRequired);
+                return false;
+            }
+
+            var activePolicies = await policyClaimStorageService.GetPoliciesAsync(cancellationToken);
+            if (string.IsNullOrWhiteSpace(SelectedPolicyForClaimId)
+                || !activePolicies.Any(policy => string.Equals(
+                    policy.Id,
+                    SelectedPolicyForClaimId,
+                    StringComparison.Ordinal)))
+            {
+                ManagementMessage = uiTextProvider.Get(UiTextKeys.ClaimManagementValidationSelectPolicyBeforeCreate);
+                return false;
+            }
+
+            var activeClaims = await policyClaimStorageService.GetClaimsAsync(cancellationToken);
+            if (activeClaims.Any(claim => string.Equals(
+                    claim.DisplayTitle,
+                    title,
+                    StringComparison.OrdinalIgnoreCase)))
+            {
+                ManagementMessage = uiTextProvider.Get(UiTextKeys.ProductClaimCasesDuplicateTitleMessage);
+                return false;
+            }
+
+            var claim = await policyClaimStorageService.AddClaimAsync(
+                new ClaimDraft(
+                    SelectedPolicyForClaimId,
+                    title,
+                    DateOnly.FromDateTime(DateTime.Today)),
+                cancellationToken);
+
+            NewClaimDisplayTitle = null;
+            if (await LoadCoreAsync(cancellationToken))
+            {
+                SelectedClaimId = claim.Id;
+                ManagementMessage = uiTextProvider.Get(UiTextKeys.ClaimManagementMessageCreated);
+            }
+
+            return true;
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch
+        {
+            ManagementMessage = uiTextProvider.Get(UiTextKeys.ProductClaimCasesOperationFailedMessage);
             return false;
         }
-
-        if (string.IsNullOrWhiteSpace(SelectedPolicyForClaimId)
-            || !AvailablePolicies.Any(policy => string.Equals(policy.Id, SelectedPolicyForClaimId, StringComparison.Ordinal)))
+        finally
         {
-            ManagementMessage = uiTextProvider.Get(UiTextKeys.ClaimManagementValidationSelectPolicyBeforeCreate);
-            return false;
+            operationGate.Release();
         }
-
-        var claim = await policyClaimStorageService.AddClaimAsync(
-            new ClaimDraft(
-                SelectedPolicyForClaimId,
-                title,
-                DateOnly.FromDateTime(DateTime.Today)),
-            cancellationToken);
-
-        NewClaimDisplayTitle = null;
-        await LoadAsync(cancellationToken);
-        SelectedClaimId = claim.Id;
-        ManagementMessage = uiTextProvider.Get(UiTextKeys.ClaimManagementMessageCreated);
-
-        return true;
     }
 
     public async Task<bool> DisableSelectedPolicyAsync(CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(SelectedPolicyId))
+        await operationGate.WaitAsync(cancellationToken);
+        try
         {
-            ManagementMessage = uiTextProvider.Get(UiTextKeys.PolicyManagementValidationSelectPolicyTarget);
+            if (string.IsNullOrWhiteSpace(SelectedPolicyId))
+            {
+                ManagementMessage = uiTextProvider.Get(UiTextKeys.PolicyManagementValidationSelectPolicyTarget);
+                return false;
+            }
+
+            var activeClaims = await policyClaimStorageService.GetClaimsByPolicyIdAsync(
+                SelectedPolicyId,
+                cancellationToken);
+            if (activeClaims.Count > 0)
+            {
+                ManagementMessage =
+                    uiTextProvider.Get(UiTextKeys.PolicyManagementValidationDisableBlockedByActiveClaims);
+                return false;
+            }
+
+            await policyClaimStorageService.DisablePolicyAsync(SelectedPolicyId, cancellationToken);
+            if (await LoadCoreAsync(cancellationToken))
+            {
+                ManagementMessage = uiTextProvider.Get(UiTextKeys.PolicyManagementMessageDisabled);
+            }
+
+            return true;
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch
+        {
+            ManagementMessage = uiTextProvider.Get(UiTextKeys.ProductPolicyContractsOperationFailedMessage);
             return false;
         }
-
-        var activeClaims = await policyClaimStorageService.GetClaimsByPolicyIdAsync(
-            SelectedPolicyId,
-            cancellationToken);
-        if (activeClaims.Count > 0)
+        finally
         {
-            ManagementMessage = uiTextProvider.Get(UiTextKeys.PolicyManagementValidationDisableBlockedByActiveClaims);
-            return false;
+            operationGate.Release();
         }
-
-        await policyClaimStorageService.DisablePolicyAsync(SelectedPolicyId, cancellationToken);
-        await LoadAsync(cancellationToken);
-        ManagementMessage = uiTextProvider.Get(UiTextKeys.PolicyManagementMessageDisabled);
-
-        return true;
     }
 
     public async Task<bool> DisableSelectedClaimAsync(CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(SelectedClaimId))
+        await operationGate.WaitAsync(cancellationToken);
+        try
         {
-            ManagementMessage = uiTextProvider.Get(UiTextKeys.ClaimManagementValidationSelectClaimTarget);
+            if (string.IsNullOrWhiteSpace(SelectedClaimId))
+            {
+                ManagementMessage = uiTextProvider.Get(UiTextKeys.ClaimManagementValidationSelectClaimTarget);
+                return false;
+            }
+
+            await policyClaimStorageService.DisableClaimAsync(SelectedClaimId, cancellationToken);
+            if (await LoadCoreAsync(cancellationToken))
+            {
+                ManagementMessage = uiTextProvider.Get(UiTextKeys.ClaimManagementMessageDisabled);
+            }
+
+            return true;
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch
+        {
+            ManagementMessage = uiTextProvider.Get(UiTextKeys.ProductClaimCasesOperationFailedMessage);
             return false;
         }
+        finally
+        {
+            operationGate.Release();
+        }
+    }
 
-        await policyClaimStorageService.DisableClaimAsync(SelectedClaimId, cancellationToken);
-        await LoadAsync(cancellationToken);
-        ManagementMessage = uiTextProvider.Get(UiTextKeys.ClaimManagementMessageDisabled);
+    private async Task<bool> LoadCoreAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var policies = await policyClaimStorageService.GetPoliciesAsync(cancellationToken);
+            var claims = await policyClaimStorageService.GetClaimsAsync(cancellationToken);
 
-        return true;
+            AvailablePolicies = policies.ToList();
+            AvailableClaims = claims.ToList();
+
+            if (!AvailablePolicies.Any(policy => string.Equals(
+                    policy.Id,
+                    SelectedPolicyId,
+                    StringComparison.Ordinal)))
+            {
+                SelectedPolicyId = null;
+            }
+
+            if (!AvailableClaims.Any(claim => string.Equals(
+                    claim.Id,
+                    SelectedClaimId,
+                    StringComparison.Ordinal)))
+            {
+                SelectedClaimId = null;
+            }
+
+            if (!AvailablePolicies.Any(policy => string.Equals(
+                    policy.Id,
+                    SelectedPolicyForClaimId,
+                    StringComparison.Ordinal)))
+            {
+                SelectedPolicyForClaimId = AvailablePolicies.FirstOrDefault()?.Id;
+            }
+
+            return true;
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch
+        {
+            ManagementMessage = uiTextProvider.Get(UiTextKeys.ProductManagementLoadFailedMessage);
+            return false;
+        }
     }
 
     private static string? NormalizeOptionalTitle(string? value)

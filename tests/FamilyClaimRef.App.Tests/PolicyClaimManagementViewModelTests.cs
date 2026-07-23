@@ -21,7 +21,7 @@ public sealed class PolicyClaimManagementViewModelTests
     public void Constructor_rejects_null_ui_text_provider()
     {
         var exception = Record.Exception(() => new PolicyClaimManagementViewModel(
-            new FakePolicyClaimStorageService(),
+            new TestPolicyClaimStorageService(),
             null!));
 
         Assert.IsType<ArgumentNullException>(exception);
@@ -37,8 +37,9 @@ public sealed class PolicyClaimManagementViewModelTests
             var claim = await service.AddClaimAsync(CreateClaimDraft(policy.Id, "claim_title_demo"));
             var viewModel = new PolicyClaimManagementViewModel(service, CreateUiTextProvider());
 
-            await viewModel.LoadAsync();
+            var loaded = await viewModel.LoadAsync();
 
+            Assert.True(loaded);
             Assert.Equal(policy.Id, Assert.Single(viewModel.AvailablePolicies).Id);
             Assert.Equal(claim.Id, Assert.Single(viewModel.AvailableClaims).Id);
             Assert.Equal(policy.Id, viewModel.SelectedPolicyForClaimId);
@@ -66,7 +67,7 @@ public sealed class PolicyClaimManagementViewModelTests
             Assert.Equal(policy.Id, viewModel.SelectedPolicyId);
             Assert.Equal(policy.Id, viewModel.SelectedPolicyForClaimId);
             Assert.Null(viewModel.NewPolicyDisplayTitle);
-            Assert.Equal("Policy target was created.", viewModel.ManagementMessage);
+            Assert.Equal("보험 계약을 등록했습니다.", viewModel.ManagementMessage);
         });
     }
 
@@ -85,7 +86,7 @@ public sealed class PolicyClaimManagementViewModelTests
 
             Assert.False(created);
             Assert.Empty(viewModel.AvailablePolicies);
-            Assert.Equal("Policy target title is required.", viewModel.ManagementMessage);
+            Assert.Equal("보험 계약 이름을 입력해 주세요.", viewModel.ManagementMessage);
         });
     }
 
@@ -107,7 +108,7 @@ public sealed class PolicyClaimManagementViewModelTests
 
             Assert.True(disabled);
             Assert.Empty(viewModel.AvailablePolicies);
-            Assert.Equal("Policy target was disabled.", viewModel.ManagementMessage);
+            Assert.Equal("보험 계약을 사용 중지했습니다.", viewModel.ManagementMessage);
         });
     }
 
@@ -131,7 +132,7 @@ public sealed class PolicyClaimManagementViewModelTests
             Assert.False(disabled);
             Assert.Single(viewModel.AvailablePolicies);
             Assert.Equal(
-                "Policy target has active claim targets. Disable claim targets first.",
+                "활성 청구 건이 있어 보험 계약을 사용 중지할 수 없습니다. 청구 건을 먼저 사용 중지해 주세요.",
                 viewModel.ManagementMessage);
         });
     }
@@ -151,7 +152,7 @@ public sealed class PolicyClaimManagementViewModelTests
 
             Assert.False(created);
             Assert.Empty(viewModel.AvailableClaims);
-            Assert.Equal("Select an active policy target before creating a claim target.", viewModel.ManagementMessage);
+            Assert.Equal("청구 건을 등록할 보험 계약을 선택해 주세요.", viewModel.ManagementMessage);
         });
     }
 
@@ -175,7 +176,7 @@ public sealed class PolicyClaimManagementViewModelTests
             Assert.Equal("claim_title_demo", claim.DisplayTitle);
             Assert.Equal(claim.Id, viewModel.SelectedClaimId);
             Assert.Null(viewModel.NewClaimDisplayTitle);
-            Assert.Equal("Claim target was created.", viewModel.ManagementMessage);
+            Assert.Equal("청구 건을 등록했습니다.", viewModel.ManagementMessage);
         });
     }
 
@@ -195,7 +196,7 @@ public sealed class PolicyClaimManagementViewModelTests
 
             Assert.False(created);
             Assert.Empty(viewModel.AvailableClaims);
-            Assert.Equal("Claim target title is required.", viewModel.ManagementMessage);
+            Assert.Equal("청구 건 이름을 입력해 주세요.", viewModel.ManagementMessage);
         });
     }
 
@@ -215,7 +216,7 @@ public sealed class PolicyClaimManagementViewModelTests
 
             Assert.True(disabled);
             Assert.Empty(viewModel.AvailableClaims);
-            Assert.Equal("Claim target was disabled.", viewModel.ManagementMessage);
+            Assert.Equal("청구 건을 사용 중지했습니다.", viewModel.ManagementMessage);
         });
     }
 
@@ -244,6 +245,228 @@ public sealed class PolicyClaimManagementViewModelTests
             Assert.Null(viewModel.SelectedClaimId);
             Assert.Null(viewModel.SelectedPolicyForClaimId);
         });
+    }
+
+    [Fact]
+    public async Task Repeated_load_replaces_collections_without_duplicate_rows()
+    {
+        var service = new TestPolicyClaimStorageService();
+        var policy = service.SeedPolicy("policy_title_demo");
+        var claim = service.SeedClaim(policy.Id, "claim_title_demo");
+        var viewModel = new PolicyClaimManagementViewModel(service, CreateUiTextProvider());
+
+        var firstLoaded = await viewModel.LoadAsync();
+        var secondLoaded = await viewModel.LoadAsync();
+
+        Assert.True(firstLoaded);
+        Assert.True(secondLoaded);
+        Assert.Equal(policy.Id, Assert.Single(viewModel.AvailablePolicies).Id);
+        Assert.Equal(claim.Id, Assert.Single(viewModel.AvailableClaims).Id);
+    }
+
+    [Fact]
+    public async Task ClearManagementMessage_preserves_inputs_selections_and_collections()
+    {
+        var service = new TestPolicyClaimStorageService();
+        var policy = service.SeedPolicy("policy_title_demo");
+        var claim = service.SeedClaim(policy.Id, "claim_title_demo");
+        var viewModel = new PolicyClaimManagementViewModel(service, CreateUiTextProvider());
+        await viewModel.LoadAsync();
+        viewModel.SelectedPolicyId = policy.Id;
+        viewModel.SelectedClaimId = claim.Id;
+        viewModel.NewPolicyDisplayTitle = "pending_policy_title";
+        viewModel.NewClaimDisplayTitle = "pending_claim_title";
+        viewModel.SelectedClaimId = null;
+        await viewModel.DisableSelectedClaimAsync();
+        viewModel.SelectedClaimId = claim.Id;
+
+        viewModel.ClearManagementMessage();
+
+        Assert.Null(viewModel.ManagementMessage);
+        Assert.Equal("pending_policy_title", viewModel.NewPolicyDisplayTitle);
+        Assert.Equal("pending_claim_title", viewModel.NewClaimDisplayTitle);
+        Assert.Equal(policy.Id, viewModel.SelectedPolicyId);
+        Assert.Equal(policy.Id, viewModel.SelectedPolicyForClaimId);
+        Assert.Equal(claim.Id, viewModel.SelectedClaimId);
+        Assert.Single(viewModel.AvailablePolicies);
+        Assert.Single(viewModel.AvailableClaims);
+    }
+
+    [Fact]
+    public async Task LoadAsync_storage_failure_returns_false_and_hides_diagnostics()
+    {
+        var service = new TestPolicyClaimStorageService
+        {
+            ThrowOnPolicyRead = true
+        };
+        var viewModel = new PolicyClaimManagementViewModel(service, CreateUiTextProvider());
+
+        var loaded = await viewModel.LoadAsync();
+
+        Assert.False(loaded);
+        Assert.Equal(
+            "목록을 불러오지 못했습니다. 다시 시도해 주세요.",
+            viewModel.ManagementMessage);
+        Assert.DoesNotContain("internal-storage-detail", viewModel.ManagementMessage, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task CreatePolicyAsync_rejects_trimmed_case_insensitive_active_duplicate()
+    {
+        var service = new TestPolicyClaimStorageService();
+        service.SeedPolicy("policy_title_demo");
+        var viewModel = new PolicyClaimManagementViewModel(service, CreateUiTextProvider())
+        {
+            NewPolicyDisplayTitle = "  POLICY_TITLE_DEMO  "
+        };
+
+        var created = await viewModel.CreatePolicyAsync();
+
+        Assert.False(created);
+        Assert.Equal("  POLICY_TITLE_DEMO  ", viewModel.NewPolicyDisplayTitle);
+        Assert.Equal(0, service.AddPolicyCallCount);
+        Assert.Equal(
+            "같은 이름의 활성 보험 계약이 이미 있습니다.",
+            viewModel.ManagementMessage);
+    }
+
+    [Fact]
+    public async Task CreateClaimAsync_rejects_global_active_duplicate_across_policies()
+    {
+        var service = new TestPolicyClaimStorageService();
+        var firstPolicy = service.SeedPolicy("first_policy");
+        var secondPolicy = service.SeedPolicy("second_policy");
+        service.SeedClaim(firstPolicy.Id, "claim_title_demo");
+        var viewModel = new PolicyClaimManagementViewModel(service, CreateUiTextProvider())
+        {
+            SelectedPolicyForClaimId = secondPolicy.Id,
+            NewClaimDisplayTitle = "  CLAIM_TITLE_DEMO "
+        };
+
+        var created = await viewModel.CreateClaimAsync();
+
+        Assert.False(created);
+        Assert.Equal("  CLAIM_TITLE_DEMO ", viewModel.NewClaimDisplayTitle);
+        Assert.Equal(0, service.AddClaimCallCount);
+        Assert.Equal(
+            "같은 이름의 활성 청구 건이 이미 있습니다.",
+            viewModel.ManagementMessage);
+    }
+
+    [Fact]
+    public async Task Disabled_policy_and_claim_titles_can_be_reused()
+    {
+        await UsingTempRootAsync(async rootPath =>
+        {
+            var service = new JsonPolicyClaimStorageService(rootPath);
+            var firstPolicy = await service.AddPolicyAsync(CreatePolicyDraft("reusable_policy"));
+            var firstClaim = await service.AddClaimAsync(CreateClaimDraft(firstPolicy.Id, "reusable_claim"));
+            await service.DisableClaimAsync(firstClaim.Id);
+            await service.DisablePolicyAsync(firstPolicy.Id);
+            var viewModel = new PolicyClaimManagementViewModel(service, CreateUiTextProvider())
+            {
+                NewPolicyDisplayTitle = "REUSABLE_POLICY"
+            };
+
+            Assert.True(await viewModel.CreatePolicyAsync());
+            viewModel.NewClaimDisplayTitle = "REUSABLE_CLAIM";
+            Assert.True(await viewModel.CreateClaimAsync());
+
+            Assert.Equal("REUSABLE_POLICY", Assert.Single(viewModel.AvailablePolicies).DisplayTitle);
+            Assert.Equal("REUSABLE_CLAIM", Assert.Single(viewModel.AvailableClaims).DisplayTitle);
+        });
+    }
+
+    [Fact]
+    public async Task Policy_mutation_failure_keeps_input_and_uses_safe_message()
+    {
+        var service = new TestPolicyClaimStorageService
+        {
+            ThrowOnPolicyAdd = true
+        };
+        var viewModel = new PolicyClaimManagementViewModel(service, CreateUiTextProvider())
+        {
+            NewPolicyDisplayTitle = "pending_policy_title"
+        };
+
+        var created = await viewModel.CreatePolicyAsync();
+
+        Assert.False(created);
+        Assert.Equal("pending_policy_title", viewModel.NewPolicyDisplayTitle);
+        Assert.Equal(
+            "보험 계약을 처리하지 못했습니다. 다시 시도해 주세요.",
+            viewModel.ManagementMessage);
+        Assert.DoesNotContain("internal-storage-detail", viewModel.ManagementMessage, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Claim_mutation_failure_keeps_input_and_uses_safe_message()
+    {
+        var service = new TestPolicyClaimStorageService
+        {
+            ThrowOnClaimAdd = true
+        };
+        var policy = service.SeedPolicy("policy_title_demo");
+        var viewModel = new PolicyClaimManagementViewModel(service, CreateUiTextProvider())
+        {
+            SelectedPolicyForClaimId = policy.Id,
+            NewClaimDisplayTitle = "pending_claim_title"
+        };
+
+        var created = await viewModel.CreateClaimAsync();
+
+        Assert.False(created);
+        Assert.Equal("pending_claim_title", viewModel.NewClaimDisplayTitle);
+        Assert.Equal(
+            "청구 건을 처리하지 못했습니다. 다시 시도해 주세요.",
+            viewModel.ManagementMessage);
+        Assert.DoesNotContain("internal-storage-detail", viewModel.ManagementMessage, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Successful_mutation_with_refresh_failure_returns_true_and_keeps_load_error()
+    {
+        var service = new TestPolicyClaimStorageService
+        {
+            ThrowOnPolicyReadAfterPolicyAdd = true
+        };
+        var viewModel = new PolicyClaimManagementViewModel(service, CreateUiTextProvider())
+        {
+            NewPolicyDisplayTitle = "policy_title_demo"
+        };
+
+        var created = await viewModel.CreatePolicyAsync();
+
+        Assert.True(created);
+        Assert.Null(viewModel.NewPolicyDisplayTitle);
+        Assert.Equal(
+            "목록을 불러오지 못했습니다. 다시 시도해 주세요.",
+            viewModel.ManagementMessage);
+        Assert.Equal(1, service.AddPolicyCallCount);
+    }
+
+    [Fact]
+    public async Task Parallel_same_instance_policy_creates_are_serialized()
+    {
+        var service = new TestPolicyClaimStorageService
+        {
+            PausePolicyAdd = true
+        };
+        var viewModel = new PolicyClaimManagementViewModel(service, CreateUiTextProvider())
+        {
+            NewPolicyDisplayTitle = "policy_title_demo"
+        };
+
+        var firstCreate = viewModel.CreatePolicyAsync();
+        await service.WaitForPolicyAddAsync();
+        var secondCreate = viewModel.CreatePolicyAsync();
+        service.ReleasePolicyAdd();
+
+        var results = await Task.WhenAll(firstCreate, secondCreate);
+
+        Assert.Equal([true, false], results);
+        Assert.Equal(1, service.AddPolicyCallCount);
+        Assert.Single(viewModel.AvailablePolicies);
     }
 
     [Fact]
@@ -334,18 +557,29 @@ public sealed class PolicyClaimManagementViewModelTests
     {
         return new ResourceUiTextProvider(new Dictionary<string, string>(StringComparer.Ordinal)
         {
-            [UiTextKeys.ClaimManagementMessageCreated] = "Claim target was created.",
-            [UiTextKeys.ClaimManagementMessageDisabled] = "Claim target was disabled.",
-            [UiTextKeys.ClaimManagementValidationTitleRequired] = "Claim target title is required.",
-            [UiTextKeys.PolicyManagementMessageCreated] = "Policy target was created.",
-            [UiTextKeys.PolicyManagementMessageDisabled] = "Policy target was disabled.",
+            [UiTextKeys.ClaimManagementMessageCreated] = "청구 건을 등록했습니다.",
+            [UiTextKeys.ClaimManagementMessageDisabled] = "청구 건을 사용 중지했습니다.",
+            [UiTextKeys.ClaimManagementValidationTitleRequired] = "청구 건 이름을 입력해 주세요.",
+            [UiTextKeys.PolicyManagementMessageCreated] = "보험 계약을 등록했습니다.",
+            [UiTextKeys.PolicyManagementMessageDisabled] = "보험 계약을 사용 중지했습니다.",
             [UiTextKeys.PolicyManagementValidationDisableBlockedByActiveClaims] =
-                "Policy target has active claim targets. Disable claim targets first.",
+                "활성 청구 건이 있어 보험 계약을 사용 중지할 수 없습니다. 청구 건을 먼저 사용 중지해 주세요.",
             [UiTextKeys.ClaimManagementValidationSelectPolicyBeforeCreate] =
-                "Select an active policy target before creating a claim target.",
-            [UiTextKeys.PolicyManagementValidationTitleRequired] = "Policy target title is required.",
-            [UiTextKeys.ClaimManagementValidationSelectClaimTarget] = "Select a claim target.",
-            [UiTextKeys.PolicyManagementValidationSelectPolicyTarget] = "Select a policy target."
+                "청구 건을 등록할 보험 계약을 선택해 주세요.",
+            [UiTextKeys.PolicyManagementValidationTitleRequired] = "보험 계약 이름을 입력해 주세요.",
+            [UiTextKeys.ClaimManagementValidationSelectClaimTarget] = "사용 중지할 청구 건을 선택해 주세요.",
+            [UiTextKeys.PolicyManagementValidationSelectPolicyTarget] =
+                "사용 중지할 보험 계약을 선택해 주세요.",
+            [UiTextKeys.ProductManagementLoadFailedMessage] =
+                "목록을 불러오지 못했습니다. 다시 시도해 주세요.",
+            [UiTextKeys.ProductPolicyContractsOperationFailedMessage] =
+                "보험 계약을 처리하지 못했습니다. 다시 시도해 주세요.",
+            [UiTextKeys.ProductClaimCasesOperationFailedMessage] =
+                "청구 건을 처리하지 못했습니다. 다시 시도해 주세요.",
+            [UiTextKeys.ProductPolicyContractsDuplicateTitleMessage] =
+                "같은 이름의 활성 보험 계약이 이미 있습니다.",
+            [UiTextKeys.ProductClaimCasesDuplicateTitleMessage] =
+                "같은 이름의 활성 청구 건이 이미 있습니다."
         });
     }
 
@@ -421,63 +655,265 @@ public sealed class PolicyClaimManagementViewModelTests
             .ToArray();
     }
 
-    private sealed class FakePolicyClaimStorageService : IPolicyClaimStorageService
+    private sealed class TestPolicyClaimStorageService : IPolicyClaimStorageService
     {
+        private readonly object syncRoot = new();
+        private readonly List<PolicyRecord> policies = [];
+        private readonly List<ClaimRecord> claims = [];
+        private readonly TaskCompletionSource<bool> policyAddStarted =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource<bool> policyAddRelease =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private int policySequence;
+        private int claimSequence;
+
+        public bool ThrowOnPolicyRead { get; init; }
+
+        public bool ThrowOnClaimRead { get; init; }
+
+        public bool ThrowOnPolicyReadAfterPolicyAdd { get; init; }
+
+        public bool ThrowOnPolicyAdd { get; init; }
+
+        public bool ThrowOnClaimAdd { get; init; }
+
+        public bool PausePolicyAdd { get; init; }
+
+        public int AddPolicyCallCount { get; private set; }
+
+        public int AddClaimCallCount { get; private set; }
+
+        public PolicyRecord SeedPolicy(string displayTitle)
+        {
+            var now = DateTimeOffset.UtcNow;
+            var policy = new PolicyRecord(
+                $"policy-{++policySequence}",
+                displayTitle,
+                new DateOnly(2026, 7, 1),
+                now,
+                now,
+                null);
+
+            lock (syncRoot)
+            {
+                policies.Add(policy);
+            }
+
+            return policy;
+        }
+
+        public ClaimRecord SeedClaim(string policyId, string displayTitle)
+        {
+            var now = DateTimeOffset.UtcNow;
+            var claim = new ClaimRecord(
+                $"claim-{++claimSequence}",
+                policyId,
+                displayTitle,
+                new DateOnly(2026, 7, 1),
+                now,
+                now,
+                null);
+
+            lock (syncRoot)
+            {
+                claims.Add(claim);
+            }
+
+            return claim;
+        }
+
+        public Task WaitForPolicyAddAsync()
+        {
+            return policyAddStarted.Task;
+        }
+
+        public void ReleasePolicyAdd()
+        {
+            policyAddRelease.TrySetResult(true);
+        }
+
         public Task<IReadOnlyList<PolicyRecord>> GetPoliciesAsync(CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            cancellationToken.ThrowIfCancellationRequested();
+            if (ThrowOnPolicyRead
+                || (ThrowOnPolicyReadAfterPolicyAdd && AddPolicyCallCount > 0))
+            {
+                throw CreateStorageException();
+            }
+
+            lock (syncRoot)
+            {
+                return Task.FromResult<IReadOnlyList<PolicyRecord>>(
+                    policies.Where(policy => policy.DisabledAt is null).ToArray());
+            }
         }
 
         public Task<PolicyRecord?> GetPolicyAsync(string id, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            cancellationToken.ThrowIfCancellationRequested();
+            lock (syncRoot)
+            {
+                return Task.FromResult(
+                    policies.FirstOrDefault(policy =>
+                        policy.DisabledAt is null
+                        && string.Equals(policy.Id, id, StringComparison.Ordinal)));
+            }
         }
 
-        public Task<PolicyRecord> AddPolicyAsync(PolicyDraft draft, CancellationToken cancellationToken = default)
+        public async Task<PolicyRecord> AddPolicyAsync(
+            PolicyDraft draft,
+            CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            lock (syncRoot)
+            {
+                AddPolicyCallCount++;
+            }
+
+            policyAddStarted.TrySetResult(true);
+            if (PausePolicyAdd)
+            {
+                await policyAddRelease.Task.WaitAsync(cancellationToken);
+            }
+
+            if (ThrowOnPolicyAdd)
+            {
+                throw CreateStorageException();
+            }
+
+            return SeedPolicy(draft.DisplayTitle);
         }
 
         public Task<PolicyRecord> DisablePolicyAsync(string id, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            cancellationToken.ThrowIfCancellationRequested();
+            lock (syncRoot)
+            {
+                var index = policies.FindIndex(policy =>
+                    policy.DisabledAt is null
+                    && string.Equals(policy.Id, id, StringComparison.Ordinal));
+                if (index < 0)
+                {
+                    throw new KeyNotFoundException(id);
+                }
+
+                var disabled = policies[index] with
+                {
+                    DisabledAt = DateTimeOffset.UtcNow,
+                    UpdatedAt = DateTimeOffset.UtcNow
+                };
+                policies[index] = disabled;
+                return Task.FromResult(disabled);
+            }
         }
 
         public Task<IReadOnlyList<ClaimRecord>> GetClaimsAsync(CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            cancellationToken.ThrowIfCancellationRequested();
+            if (ThrowOnClaimRead)
+            {
+                throw CreateStorageException();
+            }
+
+            lock (syncRoot)
+            {
+                return Task.FromResult<IReadOnlyList<ClaimRecord>>(
+                    claims.Where(claim => claim.DisabledAt is null).ToArray());
+            }
         }
 
         public Task<IReadOnlyList<ClaimRecord>> GetClaimsByPolicyIdAsync(
             string policyId,
             CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            cancellationToken.ThrowIfCancellationRequested();
+            lock (syncRoot)
+            {
+                return Task.FromResult<IReadOnlyList<ClaimRecord>>(
+                    claims
+                        .Where(claim =>
+                            claim.DisabledAt is null
+                            && string.Equals(claim.PolicyId, policyId, StringComparison.Ordinal))
+                        .ToArray());
+            }
         }
 
         public Task<ClaimRecord?> GetClaimAsync(string id, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            cancellationToken.ThrowIfCancellationRequested();
+            lock (syncRoot)
+            {
+                return Task.FromResult(
+                    claims.FirstOrDefault(claim =>
+                        claim.DisabledAt is null
+                        && string.Equals(claim.Id, id, StringComparison.Ordinal)));
+            }
         }
 
         public Task<ClaimRecord> AddClaimAsync(ClaimDraft draft, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            cancellationToken.ThrowIfCancellationRequested();
+            lock (syncRoot)
+            {
+                AddClaimCallCount++;
+            }
+
+            if (ThrowOnClaimAdd)
+            {
+                throw CreateStorageException();
+            }
+
+            return Task.FromResult(SeedClaim(draft.PolicyId, draft.DisplayTitle));
         }
 
         public Task<ClaimRecord> DisableClaimAsync(string id, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            cancellationToken.ThrowIfCancellationRequested();
+            lock (syncRoot)
+            {
+                var index = claims.FindIndex(claim =>
+                    claim.DisabledAt is null
+                    && string.Equals(claim.Id, id, StringComparison.Ordinal));
+                if (index < 0)
+                {
+                    throw new KeyNotFoundException(id);
+                }
+
+                var disabled = claims[index] with
+                {
+                    DisabledAt = DateTimeOffset.UtcNow,
+                    UpdatedAt = DateTimeOffset.UtcNow
+                };
+                claims[index] = disabled;
+                return Task.FromResult(disabled);
+            }
         }
 
         public Task<bool> PolicyExistsAsync(string id, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            cancellationToken.ThrowIfCancellationRequested();
+            lock (syncRoot)
+            {
+                return Task.FromResult(policies.Any(policy =>
+                    policy.DisabledAt is null
+                    && string.Equals(policy.Id, id, StringComparison.Ordinal)));
+            }
         }
 
         public Task<bool> ClaimExistsAsync(string id, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            cancellationToken.ThrowIfCancellationRequested();
+            lock (syncRoot)
+            {
+                return Task.FromResult(claims.Any(claim =>
+                    claim.DisabledAt is null
+                    && string.Equals(claim.Id, id, StringComparison.Ordinal)));
+            }
+        }
+
+        private static InvalidOperationException CreateStorageException()
+        {
+            return new InvalidOperationException(
+                "Synthetic internal-storage-detail that must not reach product copy.");
         }
     }
 

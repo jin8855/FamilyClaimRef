@@ -10,6 +10,16 @@
             <views:ProductHomeView />
         </DataTemplate>
 
+        <DataTemplate x:Key="PolicyContractsContentTemplate">
+            <views:ProductPolicyContractsView
+                DataContext="{Binding DataContext.PolicyClaimManagement, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+        </DataTemplate>
+
+        <DataTemplate x:Key="ClaimCasesContentTemplate">
+            <views:ProductClaimCasesView
+                DataContext="{Binding DataContext.PolicyClaimManagement, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+        </DataTemplate>
+
         <DataTemplate x:Key="DocumentRegistrationContentTemplate">
             <views:ProductDocumentRegistrationView
                 DataContext="{Binding DataContext.DocumentRegistration, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
@@ -62,6 +72,16 @@
                                      Value="Home">
                             <Setter Property="ContentTemplate"
                                     Value="{StaticResource HomeContentTemplate}" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Content.Id, RelativeSource={RelativeSource Self}}"
+                                     Value="PolicyContracts">
+                            <Setter Property="ContentTemplate"
+                                    Value="{StaticResource PolicyContractsContentTemplate}" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Content.Id, RelativeSource={RelativeSource Self}}"
+                                     Value="ClaimCases">
+                            <Setter Property="ContentTemplate"
+                                    Value="{StaticResource ClaimCasesContentTemplate}" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Content.Id, RelativeSource={RelativeSource Self}}"
                                      Value="DocumentRegistration">

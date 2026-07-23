@@ -39,6 +39,10 @@ public sealed class AppServicesTests
             services.MainWindowViewModel.DocumentRegistration,
             services.ProductShellViewModel.DocumentRegistration);
         Assert.NotNull(services.ProductShellViewModel.DocumentList);
+        Assert.NotNull(services.ProductShellViewModel.PolicyClaimManagement);
+        Assert.NotSame(
+            services.MainWindowViewModel.PolicyClaimManagement,
+            services.ProductShellViewModel.PolicyClaimManagement);
     }
 
     [Fact]
@@ -53,6 +57,9 @@ public sealed class AppServicesTests
             first.ProductShellViewModel.DocumentRegistration,
             second.ProductShellViewModel.DocumentRegistration);
         Assert.NotSame(first.ProductShellViewModel.DocumentList, second.ProductShellViewModel.DocumentList);
+        Assert.NotSame(
+            first.ProductShellViewModel.PolicyClaimManagement,
+            second.ProductShellViewModel.PolicyClaimManagement);
     }
 
     [Fact]
@@ -64,6 +71,8 @@ public sealed class AppServicesTests
         Assert.Collection(
             productShell.NavigationItems,
             item => Assert.Equal("홈", item.DisplayText),
+            item => Assert.Equal("보험 계약", item.DisplayText),
+            item => Assert.Equal("청구 건", item.DisplayText),
             item => Assert.Equal("문서 등록", item.DisplayText),
             item => Assert.Equal("문서 목록", item.DisplayText));
         Assert.Equal("문서 목록", productShell.DocumentList.Title);

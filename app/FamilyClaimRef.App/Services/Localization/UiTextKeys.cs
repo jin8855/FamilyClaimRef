@@ -5,9 +5,37 @@ public static class UiTextKeys
     public const string AppTitle = "Ui.App.Title";
     public const string ProductShellTitle = "Ui.Product.Shell.Title";
     public const string ProductNavigationHome = "Ui.Product.Navigation.Home";
+    public const string ProductNavigationPolicyContracts = "Ui.Product.Navigation.PolicyContracts";
+    public const string ProductNavigationClaimCases = "Ui.Product.Navigation.ClaimCases";
     public const string ProductNavigationDocumentRegistration = "Ui.Product.Navigation.DocumentRegistration";
     public const string ProductNavigationDocumentList = "Ui.Product.Navigation.DocumentList";
     public const string ProductHomeTitle = "Ui.Product.Home.Title";
+    public const string ProductPolicyContractsTitle = "Ui.Product.PolicyContracts.Title";
+    public const string ProductClaimCasesTitle = "Ui.Product.ClaimCases.Title";
+    public const string ProductPolicyContractsEmptyMessage = "Ui.Product.PolicyContracts.EmptyMessage";
+    public const string ProductClaimCasesEmptyMessage = "Ui.Product.ClaimCases.EmptyMessage";
+    public const string ProductPolicyContractsCreationSection = "Ui.Product.PolicyContracts.CreationSection";
+    public const string ProductClaimCasesCreationSection = "Ui.Product.ClaimCases.CreationSection";
+    public const string ProductPolicyContractsActiveListLabel = "Ui.Product.PolicyContracts.ActiveListLabel";
+    public const string ProductClaimCasesActiveListLabel = "Ui.Product.ClaimCases.ActiveListLabel";
+    public const string ProductPolicyContractsDisplayTitleLabel =
+        "Ui.Product.PolicyContracts.DisplayTitleLabel";
+    public const string ProductClaimCasesDisplayTitleLabel = "Ui.Product.ClaimCases.DisplayTitleLabel";
+    public const string ProductClaimCasesPolicyLabel = "Ui.Product.ClaimCases.PolicyLabel";
+    public const string ProductPolicyContractsCreateAction = "Ui.Product.PolicyContracts.CreateAction";
+    public const string ProductPolicyContractsDisableAction = "Ui.Product.PolicyContracts.DisableAction";
+    public const string ProductClaimCasesCreateAction = "Ui.Product.ClaimCases.CreateAction";
+    public const string ProductClaimCasesDisableAction = "Ui.Product.ClaimCases.DisableAction";
+    public const string ProductManagementStatusLabel = "Ui.Product.Management.StatusLabel";
+    public const string ProductManagementLoadFailedMessage = "Ui.Product.Management.LoadFailedMessage";
+    public const string ProductPolicyContractsOperationFailedMessage =
+        "Ui.Product.PolicyContracts.OperationFailedMessage";
+    public const string ProductClaimCasesOperationFailedMessage =
+        "Ui.Product.ClaimCases.OperationFailedMessage";
+    public const string ProductPolicyContractsDuplicateTitleMessage =
+        "Ui.Product.PolicyContracts.DuplicateTitleMessage";
+    public const string ProductClaimCasesDuplicateTitleMessage =
+        "Ui.Product.ClaimCases.DuplicateTitleMessage";
     public const string ProductDocumentRegistrationTitle = "Ui.Product.DocumentRegistration.Title";
     public const string ProductDocumentRegistrationTargetSelectionSection =
         "Ui.Product.DocumentRegistration.TargetSelectionSection";

@@ -21,9 +21,9 @@ public sealed class ResourceUiTextProviderTests
     {
         var resources = LoadUiStrings();
 
-        Assert.Equal(68, resources.Count);
-        Assert.Equal(12, resources.Keys.Count(IsProductKey));
-        Assert.Equal(12, ExpectedProductResources.Count);
+        Assert.Equal(91, resources.Count);
+        Assert.Equal(35, resources.Keys.Count(IsProductKey));
+        Assert.Equal(35, ExpectedProductResources.Count);
         Assert.All(
             ExpectedProductResources,
             expected => Assert.Equal(expected.Value, resources[expected.Key]));
@@ -36,11 +36,11 @@ public sealed class ResourceUiTextProviderTests
         var resourceKeys = resourceEntries.Select(entry => entry.Key).ToArray();
         var constantValues = LoadUiTextKeyConstants();
 
-        Assert.Equal(68, resourceEntries.Count);
+        Assert.Equal(91, resourceEntries.Count);
         Assert.Equal(resourceKeys.Length, resourceKeys.Distinct(StringComparer.Ordinal).Count());
-        Assert.Equal(68, constantValues.Count);
+        Assert.Equal(91, constantValues.Count);
         Assert.Equal(constantValues.Count, constantValues.Distinct(StringComparer.Ordinal).Count());
-        Assert.Equal(12, constantValues.Count(IsProductKey));
+        Assert.Equal(35, constantValues.Count(IsProductKey));
         Assert.Equal(
             resourceKeys.OrderBy(key => key, StringComparer.Ordinal),
             constantValues.OrderBy(key => key, StringComparer.Ordinal));
@@ -119,7 +119,7 @@ public sealed class ResourceUiTextProviderTests
         var keys = RuntimeMessageKeys;
 
         Assert.All(keys, key => Assert.False(string.IsNullOrWhiteSpace(key)));
-        Assert.Equal(24, keys.Length);
+        Assert.Equal(29, keys.Length);
         Assert.Equal(keys.Length, keys.Distinct(StringComparer.Ordinal).Count());
     }
 
@@ -173,6 +173,16 @@ public sealed class ResourceUiTextProviderTests
     [InlineData(UiTextKeys.ProductDocumentRegistrationPolicyTargetLabel, "보험 계약")]
     [InlineData(UiTextKeys.ProductDocumentRegistrationClaimTargetLabel, "청구 건")]
     [InlineData(UiTextKeys.ProductDocumentListLoadFailedMessage, "문서 목록을 불러오지 못했습니다.")]
+    [InlineData(UiTextKeys.ClaimManagementMessageCreated, "청구 건을 등록했습니다.")]
+    [InlineData(UiTextKeys.ClaimManagementMessageDisabled, "청구 건을 사용 중지했습니다.")]
+    [InlineData(UiTextKeys.ClaimManagementValidationTitleRequired, "청구 건 이름을 입력해 주세요.")]
+    [InlineData(UiTextKeys.PolicyManagementMessageCreated, "보험 계약을 등록했습니다.")]
+    [InlineData(UiTextKeys.PolicyManagementMessageDisabled, "보험 계약을 사용 중지했습니다.")]
+    [InlineData(UiTextKeys.PolicyManagementValidationDisableBlockedByActiveClaims, "활성 청구 건이 있어 보험 계약을 사용 중지할 수 없습니다. 청구 건을 먼저 사용 중지해 주세요.")]
+    [InlineData(UiTextKeys.ClaimManagementValidationSelectPolicyBeforeCreate, "청구 건을 등록할 보험 계약을 선택해 주세요.")]
+    [InlineData(UiTextKeys.PolicyManagementValidationTitleRequired, "보험 계약 이름을 입력해 주세요.")]
+    [InlineData(UiTextKeys.ClaimManagementValidationSelectClaimTarget, "사용 중지할 청구 건을 선택해 주세요.")]
+    [InlineData(UiTextKeys.PolicyManagementValidationSelectPolicyTarget, "사용 중지할 보험 계약을 선택해 주세요.")]
     public void Approved_korean_copy_values_resolve_from_UiStrings(string key, string expected)
     {
         var resources = LoadUiStrings();
@@ -296,7 +306,12 @@ public sealed class ResourceUiTextProviderTests
         UiTextKeys.ClaimManagementValidationSelectPolicyBeforeCreate,
         UiTextKeys.PolicyManagementValidationTitleRequired,
         UiTextKeys.ClaimManagementValidationSelectClaimTarget,
-        UiTextKeys.PolicyManagementValidationSelectPolicyTarget
+        UiTextKeys.PolicyManagementValidationSelectPolicyTarget,
+        UiTextKeys.ProductManagementLoadFailedMessage,
+        UiTextKeys.ProductPolicyContractsOperationFailedMessage,
+        UiTextKeys.ProductClaimCasesOperationFailedMessage,
+        UiTextKeys.ProductPolicyContractsDuplicateTitleMessage,
+        UiTextKeys.ProductClaimCasesDuplicateTitleMessage
     ];
 
     private static bool IsProductKey(string key) => key.StartsWith("Ui.Product.", StringComparison.Ordinal);
@@ -306,9 +321,37 @@ public sealed class ResourceUiTextProviderTests
         {
             [UiTextKeys.ProductShellTitle] = "FamilyClaimRef",
             [UiTextKeys.ProductNavigationHome] = "홈",
+            [UiTextKeys.ProductNavigationPolicyContracts] = "보험 계약",
+            [UiTextKeys.ProductNavigationClaimCases] = "청구 건",
             [UiTextKeys.ProductNavigationDocumentRegistration] = "문서 등록",
             [UiTextKeys.ProductNavigationDocumentList] = "문서 목록",
             [UiTextKeys.ProductHomeTitle] = "홈",
+            [UiTextKeys.ProductPolicyContractsTitle] = "보험 계약",
+            [UiTextKeys.ProductClaimCasesTitle] = "청구 건",
+            [UiTextKeys.ProductPolicyContractsEmptyMessage] = "등록된 보험 계약이 없습니다.",
+            [UiTextKeys.ProductClaimCasesEmptyMessage] = "등록된 청구 건이 없습니다.",
+            [UiTextKeys.ProductPolicyContractsCreationSection] = "보험 계약 등록",
+            [UiTextKeys.ProductClaimCasesCreationSection] = "청구 건 등록",
+            [UiTextKeys.ProductPolicyContractsActiveListLabel] = "보험 계약 목록",
+            [UiTextKeys.ProductClaimCasesActiveListLabel] = "청구 건 목록",
+            [UiTextKeys.ProductPolicyContractsDisplayTitleLabel] = "보험 계약 이름",
+            [UiTextKeys.ProductClaimCasesDisplayTitleLabel] = "청구 건 이름",
+            [UiTextKeys.ProductClaimCasesPolicyLabel] = "보험 계약",
+            [UiTextKeys.ProductPolicyContractsCreateAction] = "보험 계약 등록",
+            [UiTextKeys.ProductPolicyContractsDisableAction] = "보험 계약 사용 중지",
+            [UiTextKeys.ProductClaimCasesCreateAction] = "청구 건 등록",
+            [UiTextKeys.ProductClaimCasesDisableAction] = "청구 건 사용 중지",
+            [UiTextKeys.ProductManagementStatusLabel] = "처리 결과",
+            [UiTextKeys.ProductManagementLoadFailedMessage] =
+                "목록을 불러오지 못했습니다. 다시 시도해 주세요.",
+            [UiTextKeys.ProductPolicyContractsOperationFailedMessage] =
+                "보험 계약을 처리하지 못했습니다. 다시 시도해 주세요.",
+            [UiTextKeys.ProductClaimCasesOperationFailedMessage] =
+                "청구 건을 처리하지 못했습니다. 다시 시도해 주세요.",
+            [UiTextKeys.ProductPolicyContractsDuplicateTitleMessage] =
+                "같은 이름의 활성 보험 계약이 이미 있습니다.",
+            [UiTextKeys.ProductClaimCasesDuplicateTitleMessage] =
+                "같은 이름의 활성 청구 건이 이미 있습니다.",
             [UiTextKeys.ProductDocumentRegistrationTitle] = "문서 등록",
             [UiTextKeys.ProductDocumentRegistrationTargetSelectionSection] = "연결 대상 선택",
             [UiTextKeys.ProductDocumentRegistrationPolicyTargetLabel] = "보험 계약",
@@ -319,5 +362,5 @@ public sealed class ResourceUiTextProviderTests
         };
 
     private const string ExistingResourceFingerprint =
-        "884AB8AD16C195E5A0411BA8A2B9BE3FCF4DC20B5F539FF048BC5CCCED75A97B";
+        "3854B89745899CE5F331C3E4AD8A706F155F3001734B9A600D752253D44905D4";
 }

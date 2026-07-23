@@ -12,20 +12,29 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
     public ProductShellViewModel(
         IUiTextProvider uiTextProvider,
         DocumentRegistrationViewModel documentRegistration,
-        ProductDocumentListViewModel documentList)
+        ProductDocumentListViewModel documentList,
+        PolicyClaimManagementViewModel policyClaimManagement)
     {
         ArgumentNullException.ThrowIfNull(uiTextProvider);
         ArgumentNullException.ThrowIfNull(documentRegistration);
         ArgumentNullException.ThrowIfNull(documentList);
+        ArgumentNullException.ThrowIfNull(policyClaimManagement);
 
         ShellTitle = uiTextProvider.Get(UiTextKeys.ProductShellTitle);
         DocumentRegistration = documentRegistration;
         DocumentList = documentList;
+        PolicyClaimManagement = policyClaimManagement;
         NavigationItems = Array.AsReadOnly(
         [
             new ProductNavigationItemViewModel(
                 "Home",
                 uiTextProvider.Get(UiTextKeys.ProductNavigationHome)),
+            new ProductNavigationItemViewModel(
+                "PolicyContracts",
+                uiTextProvider.Get(UiTextKeys.ProductNavigationPolicyContracts)),
+            new ProductNavigationItemViewModel(
+                "ClaimCases",
+                uiTextProvider.Get(UiTextKeys.ProductNavigationClaimCases)),
             new ProductNavigationItemViewModel(
                 "DocumentRegistration",
                 uiTextProvider.Get(UiTextKeys.ProductNavigationDocumentRegistration)),
@@ -43,6 +52,8 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
     public DocumentRegistrationViewModel DocumentRegistration { get; }
 
     public ProductDocumentListViewModel DocumentList { get; }
+
+    public PolicyClaimManagementViewModel PolicyClaimManagement { get; }
 
     public ReadOnlyCollection<ProductNavigationItemViewModel> NavigationItems { get; }
 
