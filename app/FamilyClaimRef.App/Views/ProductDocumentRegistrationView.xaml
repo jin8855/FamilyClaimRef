@@ -60,8 +60,10 @@
                               SelectedValue="{Binding TargetKind, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                               Margin="0,0,0,8">
                         <ComboBoxItem Content="{StaticResource Ui.Product.DocumentRegistration.PolicyTargetLabel}"
+                                      AutomationProperties.Name="{StaticResource Ui.Product.DocumentRegistration.PolicyTargetLabel}"
                                       Tag="policy" />
                         <ComboBoxItem Content="{StaticResource Ui.Product.DocumentRegistration.ClaimTargetLabel}"
+                                      AutomationProperties.Name="{StaticResource Ui.Product.DocumentRegistration.ClaimTargetLabel}"
                                       Tag="claim" />
                     </ComboBox>
 
@@ -87,6 +89,12 @@
                               SelectedValuePath="Id"
                               SelectedValue="{Binding SelectedPolicyId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                               Margin="0,0,0,8">
+                        <ComboBox.ItemContainerStyle>
+                            <Style TargetType="{x:Type ComboBoxItem}">
+                                <Setter Property="AutomationProperties.Name"
+                                        Value="{Binding DisplayTitle}" />
+                            </Style>
+                        </ComboBox.ItemContainerStyle>
                         <ComboBox.Style>
                             <Style TargetType="{x:Type ComboBox}">
                                 <Setter Property="Visibility" Value="Collapsed" />
@@ -121,6 +129,12 @@
                               SelectedValuePath="Id"
                               SelectedValue="{Binding SelectedClaimId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                               Margin="0,0,0,8">
+                        <ComboBox.ItemContainerStyle>
+                            <Style TargetType="{x:Type ComboBoxItem}">
+                                <Setter Property="AutomationProperties.Name"
+                                        Value="{Binding DisplayTitle}" />
+                            </Style>
+                        </ComboBox.ItemContainerStyle>
                         <ComboBox.Style>
                             <Style TargetType="{x:Type ComboBox}">
                                 <Setter Property="Visibility" Value="Collapsed" />
@@ -163,6 +177,12 @@
                               SelectedValuePath="Code"
                               SelectedValue="{Binding DocumentType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                               Margin="0,0,0,8">
+                        <ComboBox.ItemContainerStyle>
+                            <Style TargetType="{x:Type ComboBoxItem}">
+                                <Setter Property="AutomationProperties.Name"
+                                        Value="{Binding Label}" />
+                            </Style>
+                        </ComboBox.ItemContainerStyle>
                         <ComboBox.Style>
                             <Style TargetType="{x:Type ComboBox}">
                                 <Setter Property="ItemsSource"

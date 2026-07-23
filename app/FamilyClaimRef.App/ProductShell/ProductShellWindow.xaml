@@ -58,7 +58,15 @@
                  ItemsSource="{Binding NavigationItems}"
                  DisplayMemberPath="DisplayText"
                  SelectedItem="{Binding SelectedNavigationItem, Mode=TwoWay}"
-                 Margin="0,0,16,0" />
+                 SelectionMode="Single"
+                 Margin="0,0,16,0">
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="{x:Type ListBoxItem}">
+                    <Setter Property="AutomationProperties.Name"
+                            Value="{Binding DisplayText}" />
+                </Style>
+            </ListBox.ItemContainerStyle>
+        </ListBox>
 
         <ContentControl Grid.Row="1"
                         Grid.Column="1"

@@ -2,109 +2,130 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Loaded="UserControl_Loaded">
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel>
-            <TextBlock Text="{StaticResource Ui.Product.ClaimCases.Title}"
-                       FontSize="20"
-                       FontWeight="SemiBold"
-                       Margin="0,0,0,16" />
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
 
-            <GroupBox Header="{StaticResource Ui.Product.ClaimCases.CreationSection}"
-                      Margin="0,0,0,16">
-                <Grid Margin="12">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+        <TextBlock Text="{StaticResource Ui.Product.ClaimCases.Title}"
+                   FontSize="20"
+                   FontWeight="SemiBold"
+                   Margin="0,0,0,16" />
 
-                    <TextBlock Text="{StaticResource Ui.Product.ClaimCases.PolicyLabel}"
-                               VerticalAlignment="Center"
-                               Margin="0,0,12,8" />
-                    <ComboBox Grid.Column="1"
-                              ItemsSource="{Binding AvailablePolicies}"
-                              DisplayMemberPath="DisplayTitle"
-                              SelectedValuePath="Id"
-                              SelectedValue="{Binding SelectedPolicyForClaimId, Mode=TwoWay}"
-                              MinWidth="240"
-                              Margin="0,0,12,8" />
+        <GroupBox Grid.Row="1"
+                  Header="{StaticResource Ui.Product.ClaimCases.CreationSection}"
+                  Margin="0,0,0,16">
+            <Grid Margin="12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
-                    <TextBlock Grid.Row="1"
-                               Text="{StaticResource Ui.Product.ClaimCases.DisplayTitleLabel}"
-                               VerticalAlignment="Center"
-                               Margin="0,0,12,0" />
-                    <TextBox Grid.Row="1"
-                             Grid.Column="1"
-                             Text="{Binding NewClaimDisplayTitle, UpdateSourceTrigger=PropertyChanged}"
-                             MinWidth="240"
-                             Margin="0,0,12,0" />
-                    <Button Grid.Row="1"
-                            Grid.Column="2"
-                            Content="{StaticResource Ui.Product.ClaimCases.CreateAction}"
-                            IsEnabled="{Binding CanCreateClaim}"
-                            Click="CreateButton_Click"
-                            Padding="14,6" />
-                </Grid>
-            </GroupBox>
+                <TextBlock Text="{StaticResource Ui.Product.ClaimCases.PolicyLabel}"
+                           VerticalAlignment="Center"
+                           Margin="0,0,12,8" />
+                <ComboBox Grid.Column="1"
+                          ItemsSource="{Binding AvailablePolicies}"
+                          DisplayMemberPath="DisplayTitle"
+                          SelectedValuePath="Id"
+                          SelectedValue="{Binding SelectedPolicyForClaimId, Mode=TwoWay}"
+                          MinWidth="240"
+                          Margin="0,0,12,8">
+                    <ComboBox.ItemContainerStyle>
+                        <Style TargetType="{x:Type ComboBoxItem}">
+                            <Setter Property="AutomationProperties.Name"
+                                    Value="{Binding DisplayTitle}" />
+                        </Style>
+                    </ComboBox.ItemContainerStyle>
+                </ComboBox>
 
-            <GroupBox Header="{StaticResource Ui.Product.ClaimCases.ActiveListLabel}"
-                      Margin="0,0,0,16">
-                <Grid Margin="12">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
+                <TextBlock Grid.Row="1"
+                           Text="{StaticResource Ui.Product.ClaimCases.DisplayTitleLabel}"
+                           VerticalAlignment="Center"
+                           Margin="0,0,12,0" />
+                <TextBox Grid.Row="1"
+                         Grid.Column="1"
+                         Text="{Binding NewClaimDisplayTitle, UpdateSourceTrigger=PropertyChanged}"
+                         MinWidth="240"
+                         Margin="0,0,12,0" />
+                <Button Grid.Row="1"
+                        Grid.Column="2"
+                        Content="{StaticResource Ui.Product.ClaimCases.CreateAction}"
+                        IsEnabled="{Binding CanCreateClaim}"
+                        Click="CreateButton_Click"
+                        Padding="14,6" />
+            </Grid>
+        </GroupBox>
 
-                    <ListBox ItemsSource="{Binding AvailableClaims}"
-                             DisplayMemberPath="DisplayTitle"
-                             SelectedValuePath="Id"
-                             SelectedValue="{Binding SelectedClaimId, Mode=TwoWay}"
-                             MinHeight="120">
-                        <ListBox.Style>
-                            <Style TargetType="{x:Type ListBox}">
-                                <Setter Property="Visibility" Value="Visible" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding HasAvailableClaims}" Value="False">
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </ListBox.Style>
-                    </ListBox>
+        <GroupBox Grid.Row="2"
+                  Header="{StaticResource Ui.Product.ClaimCases.ActiveListLabel}"
+                  Margin="0,0,0,16">
+            <Grid Margin="12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-                    <TextBlock Text="{StaticResource Ui.Product.ClaimCases.EmptyMessage}"
-                               VerticalAlignment="Top">
-                        <TextBlock.Style>
-                            <Style TargetType="{x:Type TextBlock}">
-                                <Setter Property="Visibility" Value="Collapsed" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding HasAvailableClaims}" Value="False">
-                                        <Setter Property="Visibility" Value="Visible" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
+                <ListBox ItemsSource="{Binding AvailableClaims}"
+                         DisplayMemberPath="DisplayTitle"
+                         SelectedValuePath="Id"
+                         SelectedValue="{Binding SelectedClaimId, Mode=TwoWay}"
+                         MinHeight="72">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="{x:Type ListBoxItem}">
+                            <Setter Property="AutomationProperties.Name"
+                                    Value="{Binding DisplayTitle}" />
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.Style>
+                        <Style TargetType="{x:Type ListBox}">
+                            <Setter Property="Visibility" Value="Visible" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasAvailableClaims}" Value="False">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ListBox.Style>
+                </ListBox>
 
-                    <Button Grid.Row="1"
-                            Content="{StaticResource Ui.Product.ClaimCases.DisableAction}"
-                            IsEnabled="{Binding CanDisableClaim}"
-                            Click="DisableButton_Click"
-                            HorizontalAlignment="Right"
-                            Margin="0,12,0,0"
-                            Padding="14,6" />
-                </Grid>
-            </GroupBox>
+                <TextBlock Text="{StaticResource Ui.Product.ClaimCases.EmptyMessage}"
+                           VerticalAlignment="Top">
+                    <TextBlock.Style>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasAvailableClaims}" Value="False">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
 
-            <GroupBox Header="{StaticResource Ui.Product.Management.StatusLabel}">
-                <TextBlock Text="{Binding ManagementMessage}"
-                           Margin="12"
-                           TextWrapping="Wrap" />
-            </GroupBox>
-        </StackPanel>
-    </ScrollViewer>
+                <Button Grid.Row="1"
+                        Content="{StaticResource Ui.Product.ClaimCases.DisableAction}"
+                        IsEnabled="{Binding CanDisableClaim}"
+                        Click="DisableButton_Click"
+                        HorizontalAlignment="Right"
+                        Margin="0,12,0,0"
+                        Padding="14,6" />
+            </Grid>
+        </GroupBox>
+
+        <GroupBox Grid.Row="3"
+                  Header="{StaticResource Ui.Product.Management.StatusLabel}">
+            <TextBlock Text="{Binding ManagementMessage}"
+                       Margin="12"
+                       TextWrapping="Wrap" />
+        </GroupBox>
+    </Grid>
 </UserControl>
