@@ -20,12 +20,8 @@ public partial class App : Application
         var services = AppServices.CreateDefault();
         Window selectedWindow = startupMode switch
         {
-            StartupWindowMode.MainWindow => new MainWindow
-            {
-                DataContext = services.MainWindowViewModel
-            },
-            StartupWindowMode.ProductShellPreview =>
-                new ProductShellWindow(services.ProductShellViewModel),
+            StartupWindowMode.MainWindow or StartupWindowMode.ProductShellPreview =>
+                CreateProductShellWindow(services),
             _ => throw new ArgumentOutOfRangeException(
                 nameof(startupMode),
                 startupMode,
@@ -34,6 +30,11 @@ public partial class App : Application
 
         MainWindow = selectedWindow;
         selectedWindow.Show();
+    }
+
+    private static ProductShellWindow CreateProductShellWindow(AppServices services)
+    {
+        return new ProductShellWindow(services.ProductShellViewModel);
     }
 }
 
