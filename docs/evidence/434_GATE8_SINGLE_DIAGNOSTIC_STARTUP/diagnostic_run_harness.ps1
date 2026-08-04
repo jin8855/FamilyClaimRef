@@ -1,0 +1,842 @@
+param()
+
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
+
+$expectedHead = 'aecf7edfd43b4124ec5ff17d35687020cf4c0d90'
+$expectedPathSetSha256 = '08c04ac187923eb2b983dc94412c26705aff10e16b6f11627419a4bf23f98aba'
+$expectedExecutableBytes = 162816L
+$expectedExecutableSha256 = 'bb3de775939bbeb06aa9abe42e9e93cee51881084b3e6f20e7293a2d23300c39'
+$maximumLogBytes = 131072L
+$schemaVersion = 1
+$evidenceRelativeRoot = 'docs/evidence/434_GATE8_SINGLE_DIAGNOSTIC_STARTUP'
+$harnessRelativePath = "$evidenceRelativeRoot/diagnostic_run_harness.ps1"
+$observationRelativePath = "$evidenceRelativeRoot/runtime_observation.json"
+$logEvidenceRelativePath = "$evidenceRelativeRoot/startup.ndjson"
+
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+using System.Text;
+
+public static class Gate8WindowNativeMethods
+{
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern uint GetWindowThreadProcessId(
+        IntPtr hWnd,
+        out uint processId);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    public static extern int GetClassName(
+        IntPtr hWnd,
+        StringBuilder className,
+        int maximumCount);
+}
+'@
+
+function Get-StringSha256 {
+    param([Parameter(Mandatory)][string]$Value)
+
+    $sha = [Security.Cryptography.SHA256]::Create()
+    try {
+        $hash = $sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($Value))
+    }
+    finally {
+        $sha.Dispose()
+    }
+
+    return ([BitConverter]::ToString($hash) -replace '-', '').ToLowerInvariant()
+}
+
+function Get-FileSha256 {
+    param([Parameter(Mandatory)][string]$Path)
+
+    return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
+}
+
+function Write-Utf8NoBom {
+    param(
+        [Parameter(Mandatory)][string]$Path,
+        [Parameter(Mandatory)][string]$Value
+    )
+
+    [IO.File]::WriteAllText(
+        $Path,
+        $Value,
+        [Text.UTF8Encoding]::new($false))
+}
+
+function Get-RandomHex {
+    param([Parameter(Mandatory)][int]$ByteCount)
+
+    $bytes = [byte[]]::new($ByteCount)
+    $generator = [Security.Cryptography.RandomNumberGenerator]::Create()
+    try {
+        $generator.GetBytes($bytes)
+    }
+    finally {
+        $generator.Dispose()
+    }
+
+    return ([BitConverter]::ToString($bytes) -replace '-', '').ToLowerInvariant()
+}
+
+function Get-RepositoryStatusPaths {
+    param([Parameter(Mandatory)][string]$RepositoryRoot)
+
+    $lines = @(
+        git -C $RepositoryRoot -c core.quotepath=false status --short --untracked-files=all
+    )
+    if ($LASTEXITCODE -ne 0) {
+        throw 'Unable to read repository status.'
+    }
+
+    return @(
+        $lines |
+            ForEach-Object { $_.Substring(3).Replace('\', '/') } |
+            Where-Object {
+                $_ -ne $harnessRelativePath -and
+                $_ -ne $observationRelativePath -and
+                $_ -ne $logEvidenceRelativePath -and
+                $_ -notlike 'docs/434_*'
+            } |
+            Sort-Object
+    )
+}
+
+function Get-RepositoryContentMap {
+    param(
+        [Parameter(Mandatory)][string]$RepositoryRoot,
+        [Parameter(Mandatory)][string[]]$RelativePaths
+    )
+
+    $map = @{}
+    foreach ($relativePath in $RelativePaths) {
+        $fullPath = Join-Path $RepositoryRoot ($relativePath.Replace('/', '\'))
+        if (-not (Test-Path -LiteralPath $fullPath -PathType Leaf)) {
+            throw "Repository baseline path is missing: $relativePath"
+        }
+
+        $map[$relativePath] = Get-FileSha256 $fullPath
+    }
+
+    return $map
+}
+
+function Get-RepositoryContentMismatchCount {
+    param(
+        [Parameter(Mandatory)][string]$RepositoryRoot,
+        [Parameter(Mandatory)][hashtable]$BaselineMap
+    )
+
+    $mismatchCount = 0
+    foreach ($entry in $BaselineMap.GetEnumerator()) {
+        $fullPath = Join-Path $RepositoryRoot ($entry.Key.Replace('/', '\'))
+        if (-not (Test-Path -LiteralPath $fullPath -PathType Leaf) -or
+            (Get-FileSha256 $fullPath) -ne $entry.Value) {
+            $mismatchCount++
+        }
+    }
+
+    return $mismatchCount
+}
+
+function Test-SameOrChildPath {
+    param(
+        [Parameter(Mandatory)][string]$Candidate,
+        [Parameter(Mandatory)][string]$Parent
+    )
+
+    $normalizedCandidate = [IO.Path]::TrimEndingDirectorySeparator(
+        [IO.Path]::GetFullPath($Candidate))
+    $normalizedParent = [IO.Path]::TrimEndingDirectorySeparator(
+        [IO.Path]::GetFullPath($Parent))
+    if ($normalizedCandidate.Equals(
+            $normalizedParent,
+            [StringComparison]::OrdinalIgnoreCase)) {
+        return $true
+    }
+
+    return $normalizedCandidate.StartsWith(
+        "$normalizedParent$([IO.Path]::DirectorySeparatorChar)",
+        [StringComparison]::OrdinalIgnoreCase)
+}
+
+function Test-StrictChildPath {
+    param(
+        [Parameter(Mandatory)][string]$Candidate,
+        [Parameter(Mandatory)][string]$Parent
+    )
+
+    $normalizedCandidate = [IO.Path]::TrimEndingDirectorySeparator(
+        [IO.Path]::GetFullPath($Candidate))
+    $normalizedParent = [IO.Path]::TrimEndingDirectorySeparator(
+        [IO.Path]::GetFullPath($Parent))
+    return -not $normalizedCandidate.Equals(
+        $normalizedParent,
+        [StringComparison]::OrdinalIgnoreCase) -and
+        (Test-SameOrChildPath $normalizedCandidate $normalizedParent)
+}
+
+function Test-NoReparseTree {
+    param([Parameter(Mandatory)][string]$Root)
+
+    if (-not (Test-Path -LiteralPath $Root -PathType Container)) {
+        return $false
+    }
+
+    $pending = [Collections.Generic.Stack[string]]::new()
+    $pending.Push([IO.Path]::GetFullPath($Root))
+    while ($pending.Count -gt 0) {
+        $current = $pending.Pop()
+        $currentAttributes = [IO.File]::GetAttributes($current)
+        if (($currentAttributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+            return $false
+        }
+
+        foreach ($entry in @(Get-ChildItem -LiteralPath $current -Force)) {
+            $attributes = [IO.File]::GetAttributes($entry.FullName)
+            if (($attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+                return $false
+            }
+
+            if (($attributes -band [IO.FileAttributes]::Directory) -ne 0) {
+                $pending.Push($entry.FullName)
+            }
+        }
+    }
+
+    return $true
+}
+
+function Remove-ExactOwnedRoot {
+    param(
+        [Parameter(Mandatory)][string]$Root,
+        [Parameter(Mandatory)][string]$AllowedParent,
+        [Parameter(Mandatory)][string]$OwnerTokenPath,
+        [Parameter(Mandatory)][string]$ExpectedOwnerToken
+    )
+
+    if (-not (Test-Path -LiteralPath $Root -PathType Container)) {
+        return $true
+    }
+
+    $normalizedRoot = [IO.Path]::GetFullPath($Root)
+    if (-not (Test-StrictChildPath $normalizedRoot $AllowedParent) -or
+        -not (Test-Path -LiteralPath $OwnerTokenPath -PathType Leaf) -or
+        [IO.File]::ReadAllText($OwnerTokenPath) -ne $ExpectedOwnerToken -or
+        -not (Test-NoReparseTree $normalizedRoot)) {
+        return $false
+    }
+
+    Remove-Item -LiteralPath $normalizedRoot -Recurse -Force
+    return -not (Test-Path -LiteralPath $normalizedRoot)
+}
+
+function Read-LiveLogLines {
+    param([Parameter(Mandatory)][string]$Path)
+
+    try {
+        $stream = [IO.FileStream]::new(
+            $Path,
+            [IO.FileMode]::Open,
+            [IO.FileAccess]::Read,
+            [IO.FileShare]::ReadWrite)
+        try {
+            $reader = [IO.StreamReader]::new(
+                $stream,
+                [Text.UTF8Encoding]::new($false),
+                $true)
+            try {
+                $text = $reader.ReadToEnd()
+            }
+            finally {
+                $reader.Dispose()
+            }
+        }
+        finally {
+            $stream.Dispose()
+        }
+
+        return @($text -split "`n" | Where-Object { $_.Length -gt 0 })
+    }
+    catch {
+        return @()
+    }
+}
+
+function Stop-CapturedProcessFallback {
+    param(
+        [Parameter(Mandatory)]
+        [Diagnostics.Process]$CapturedProcess
+    )
+
+    if ($CapturedProcess.HasExited) {
+        return
+    }
+
+    $CapturedProcess.Kill()
+    $CapturedProcess.WaitForExit(10000) | Out-Null
+}
+
+function Test-ExpectedRecords {
+    param(
+        [Parameter(Mandatory)][object[]]$Records,
+        [Parameter(Mandatory)][object[]]$ExpectedRecords
+    )
+
+    $cursor = -1
+    $missing = [Collections.Generic.List[string]]::new()
+    foreach ($expected in $ExpectedRecords) {
+        $foundIndex = -1
+        for ($index = $cursor + 1; $index -lt $Records.Count; $index++) {
+            $record = $Records[$index]
+            if ($record.owner -eq $expected.owner -and
+                $record.milestone -eq $expected.milestone -and
+                $record.phase -eq $expected.phase -and
+                $record.result -eq $expected.result) {
+                $foundIndex = $index
+                break
+            }
+        }
+
+        if ($foundIndex -lt 0) {
+            $missing.Add(
+                "$($expected.owner)|$($expected.milestone)|$($expected.phase)|$($expected.result)")
+        }
+        else {
+            $cursor = $foundIndex
+        }
+    }
+
+    return @($missing)
+}
+
+$repositoryRoot = [IO.Path]::GetFullPath(
+    (Join-Path $PSScriptRoot '..\..\..'))
+$executableRelativePath =
+    'app/FamilyClaimRef.App/bin/Debug/net10.0-windows/FamilyClaimRef.App.exe'
+$executablePath = Join-Path $repositoryRoot ($executableRelativePath.Replace('/', '\'))
+$workingDirectory = Split-Path -Parent $executablePath
+$observationPath = Join-Path $repositoryRoot ($observationRelativePath.Replace('/', '\'))
+$logEvidencePath = Join-Path $repositoryRoot ($logEvidenceRelativePath.Replace('/', '\'))
+$harnessPath = $PSCommandPath
+
+$branch = git -C $repositoryRoot branch --show-current
+$head = git -C $repositoryRoot rev-parse HEAD
+if ($LASTEXITCODE -ne 0 -or $branch -ne 'main' -or $head -ne $expectedHead) {
+    throw 'Branch or HEAD baseline mismatch.'
+}
+
+$baselinePaths = @(Get-RepositoryStatusPaths $repositoryRoot)
+$baselinePathSetText = ($baselinePaths -join "`n") + "`n"
+if ($baselinePaths.Count -ne 54 -or
+    (Get-StringSha256 $baselinePathSetText) -ne $expectedPathSetSha256) {
+    throw 'Repository path-set baseline mismatch.'
+}
+$baselineContentMap = Get-RepositoryContentMap $repositoryRoot $baselinePaths
+
+if (-not (Test-Path -LiteralPath $executablePath -PathType Leaf) -or
+    (Get-Item -LiteralPath $executablePath).Length -ne $expectedExecutableBytes -or
+    (Get-FileSha256 $executablePath) -ne $expectedExecutableSha256) {
+    throw 'Executable identity mismatch.'
+}
+
+$productProcessesBefore = @(
+    Get-Process -Name 'FamilyClaimRef.App' -ErrorAction SilentlyContinue
+)
+if ($productProcessesBefore.Count -ne 0) {
+    throw 'Product process already exists.'
+}
+
+$tempRoot = [IO.Path]::GetFullPath([IO.Path]::GetTempPath())
+$approvedParent = [IO.Path]::GetFullPath(
+    (Join-Path $tempRoot 'FamilyClaimRef\StartupDiagnostics'))
+if (-not (Test-Path -LiteralPath $approvedParent -PathType Container) -or
+    ([IO.File]::GetAttributes($approvedParent) -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+    throw 'Approved TEMP parent is unavailable or reparse-backed.'
+}
+$approvedParentEntriesBefore = @(
+    Get-ChildItem -LiteralPath $approvedParent -Force |
+        ForEach-Object { $_.Name } |
+        Sort-Object
+)
+
+$runId = Get-RandomHex 16
+$nonce = Get-RandomHex 32
+$diagnosticRoot = [IO.Path]::GetFullPath(
+    (Join-Path $approvedParent "$runId-diagnostic"))
+$runtimeRoot = [IO.Path]::GetFullPath(
+    (Join-Path $approvedParent "$runId-runtime"))
+if (-not (Test-StrictChildPath $diagnosticRoot $approvedParent) -or
+    -not (Test-StrictChildPath $runtimeRoot $approvedParent) -or
+    (Test-Path -LiteralPath $diagnosticRoot) -or
+    (Test-Path -LiteralPath $runtimeRoot)) {
+    throw 'Generated test roots failed the preexistence or boundary gate.'
+}
+
+$ownerToken = [ordered]@{
+    schemaVersion = 1
+    runId = $runId
+    nonce = $nonce
+    purpose = 'gate8-single-diagnostic-startup'
+} | ConvertTo-Json -Compress
+
+[IO.Directory]::CreateDirectory($diagnosticRoot) | Out-Null
+[IO.Directory]::CreateDirectory($runtimeRoot) | Out-Null
+$diagnosticOwnerTokenPath = Join-Path $diagnosticRoot '.gate8-owner.json'
+$runtimeOwnerTokenPath = Join-Path $runtimeRoot '.gate8-owner.json'
+Write-Utf8NoBom $diagnosticOwnerTokenPath $ownerToken
+Write-Utf8NoBom $runtimeOwnerTokenPath $ownerToken
+
+if (-not (Test-NoReparseTree $diagnosticRoot) -or
+    -not (Test-NoReparseTree $runtimeRoot)) {
+    throw 'Prepared test root contains a reparse point.'
+}
+
+$logPath = Join-Path $diagnosticRoot 'startup.ndjson'
+if (Test-Path -LiteralPath $logPath) {
+    throw 'Diagnostic log unexpectedly preexists.'
+}
+
+$expectedRecords = @(
+    [pscustomobject]@{ owner='App'; milestone='app_constructor.body_enter'; phase='enter'; result='started' },
+    [pscustomobject]@{ owner='App'; milestone='app_constructor.body_ready'; phase='return'; result='completed' },
+    [pscustomobject]@{ owner='App'; milestone='app_on_startup.enter'; phase='enter'; result='started' },
+    [pscustomobject]@{ owner='App'; milestone='base_on_startup'; phase='begin'; result='started' },
+    [pscustomobject]@{ owner='App'; milestone='base_on_startup'; phase='end'; result='completed' },
+    [pscustomobject]@{ owner='App'; milestone='startup_mode.selection'; phase='decision'; result='default' },
+    [pscustomobject]@{ owner='App'; milestone='app_services_create_default'; phase='begin'; result='started' },
+    [pscustomobject]@{ owner='App'; milestone='app_services_create_default'; phase='end'; result='completed' },
+    [pscustomobject]@{ owner='App'; milestone='product_shell_window.construction'; phase='begin'; result='started' },
+    [pscustomobject]@{ owner='ProductShellWindow'; milestone='product_shell_window.constructor'; phase='enter'; result='started' },
+    [pscustomobject]@{ owner='ProductShellWindow'; milestone='product_shell_window.initialize_component'; phase='begin'; result='started' },
+    [pscustomobject]@{ owner='ProductShellWindow'; milestone='product_shell_window.initialize_component'; phase='end'; result='completed' },
+    [pscustomobject]@{ owner='ProductShellWindow'; milestone='product_shell_window.data_context_assignment'; phase='begin'; result='started' },
+    [pscustomobject]@{ owner='ProductShellWindow'; milestone='product_shell_window.data_context_assignment'; phase='end'; result='completed' },
+    [pscustomobject]@{ owner='ProductShellWindow'; milestone='product_shell_window.constructor'; phase='return'; result='completed' },
+    [pscustomobject]@{ owner='App'; milestone='product_shell_window.construction'; phase='end'; result='completed' },
+    [pscustomobject]@{ owner='App'; milestone='application.main_window_assignment'; phase='end'; result='completed' },
+    [pscustomobject]@{ owner='App'; milestone='product_shell_window.show'; phase='begin'; result='started' },
+    [pscustomobject]@{ owner='ProductShellWindow'; milestone='product_shell_window.loaded'; phase='event'; result='observed' },
+    [pscustomobject]@{ owner='App'; milestone='product_shell_window.show'; phase='return'; result='completed' },
+    [pscustomobject]@{ owner='ProductShellWindow'; milestone='product_shell_window.dispatcher_callback'; phase='callback'; result='scheduled' },
+    [pscustomobject]@{ owner='ProductShellWindow'; milestone='product_shell_window.content_rendered'; phase='event'; result='observed' },
+    [pscustomobject]@{ owner='ProductShellWindow'; milestone='product_shell_window.dispatcher_callback'; phase='callback'; result='executed' },
+    [pscustomobject]@{ owner='ProductShellWindow'; milestone='product_shell_window.closed'; phase='event'; result='observed' },
+    [pscustomobject]@{ owner='App'; milestone='app_on_exit'; phase='enter'; result='started' },
+    [pscustomobject]@{ owner='App'; milestone='app_on_exit'; phase='return'; result='completed' }
+)
+
+$allowedOwners = @('App', 'ProductShellWindow', 'StartupDiagnosticSession')
+$allowedMilestones = @(
+    'app_constructor.body_enter',
+    'startup_diagnostics.handler_registration',
+    'app_constructor.body_ready',
+    'app_on_startup.enter',
+    'base_on_startup',
+    'startup_mode.selection',
+    'app_services_create_default',
+    'product_shell_window.construction',
+    'application.main_window_assignment',
+    'product_shell_window.show',
+    'app_on_startup.exception',
+    'app_on_exit',
+    'product_shell_window.constructor',
+    'product_shell_window.initialize_component',
+    'product_shell_window.data_context_assignment',
+    'product_shell_window.loaded',
+    'product_shell_window.content_rendered',
+    'product_shell_window.dispatcher_callback',
+    'product_shell_window.closed',
+    'app_domain.unhandled_exception',
+    'dispatcher.unhandled_exception',
+    'task_scheduler.unobserved_task_exception'
+)
+$allowedPhases = @('begin', 'end', 'enter', 'return', 'event', 'decision', 'callback')
+$allowedResults = @(
+    'started', 'completed', 'enabled', 'disabled', 'default',
+    'product_shell_preview', 'observed', 'scheduled', 'executed', 'failed'
+)
+$allowedMethods = @(
+    'FamilyClaimRef.App.App..ctor',
+    'FamilyClaimRef.App.App.OnStartup',
+    'FamilyClaimRef.App.App.OnExit',
+    'FamilyClaimRef.App.ProductShell.ProductShellWindow..ctor',
+    'FamilyClaimRef.App.ProductShell.ProductShellWindow.ScheduleStartupDispatcherObservation',
+    'FamilyClaimRef.App.Startup.StartupDiagnosticSession.RegisterHandlers',
+    'FamilyClaimRef.App.Startup.StartupDiagnosticSession.OnAppDomainUnhandledException',
+    'FamilyClaimRef.App.Startup.StartupDiagnosticSession.OnDispatcherUnhandledException',
+    'FamilyClaimRef.App.Startup.StartupDiagnosticSession.OnTaskSchedulerUnobservedException'
+)
+
+$harnessSha256 = Get-FileSha256 $harnessPath
+$productStartAttemptCount = 0
+$productProcessCreatedCount = 0
+$secondStartAttemptCount = 0
+$capturedPid = $null
+$startUtc = [DateTimeOffset]::UtcNow
+$observationDeadlineUtc = $startUtc.AddSeconds(30)
+$firstWindowObservedUtc = $null
+$diagnosticLogFirstObservedUtc = $null
+$mainWindowObserved = $false
+$mainWindowOwnedByCapturedPid = $false
+$diagnosticLogObserved = $false
+$processExitedDuringStartupObservation = $false
+$gracefulCloseRequestedCount = 0
+$gracefulExit = $false
+$fallbackTerminationUsed = $false
+$terminationMode = 'not_started'
+$exitCode = $null
+$process = $null
+$windowHandle = [IntPtr]::Zero
+$windowTitle = $null
+$windowClassName = $null
+$windowOwnerPid = $null
+$harnessFailureCategory = $null
+
+$processStartInfo = [Diagnostics.ProcessStartInfo]::new()
+$processStartInfo.FileName = $executablePath
+$processStartInfo.WorkingDirectory = $workingDirectory
+$processStartInfo.UseShellExecute = $false
+$processStartInfo.Environment['FAMILYCLAIMREF_ENABLE_STARTUP_DIAGNOSTICS'] = '1'
+$processStartInfo.Environment['FAMILYCLAIMREF_STARTUP_DIAGNOSTIC_ROOT'] = $diagnosticRoot
+$processStartInfo.Environment['FAMILYCLAIMREF_ENABLE_DEV_RUNTIME_ROOT_OVERRIDE'] = '1'
+$processStartInfo.Environment['FAMILYCLAIMREF_RUNTIME_ROOT'] = $runtimeRoot
+
+try {
+    $productStartAttemptCount++
+    $process = [Diagnostics.Process]::Start($processStartInfo)
+    if ($null -ne $process) {
+        $productProcessCreatedCount = 1
+        $capturedPid = $process.Id
+        $terminationMode = 'observing'
+    }
+
+    while ($null -ne $process -and [DateTimeOffset]::UtcNow -lt $observationDeadlineUtc) {
+        if ($process.HasExited) {
+            $processExitedDuringStartupObservation = $true
+            $terminationMode = 'process_exited_during_observation'
+            break
+        }
+
+        $process.Refresh()
+        if (-not $mainWindowObserved -and $process.MainWindowHandle -ne [IntPtr]::Zero) {
+            $windowHandle = $process.MainWindowHandle
+            $windowTitle = $process.MainWindowTitle
+            [uint32]$observedWindowOwnerPid = 0
+            [void][Gate8WindowNativeMethods]::GetWindowThreadProcessId(
+                $windowHandle,
+                [ref]$observedWindowOwnerPid)
+            $windowOwnerPid = [int]$observedWindowOwnerPid
+            $windowClassBuilder = [Text.StringBuilder]::new(256)
+            [void][Gate8WindowNativeMethods]::GetClassName(
+                $windowHandle,
+                $windowClassBuilder,
+                $windowClassBuilder.Capacity)
+            $windowClassName = $windowClassBuilder.ToString()
+            $mainWindowObserved = $true
+            $mainWindowOwnedByCapturedPid =
+                $windowOwnerPid -eq $capturedPid
+            $firstWindowObservedUtc = [DateTimeOffset]::UtcNow
+        }
+
+        if (Test-Path -LiteralPath $logPath -PathType Leaf) {
+            if (-not $diagnosticLogObserved) {
+                $diagnosticLogFirstObservedUtc = [DateTimeOffset]::UtcNow
+            }
+            $diagnosticLogObserved = $true
+            $liveLines = @(Read-LiveLogLines $logPath)
+            $dispatcherExecuted = $false
+            foreach ($liveLine in $liveLines) {
+                try {
+                    $liveRecord = $liveLine | ConvertFrom-Json
+                    if ($liveRecord.milestone -eq 'product_shell_window.dispatcher_callback' -and
+                        $liveRecord.result -eq 'executed') {
+                        $dispatcherExecuted = $true
+                    }
+                }
+                catch {
+                    $dispatcherExecuted = $false
+                    break
+                }
+            }
+
+            if ($mainWindowObserved -and $dispatcherExecuted) {
+                break
+            }
+        }
+
+        Start-Sleep -Milliseconds 100
+    }
+
+    if ($null -ne $process -and -not $process.HasExited -and $mainWindowObserved) {
+        $gracefulCloseRequestedCount = 1
+        $closeRequested = $process.CloseMainWindow()
+        if ($closeRequested -and $process.WaitForExit(10000)) {
+            $gracefulExit = $true
+            $terminationMode = 'graceful_close'
+        }
+    }
+
+    if ($null -ne $process -and -not $process.HasExited) {
+        $fallbackTerminationUsed = $true
+        $terminationMode = 'captured_pid_fallback'
+        Stop-CapturedProcessFallback $process
+    }
+
+    if ($null -ne $process -and $process.HasExited) {
+        $exitCode = $process.ExitCode
+    }
+}
+catch {
+    $harnessFailureCategory = $_.Exception.GetType().FullName
+    if ($null -ne $process -and -not $process.HasExited) {
+        $fallbackTerminationUsed = $true
+        $terminationMode = 'captured_pid_exception_fallback'
+        Stop-CapturedProcessFallback $process
+    }
+
+    if ($null -ne $process -and $process.HasExited) {
+        $exitCode = $process.ExitCode
+    }
+}
+finally {
+    if ($null -ne $process) {
+        $process.Dispose()
+    }
+}
+
+$records = @()
+$logLines = @()
+$logBytes = 0L
+$logSha256 = $null
+$privacyValidation = 'FAIL'
+$sizeValidation = 'FAIL'
+$sequenceValidation = 'FAIL'
+$jsonValidation = 'FAIL'
+$expectedMilestoneValidation = 'FAIL'
+$missingMilestones = @()
+$allowlistViolationCount = 0
+$privacyFindingCount = 0
+$diagnosticLogFileCount = 0
+$logEvidenceCopied = $false
+$logEvidenceIdentityMatches = $false
+
+if (Test-Path -LiteralPath $logPath -PathType Leaf) {
+    $diagnosticLogFileCount = @(
+        Get-ChildItem -LiteralPath $diagnosticRoot -File -Force |
+            Where-Object { $_.Name -eq 'startup.ndjson' }
+    ).Count
+    $logBytes = (Get-Item -LiteralPath $logPath).Length
+    $logSha256 = Get-FileSha256 $logPath
+    $logLines = @(
+        [IO.File]::ReadAllLines(
+            $logPath,
+            [Text.UTF8Encoding]::new($false)) |
+            Where-Object { $_.Length -gt 0 }
+    )
+
+    try {
+        $records = @($logLines | ForEach-Object { $_ | ConvertFrom-Json })
+        $jsonValidation = 'PASS'
+    }
+    catch {
+        $records = @()
+    }
+
+    if ($logBytes -ge 1 -and $logBytes -le $maximumLogBytes) {
+        $sizeValidation = 'PASS'
+    }
+
+    if ($records.Count -gt 0) {
+        $sequenceValues = @($records | ForEach-Object { [long]$_.sequence })
+        $expectedSequence = @(1..$records.Count | ForEach-Object { [long]$_ })
+        if (($sequenceValues -join ',') -eq ($expectedSequence -join ',') -and
+            @($sequenceValues | Select-Object -Unique).Count -eq $sequenceValues.Count) {
+            $sequenceValidation = 'PASS'
+        }
+
+        foreach ($record in $records) {
+            if ($record.owner -notin $allowedOwners -or
+                $record.milestone -notin $allowedMilestones -or
+                $record.phase -notin $allowedPhases -or
+                $record.result -notin $allowedResults -or
+                ($null -ne $record.methodIdentifier -and
+                 $record.methodIdentifier -notin $allowedMethods)) {
+                $allowlistViolationCount++
+            }
+        }
+
+        $missingMilestones = @(
+            Test-ExpectedRecords $records $expectedRecords
+        )
+        if ($missingMilestones.Count -eq 0) {
+            $expectedMilestoneValidation = 'PASS'
+        }
+    }
+
+    $logText = [IO.File]::ReadAllText(
+        $logPath,
+        [Text.UTF8Encoding]::new($false))
+    $forbiddenValues = @(
+        $runId,
+        $nonce,
+        'FAMILYCLAIMREF_ENABLE_STARTUP_DIAGNOSTICS',
+        'FAMILYCLAIMREF_STARTUP_DIAGNOSTIC_ROOT',
+        'FAMILYCLAIMREF_ENABLE_DEV_RUNTIME_ROOT_OVERRIDE',
+        'FAMILYCLAIMREF_RUNTIME_ROOT'
+    )
+    foreach ($forbiddenValue in $forbiddenValues) {
+        if ($logText.IndexOf(
+                $forbiddenValue,
+                [StringComparison]::OrdinalIgnoreCase) -ge 0) {
+            $privacyFindingCount++
+        }
+    }
+    if ($logText -match '[A-Za-z]:\\' -or
+        $logText -match '\\\\\?\\' -or
+        $logText -match '(?i)exceptionMessage|stackTrace|attachment|claim_[A-Za-z0-9]') {
+        $privacyFindingCount++
+    }
+
+    if ($jsonValidation -eq 'PASS' -and
+        $allowlistViolationCount -eq 0 -and
+        $privacyFindingCount -eq 0) {
+        $privacyValidation = 'PASS'
+    }
+}
+
+if ($privacyValidation -eq 'PASS' -and
+    $sizeValidation -eq 'PASS' -and
+    $sequenceValidation -eq 'PASS' -and
+    $expectedMilestoneValidation -eq 'PASS' -and
+    $diagnosticLogFileCount -eq 1) {
+    [IO.File]::Copy($logPath, $logEvidencePath, $false)
+    $logEvidenceCopied = $true
+    $logEvidenceIdentityMatches =
+        (Get-Item -LiteralPath $logEvidencePath).Length -eq $logBytes -and
+        (Get-FileSha256 $logEvidencePath) -eq $logSha256
+}
+
+$diagnosticCleanupSucceeded = Remove-ExactOwnedRoot `
+    $diagnosticRoot `
+    $approvedParent `
+    $diagnosticOwnerTokenPath `
+    $ownerToken
+$runtimeCleanupSucceeded = Remove-ExactOwnedRoot `
+    $runtimeRoot `
+    $approvedParent `
+    $runtimeOwnerTokenPath `
+    $ownerToken
+
+$diagnosticRootResidueCount = if (Test-Path -LiteralPath $diagnosticRoot) { 1 } else { 0 }
+$isolatedRuntimeRootResidueCount = if (Test-Path -LiteralPath $runtimeRoot) { 1 } else { 0 }
+$approvedParentEntriesAfter = @(
+    Get-ChildItem -LiteralPath $approvedParent -Force |
+        ForEach-Object { $_.Name } |
+        Sort-Object
+)
+$unrelatedTempDeltaCount = @(
+    Compare-Object `
+        -ReferenceObject $approvedParentEntriesBefore `
+        -DifferenceObject $approvedParentEntriesAfter
+).Count
+$productProcessesAfter = @(
+    Get-Process -Name 'FamilyClaimRef.App' -ErrorAction SilentlyContinue
+)
+$repositoryExistingPathMismatchCount =
+    Get-RepositoryContentMismatchCount $repositoryRoot $baselineContentMap
+
+$orderedMilestoneSummary = @(
+    $records | ForEach-Object {
+        "$($_.sequence)|$($_.owner)|$($_.milestone)|$($_.phase)|$($_.result)"
+    }
+)
+
+$pass = (
+    $productStartAttemptCount -eq 1 -and
+    $secondStartAttemptCount -eq 0 -and
+    $productProcessCreatedCount -eq 1 -and
+    $mainWindowObserved -and
+    $mainWindowOwnedByCapturedPid -and
+    $windowTitle -eq 'FamilyClaimRef' -and
+    $diagnosticLogObserved -and
+    $logEvidenceCopied -and
+    $logEvidenceIdentityMatches -and
+    $diagnosticLogFileCount -eq 1 -and
+    $gracefulCloseRequestedCount -eq 1 -and
+    $gracefulExit -and
+    -not $fallbackTerminationUsed -and
+    $exitCode -eq 0 -and
+    $diagnosticCleanupSucceeded -and
+    $runtimeCleanupSucceeded -and
+    $productProcessesAfter.Count -eq 0 -and
+    $diagnosticRootResidueCount -eq 0 -and
+    $isolatedRuntimeRootResidueCount -eq 0 -and
+    $unrelatedTempDeltaCount -eq 0 -and
+    $null -eq $harnessFailureCategory -and
+    $repositoryExistingPathMismatchCount -eq 0
+)
+
+$observation = [ordered]@{
+    schemaVersion = $schemaVersion
+    runId = $runId
+    branch = $branch
+    head = $head
+    executableRelativePath = $executableRelativePath
+    executableBytes = $expectedExecutableBytes
+    executableSha256 = $expectedExecutableSha256
+    harnessSha256 = $harnessSha256
+    productStartAttemptCount = $productStartAttemptCount
+    productProcessCreatedCount = $productProcessCreatedCount
+    capturedPid = $capturedPid
+    startUtc = $startUtc.ToString('O')
+    observationDeadlineUtc = $observationDeadlineUtc.ToString('O')
+    processExitedDuringStartupObservation = $processExitedDuringStartupObservation
+    mainWindowObserved = $mainWindowObserved
+    mainWindowOwnedByCapturedPid = $mainWindowOwnedByCapturedPid
+    mainWindowTitle = $windowTitle
+    mainWindowClassName = $windowClassName
+    mainWindowOwnerPid = $windowOwnerPid
+    firstWindowObservedUtc = if ($null -eq $firstWindowObservedUtc) { $null } else { $firstWindowObservedUtc.ToString('O') }
+    diagnosticLogObserved = $diagnosticLogObserved
+    diagnosticLogFirstObservedUtc = if ($null -eq $diagnosticLogFirstObservedUtc) { $null } else { $diagnosticLogFirstObservedUtc.ToString('O') }
+    diagnosticLogBytes = $logBytes
+    diagnosticLogSha256 = $logSha256
+    diagnosticLogFileCount = $diagnosticLogFileCount
+    logEvidenceCopied = $logEvidenceCopied
+    logEvidenceIdentityMatches = $logEvidenceIdentityMatches
+    diagnosticRecordCount = $records.Count
+    firstSequence = if ($records.Count -eq 0) { $null } else { [long]$records[0].sequence }
+    lastSequence = if ($records.Count -eq 0) { $null } else { [long]$records[-1].sequence }
+    orderedMilestoneSummary = $orderedMilestoneSummary
+    missingExpectedMilestones = $missingMilestones
+    privacyValidation = $privacyValidation
+    sizeValidation = $sizeValidation
+    sequenceValidation = $sequenceValidation
+    jsonValidation = $jsonValidation
+    expectedMilestoneValidation = $expectedMilestoneValidation
+    allowlistViolationCount = $allowlistViolationCount
+    privacyFindingCount = $privacyFindingCount
+    terminationMode = $terminationMode
+    gracefulCloseRequestedCount = $gracefulCloseRequestedCount
+    gracefulExit = $gracefulExit
+    fallbackTerminationUsed = $fallbackTerminationUsed
+    exitCode = $exitCode
+    productProcessCountBefore = $productProcessesBefore.Count
+    productProcessCountAfter = $productProcessesAfter.Count
+    diagnosticRootResidueCount = $diagnosticRootResidueCount
+    isolatedRuntimeRootResidueCount = $isolatedRuntimeRootResidueCount
+    unrelatedTempDeltaCount = $unrelatedTempDeltaCount
+    harnessFailureCategory = $harnessFailureCategory
+    repositoryExistingPathMismatchCount = $repositoryExistingPathMismatchCount
+    secondStartAttemptCount = $secondStartAttemptCount
+    stageCommitPushCounts = '0/0/0'
+    pass = $pass
+}
+
+Write-Utf8NoBom $observationPath (
+    $observation | ConvertTo-Json -Depth 8)
+
+$observation | ConvertTo-Json -Depth 8 -Compress

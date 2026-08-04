@@ -21,9 +21,9 @@ public sealed class ResourceUiTextProviderTests
     {
         var resources = LoadUiStrings();
 
-        Assert.Equal(91, resources.Count);
-        Assert.Equal(35, resources.Keys.Count(IsProductKey));
-        Assert.Equal(35, ExpectedProductResources.Count);
+        Assert.Equal(116, resources.Count);
+        Assert.Equal(60, resources.Keys.Count(IsProductKey));
+        Assert.Equal(60, ExpectedProductResources.Count);
         Assert.All(
             ExpectedProductResources,
             expected => Assert.Equal(expected.Value, resources[expected.Key]));
@@ -36,11 +36,11 @@ public sealed class ResourceUiTextProviderTests
         var resourceKeys = resourceEntries.Select(entry => entry.Key).ToArray();
         var constantValues = LoadUiTextKeyConstants();
 
-        Assert.Equal(91, resourceEntries.Count);
+        Assert.Equal(116, resourceEntries.Count);
         Assert.Equal(resourceKeys.Length, resourceKeys.Distinct(StringComparer.Ordinal).Count());
-        Assert.Equal(91, constantValues.Count);
+        Assert.Equal(116, constantValues.Count);
         Assert.Equal(constantValues.Count, constantValues.Distinct(StringComparer.Ordinal).Count());
-        Assert.Equal(35, constantValues.Count(IsProductKey));
+        Assert.Equal(60, constantValues.Count(IsProductKey));
         Assert.Equal(
             resourceKeys.OrderBy(key => key, StringComparer.Ordinal),
             constantValues.OrderBy(key => key, StringComparer.Ordinal));
@@ -119,7 +119,7 @@ public sealed class ResourceUiTextProviderTests
         var keys = RuntimeMessageKeys;
 
         Assert.All(keys, key => Assert.False(string.IsNullOrWhiteSpace(key)));
-        Assert.Equal(29, keys.Length);
+        Assert.Equal(47, keys.Length);
         Assert.Equal(keys.Length, keys.Distinct(StringComparer.Ordinal).Count());
     }
 
@@ -172,7 +172,32 @@ public sealed class ResourceUiTextProviderTests
     [InlineData(UiTextKeys.ProductDocumentRegistrationTargetSelectionSection, "연결 대상 선택")]
     [InlineData(UiTextKeys.ProductDocumentRegistrationPolicyTargetLabel, "보험 계약")]
     [InlineData(UiTextKeys.ProductDocumentRegistrationClaimTargetLabel, "청구 건")]
+    [InlineData(UiTextKeys.ProductDocumentRegistrationValidationUnsupportedFileType, "지원하지 않는 파일 형식입니다.")]
+    [InlineData(UiTextKeys.ProductDocumentRegistrationValidationEmptyFile, "빈 파일은 등록할 수 없습니다.")]
+    [InlineData(UiTextKeys.ProductDocumentRegistrationValidationFileTooLarge, "파일 크기는 25MB 이하여야 합니다.")]
+    [InlineData(UiTextKeys.ProductDocumentRegistrationValidationSourceUnavailable, "선택한 파일을 읽을 수 없습니다. 다시 선택해 주세요.")]
+    [InlineData(UiTextKeys.ProductDocumentRegistrationValidationSourceChanged, "선택 후 파일이 변경되었습니다. 다시 선택해 주세요.")]
+    [InlineData(UiTextKeys.ProductDocumentRegistrationValidationDuplicateDocument, "같은 대상에 동일한 문서가 이미 등록되어 있습니다.")]
+    [InlineData(UiTextKeys.ProductDocumentRegistrationStatusCanceled, "파일 선택을 취소했습니다.")]
+    [InlineData(UiTextKeys.ProductDocumentRegistrationStatusRetryAvailable, "입력 내용을 유지했습니다. 확인 후 다시 시도해 주세요.")]
     [InlineData(UiTextKeys.ProductDocumentListLoadFailedMessage, "문서 목록을 불러오지 못했습니다.")]
+    [InlineData(UiTextKeys.ProductFamilyMemberDisplayNameLabel, "표시명")]
+    [InlineData(UiTextKeys.ProductFamilyMemberRelationLabel, "관계")]
+    [InlineData(UiTextKeys.ProductFamilyMemberMemoLabel, "메모")]
+    [InlineData(UiTextKeys.ProductFamilyMemberActiveStateLabel, "사용 여부")]
+    [InlineData(UiTextKeys.ProductFamilyMemberActiveListLabel, "가족 목록")]
+    [InlineData(UiTextKeys.ProductFamilyMemberEmptyMessage, "등록된 가족 정보가 없습니다.")]
+    [InlineData(UiTextKeys.ProductFamilyMemberLoadFailedMessage, "가족 목록을 불러오지 못했습니다. 다시 시도해 주세요.")]
+    [InlineData(UiTextKeys.ProductFamilyMemberSavedMessage, "가족 정보를 저장했습니다.")]
+    [InlineData(UiTextKeys.ProductFamilyMemberDeactivatedMessage, "가족 정보를 사용 중지했습니다.")]
+    [InlineData(UiTextKeys.ProductFamilyMemberReactivateAction, "다시 사용")]
+    [InlineData(UiTextKeys.ProductFamilyMemberReactivatedMessage, "가족 정보를 다시 사용하도록 변경했습니다.")]
+    [InlineData(UiTextKeys.ProductFamilyMemberDisplayNameRequiredMessage, "표시명을 입력해 주세요.")]
+    [InlineData(UiTextKeys.ProductFamilyMemberRelationRequiredMessage, "관계를 선택해 주세요.")]
+    [InlineData(UiTextKeys.ProductFamilyMemberConflictMessage, "다른 변경이 반영되었습니다. 목록을 다시 불러온 뒤 시도해 주세요.")]
+    [InlineData(UiTextKeys.ProductFamilyMemberTargetUnavailableMessage, "처리할 가족 정보를 찾을 수 없습니다. 목록을 다시 확인해 주세요.")]
+    [InlineData(UiTextKeys.ProductFamilyMemberOperationFailedMessage, "가족 정보를 처리하지 못했습니다. 다시 시도해 주세요.")]
+    [InlineData(UiTextKeys.ProductFamilyMemberSavedRefreshFailedMessage, "저장은 완료되었지만 목록을 새로고치지 못했습니다. 다시 불러와 주세요.")]
     [InlineData(UiTextKeys.ClaimManagementMessageCreated, "청구 건을 등록했습니다.")]
     [InlineData(UiTextKeys.ClaimManagementMessageDisabled, "청구 건을 사용 중지했습니다.")]
     [InlineData(UiTextKeys.ClaimManagementValidationTitleRequired, "청구 건 이름을 입력해 주세요.")]
@@ -312,6 +337,26 @@ public sealed class ResourceUiTextProviderTests
         UiTextKeys.ProductClaimCasesOperationFailedMessage,
         UiTextKeys.ProductPolicyContractsDuplicateTitleMessage,
         UiTextKeys.ProductClaimCasesDuplicateTitleMessage
+        ,
+        UiTextKeys.ProductDocumentRegistrationValidationUnsupportedFileType,
+        UiTextKeys.ProductDocumentRegistrationValidationEmptyFile,
+        UiTextKeys.ProductDocumentRegistrationValidationFileTooLarge,
+        UiTextKeys.ProductDocumentRegistrationValidationSourceUnavailable,
+        UiTextKeys.ProductDocumentRegistrationValidationSourceChanged,
+        UiTextKeys.ProductDocumentRegistrationValidationDuplicateDocument,
+        UiTextKeys.ProductDocumentRegistrationStatusCanceled,
+        UiTextKeys.ProductDocumentRegistrationStatusRetryAvailable
+        ,
+        UiTextKeys.ProductFamilyMemberLoadFailedMessage,
+        UiTextKeys.ProductFamilyMemberSavedMessage,
+        UiTextKeys.ProductFamilyMemberDeactivatedMessage,
+        UiTextKeys.ProductFamilyMemberReactivatedMessage,
+        UiTextKeys.ProductFamilyMemberDisplayNameRequiredMessage,
+        UiTextKeys.ProductFamilyMemberRelationRequiredMessage,
+        UiTextKeys.ProductFamilyMemberConflictMessage,
+        UiTextKeys.ProductFamilyMemberTargetUnavailableMessage,
+        UiTextKeys.ProductFamilyMemberOperationFailedMessage,
+        UiTextKeys.ProductFamilyMemberSavedRefreshFailedMessage
     ];
 
     private static bool IsProductKey(string key) => key.StartsWith("Ui.Product.", StringComparison.Ordinal);
@@ -356,9 +401,48 @@ public sealed class ResourceUiTextProviderTests
             [UiTextKeys.ProductDocumentRegistrationTargetSelectionSection] = "연결 대상 선택",
             [UiTextKeys.ProductDocumentRegistrationPolicyTargetLabel] = "보험 계약",
             [UiTextKeys.ProductDocumentRegistrationClaimTargetLabel] = "청구 건",
+            [UiTextKeys.ProductDocumentRegistrationValidationUnsupportedFileType] =
+                "지원하지 않는 파일 형식입니다.",
+            [UiTextKeys.ProductDocumentRegistrationValidationEmptyFile] =
+                "빈 파일은 등록할 수 없습니다.",
+            [UiTextKeys.ProductDocumentRegistrationValidationFileTooLarge] =
+                "파일 크기는 25MB 이하여야 합니다.",
+            [UiTextKeys.ProductDocumentRegistrationValidationSourceUnavailable] =
+                "선택한 파일을 읽을 수 없습니다. 다시 선택해 주세요.",
+            [UiTextKeys.ProductDocumentRegistrationValidationSourceChanged] =
+                "선택 후 파일이 변경되었습니다. 다시 선택해 주세요.",
+            [UiTextKeys.ProductDocumentRegistrationValidationDuplicateDocument] =
+                "같은 대상에 동일한 문서가 이미 등록되어 있습니다.",
+            [UiTextKeys.ProductDocumentRegistrationStatusCanceled] =
+                "파일 선택을 취소했습니다.",
+            [UiTextKeys.ProductDocumentRegistrationStatusRetryAvailable] =
+                "입력 내용을 유지했습니다. 확인 후 다시 시도해 주세요.",
             [UiTextKeys.ProductDocumentListTitle] = "문서 목록",
             [UiTextKeys.ProductDocumentListEmptyMessage] = "등록된 문서가 없습니다.",
-            [UiTextKeys.ProductDocumentListLoadFailedMessage] = "문서 목록을 불러오지 못했습니다."
+            [UiTextKeys.ProductDocumentListLoadFailedMessage] = "문서 목록을 불러오지 못했습니다.",
+            [UiTextKeys.ProductFamilyMemberDisplayNameLabel] = "표시명",
+            [UiTextKeys.ProductFamilyMemberRelationLabel] = "관계",
+            [UiTextKeys.ProductFamilyMemberMemoLabel] = "메모",
+            [UiTextKeys.ProductFamilyMemberActiveStateLabel] = "사용 여부",
+            [UiTextKeys.ProductFamilyMemberActiveListLabel] = "가족 목록",
+            [UiTextKeys.ProductFamilyMemberEmptyMessage] = "등록된 가족 정보가 없습니다.",
+            [UiTextKeys.ProductFamilyMemberLoadFailedMessage] =
+                "가족 목록을 불러오지 못했습니다. 다시 시도해 주세요.",
+            [UiTextKeys.ProductFamilyMemberSavedMessage] = "가족 정보를 저장했습니다.",
+            [UiTextKeys.ProductFamilyMemberDeactivatedMessage] = "가족 정보를 사용 중지했습니다.",
+            [UiTextKeys.ProductFamilyMemberReactivateAction] = "다시 사용",
+            [UiTextKeys.ProductFamilyMemberReactivatedMessage] =
+                "가족 정보를 다시 사용하도록 변경했습니다.",
+            [UiTextKeys.ProductFamilyMemberDisplayNameRequiredMessage] = "표시명을 입력해 주세요.",
+            [UiTextKeys.ProductFamilyMemberRelationRequiredMessage] = "관계를 선택해 주세요.",
+            [UiTextKeys.ProductFamilyMemberConflictMessage] =
+                "다른 변경이 반영되었습니다. 목록을 다시 불러온 뒤 시도해 주세요.",
+            [UiTextKeys.ProductFamilyMemberTargetUnavailableMessage] =
+                "처리할 가족 정보를 찾을 수 없습니다. 목록을 다시 확인해 주세요.",
+            [UiTextKeys.ProductFamilyMemberOperationFailedMessage] =
+                "가족 정보를 처리하지 못했습니다. 다시 시도해 주세요.",
+            [UiTextKeys.ProductFamilyMemberSavedRefreshFailedMessage] =
+                "저장은 완료되었지만 목록을 새로고치지 못했습니다. 다시 불러와 주세요."
         };
 
     private const string ExistingResourceFingerprint =

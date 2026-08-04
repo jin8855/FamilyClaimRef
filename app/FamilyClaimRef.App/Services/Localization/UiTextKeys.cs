@@ -36,6 +36,39 @@ public static class UiTextKeys
         "Ui.Product.PolicyContracts.DuplicateTitleMessage";
     public const string ProductClaimCasesDuplicateTitleMessage =
         "Ui.Product.ClaimCases.DuplicateTitleMessage";
+    public const string ProductFamilyMemberDisplayNameLabel =
+        "Ui.Product.FamilyMember.DisplayNameLabel";
+    public const string ProductFamilyMemberRelationLabel =
+        "Ui.Product.FamilyMember.RelationLabel";
+    public const string ProductFamilyMemberMemoLabel = "Ui.Product.FamilyMember.MemoLabel";
+    public const string ProductFamilyMemberActiveStateLabel =
+        "Ui.Product.FamilyMember.ActiveStateLabel";
+    public const string ProductFamilyMemberActiveListLabel =
+        "Ui.Product.FamilyMember.ActiveListLabel";
+    public const string ProductFamilyMemberEmptyMessage =
+        "Ui.Product.FamilyMember.EmptyMessage";
+    public const string ProductFamilyMemberLoadFailedMessage =
+        "Ui.Product.FamilyMember.LoadFailedMessage";
+    public const string ProductFamilyMemberSavedMessage =
+        "Ui.Product.FamilyMember.SavedMessage";
+    public const string ProductFamilyMemberDeactivatedMessage =
+        "Ui.Product.FamilyMember.DeactivatedMessage";
+    public const string ProductFamilyMemberReactivateAction =
+        "Ui.Product.FamilyMember.ReactivateAction";
+    public const string ProductFamilyMemberReactivatedMessage =
+        "Ui.Product.FamilyMember.ReactivatedMessage";
+    public const string ProductFamilyMemberDisplayNameRequiredMessage =
+        "Ui.Product.FamilyMember.DisplayNameRequiredMessage";
+    public const string ProductFamilyMemberRelationRequiredMessage =
+        "Ui.Product.FamilyMember.RelationRequiredMessage";
+    public const string ProductFamilyMemberConflictMessage =
+        "Ui.Product.FamilyMember.ConflictMessage";
+    public const string ProductFamilyMemberTargetUnavailableMessage =
+        "Ui.Product.FamilyMember.TargetUnavailableMessage";
+    public const string ProductFamilyMemberOperationFailedMessage =
+        "Ui.Product.FamilyMember.OperationFailedMessage";
+    public const string ProductFamilyMemberSavedRefreshFailedMessage =
+        "Ui.Product.FamilyMember.SavedRefreshFailedMessage";
     public const string ProductDocumentRegistrationTitle = "Ui.Product.DocumentRegistration.Title";
     public const string ProductDocumentRegistrationTargetSelectionSection =
         "Ui.Product.DocumentRegistration.TargetSelectionSection";
@@ -43,6 +76,22 @@ public static class UiTextKeys
         "Ui.Product.DocumentRegistration.PolicyTargetLabel";
     public const string ProductDocumentRegistrationClaimTargetLabel =
         "Ui.Product.DocumentRegistration.ClaimTargetLabel";
+    public const string ProductDocumentRegistrationValidationUnsupportedFileType =
+        "Ui.Product.DocumentRegistration.Validation.UnsupportedFileType";
+    public const string ProductDocumentRegistrationValidationEmptyFile =
+        "Ui.Product.DocumentRegistration.Validation.EmptyFile";
+    public const string ProductDocumentRegistrationValidationFileTooLarge =
+        "Ui.Product.DocumentRegistration.Validation.FileTooLarge";
+    public const string ProductDocumentRegistrationValidationSourceUnavailable =
+        "Ui.Product.DocumentRegistration.Validation.SourceUnavailable";
+    public const string ProductDocumentRegistrationValidationSourceChanged =
+        "Ui.Product.DocumentRegistration.Validation.SourceChanged";
+    public const string ProductDocumentRegistrationValidationDuplicateDocument =
+        "Ui.Product.DocumentRegistration.Validation.DuplicateDocument";
+    public const string ProductDocumentRegistrationStatusCanceled =
+        "Ui.Product.DocumentRegistration.Status.Canceled";
+    public const string ProductDocumentRegistrationStatusRetryAvailable =
+        "Ui.Product.DocumentRegistration.Status.RetryAvailable";
     public const string ProductDocumentListTitle = "Ui.Product.DocumentList.Title";
     public const string ProductDocumentListEmptyMessage = "Ui.Product.DocumentList.EmptyMessage";
     public const string ProductDocumentListLoadFailedMessage = "Ui.Product.DocumentList.LoadFailedMessage";

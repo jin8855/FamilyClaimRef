@@ -185,6 +185,38 @@ public sealed class DocumentRegistrationNegativeValidationTests
         });
     }
 
+    [Fact]
+    public async Task Gate8_source_removed_after_selection_creates_no_metadata_link_or_attachment()
+    {
+        await UsingTestContextAsync(async context =>
+        {
+            var policy = await context.PolicyClaimStorage.AddPolicyAsync(CreatePolicyDraft());
+            var sourcePath = Path.Combine(context.InputRootPath, "removed-after-selection.png");
+            await File.WriteAllBytesAsync(
+                sourcePath,
+                [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x01]);
+            var snapshot = await new DocumentFileValidationService().ValidateSourceAsync(sourcePath);
+            File.Delete(sourcePath);
+
+            var exception = await Record.ExceptionAsync(() =>
+                context.Workflow.RegisterPolicyDocumentAsync(new PolicyDocumentRegistrationRequest(
+                    sourcePath,
+                    policy.Id,
+                    "terms",
+                    "Synthetic removed source",
+                    ReferenceDate,
+                    snapshot)));
+
+            var registrationException =
+                Assert.IsType<DocumentRegistrationException>(exception);
+            Assert.Equal(
+                DocumentRegistrationErrorCode.SourceUnavailable,
+                registrationException.ErrorCode);
+            await AssertNoDocumentMetadataOrAttachmentsAsync(context);
+            await AssertNoPolicyLinksAsync(context, policy.Id);
+        });
+    }
+
     private static async Task UsingTestContextAsync(Func<TestContext, Task> action)
     {
         var projectRoot = FindProjectRoot();
@@ -205,9 +237,11 @@ public sealed class DocumentRegistrationNegativeValidationTests
         var documentStorage = new JsonDocumentStorageService(metadataRootPath);
         var policyClaimStorage = new JsonPolicyClaimStorageService(metadataRootPath);
         var fileAttachmentService = new LocalFileAttachmentService(attachmentRootPath);
+        var validationService = new DocumentFileValidationService();
         var attachmentCoordinator = new DocumentAttachmentCoordinator(
             documentStorage,
-            fileAttachmentService);
+            fileAttachmentService,
+            validationService);
         var linkCoordinator = new DocumentLinkCoordinator(
             documentStorage,
             policyClaimStorage);
@@ -215,7 +249,8 @@ public sealed class DocumentRegistrationNegativeValidationTests
             attachmentCoordinator,
             linkCoordinator,
             documentStorage,
-            fileAttachmentService);
+            fileAttachmentService,
+            policyClaimStorage);
         var context = new TestContext(
             inputRootPath,
             metadataRootPath,

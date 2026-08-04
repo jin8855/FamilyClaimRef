@@ -31,16 +31,24 @@ public sealed class ProductDocumentListViewModelTests
     }
 
     [Fact]
-    public void Item_is_immutable_and_exposes_only_the_accepted_display_title()
+    public void Item_is_immutable_and_exposes_the_approved_document_box_columns()
     {
         const string displayTitle = "  Synthetic title  ";
         var item = new ProductDocumentListItemViewModel(displayTitle);
         var publicProperties = typeof(ProductDocumentListItemViewModel)
             .GetProperties(BindingFlags.Instance | BindingFlags.Public);
 
-        var property = Assert.Single(publicProperties);
-        Assert.Equal(nameof(ProductDocumentListItemViewModel.DisplayTitle), property.Name);
-        Assert.False(property.CanWrite);
+        Assert.Equal(
+            [
+                nameof(ProductDocumentListItemViewModel.DisplayTitle),
+                nameof(ProductDocumentListItemViewModel.DocumentType),
+                nameof(ProductDocumentListItemViewModel.OcrStatus),
+                nameof(ProductDocumentListItemViewModel.Purpose),
+                nameof(ProductDocumentListItemViewModel.ReferenceDate),
+                nameof(ProductDocumentListItemViewModel.Target)
+            ],
+            publicProperties.Select(property => property.Name).Order(StringComparer.Ordinal));
+        Assert.All(publicProperties, property => Assert.False(property.CanWrite));
         Assert.Equal(displayTitle, item.DisplayTitle);
         Assert.DoesNotContain(typeof(INotifyPropertyChanged), typeof(ProductDocumentListItemViewModel).GetInterfaces());
     }
@@ -108,11 +116,36 @@ public sealed class ProductDocumentListViewModelTests
         await viewModel.LoadAsync();
 
         Assert.Equal(["First title", "Second title"], viewModel.Items.Select(item => item.DisplayTitle));
-        Assert.All(
-            viewModel.Items,
-            item => Assert.Single(item.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)));
+        Assert.All(viewModel.Items, item => Assert.Equal("Purpose unavailable", item.Purpose));
         AssertExclusiveState(viewModel, isLoading: false, isEmpty: false, hasLoadError: false);
         Assert.Equal(0, storage.UnexpectedCallCount);
+    }
+
+    [Fact]
+    public async Task Load_projects_available_metadata_and_explicit_empty_values()
+    {
+        var storage = new FakeDocumentStorageService();
+        storage.EnqueueDocuments(
+            CreateDocument(
+                "Policy terms",
+                documentType: "terms",
+                referenceDate: new DateOnly(2026, 7, 31)),
+            CreateDocument("Unknown", documentType: null));
+        var viewModel = CreateViewModel(storage);
+
+        await viewModel.LoadAsync();
+
+        var policy = viewModel.Items[0];
+        Assert.Equal("Managed purpose", policy.Purpose);
+        Assert.Equal("약관", policy.DocumentType);
+        Assert.Equal("Target unavailable", policy.Target);
+        Assert.Equal("OCR unavailable", policy.OcrStatus);
+        Assert.Equal("2026-07-31", policy.ReferenceDate);
+
+        var unknown = viewModel.Items[1];
+        Assert.Equal("Purpose unavailable", unknown.Purpose);
+        Assert.Equal("Empty value", unknown.DocumentType);
+        Assert.Equal("Empty value", unknown.ReferenceDate);
     }
 
     [Fact]
@@ -294,13 +327,21 @@ public sealed class ProductDocumentListViewModelTests
         {
             [UiTextKeys.ProductDocumentListTitle] = "Document list",
             [UiTextKeys.ProductDocumentListEmptyMessage] = "No documents",
-            [UiTextKeys.ProductDocumentListLoadFailedMessage] = "Unable to load documents"
+            [UiTextKeys.ProductDocumentListLoadFailedMessage] = "Unable to load documents",
+            [ProductScreenTextKeys.EmptyValue] = "Empty value",
+            [ProductScreenTextKeys.DocumentManagedPurpose] = "Managed purpose",
+            [ProductScreenTextKeys.DocumentClaimPurpose] = "Claim purpose",
+            [ProductScreenTextKeys.DocumentPurposeUnavailable] = "Purpose unavailable",
+            [ProductScreenTextKeys.DocumentTargetUnavailable] = "Target unavailable",
+            [ProductScreenTextKeys.DocumentOcrUnavailable] = "OCR unavailable"
         });
     }
 
     private static DocumentRecord CreateDocument(
         string displayTitle,
-        DateTimeOffset? disabledAt = null)
+        DateTimeOffset? disabledAt = null,
+        string? documentType = null,
+        DateOnly? referenceDate = null)
     {
         var timestamp = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
         var identifier = Guid.NewGuid().ToString("N");
@@ -312,14 +353,16 @@ public sealed class ProductDocumentListViewModelTests
             $"documents/{identifier}.png",
             timestamp,
             timestamp,
-            disabledAt);
+            disabledAt,
+            DocumentType: documentType,
+            ReferenceDate: referenceDate);
     }
 
     private sealed class FakeUiTextProvider(IReadOnlyDictionary<string, string> values) : IUiTextProvider
     {
         public string Get(string key)
         {
-            return values[key];
+            return values.TryGetValue(key, out var value) ? value : key;
         }
 
         public string Format(string key, params object?[] args)

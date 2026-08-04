@@ -52,6 +52,40 @@ public sealed class JsonDocumentStorageServiceTests
     }
 
     [Fact]
+    public async Task AddDocumentAsync_persists_complete_gate8_metadata()
+    {
+        await UsingTempRootAsync(async rootPath =>
+        {
+            var service = new JsonDocumentStorageService(rootPath);
+            var draft = new DocumentDraft(
+                "policy-document_20260724_terms_001.pdf",
+                "Synthetic document",
+                "PDF",
+                "documents/policy-document_20260724_terms_001.pdf",
+                "synthetic.pdf",
+                "PDF",
+                12,
+                new string('a', 64),
+                new DateOnly(2026, 7, 24),
+                "terms");
+
+            var record = await service.AddDocumentAsync(draft);
+            var loaded = await service.GetDocumentByIdAsync(record.Id);
+
+            Assert.NotNull(loaded);
+            Assert.Equal("pdf", loaded.Extension);
+            Assert.Equal("synthetic.pdf", loaded.OriginalDisplayFileName);
+            Assert.Equal("PDF", loaded.ValidatedFileType);
+            Assert.Equal(12, loaded.ByteLength);
+            Assert.Equal(new string('a', 64), loaded.Sha256);
+            Assert.Equal(new DateOnly(2026, 7, 24), loaded.ReferenceDate);
+            Assert.Equal("terms", loaded.DocumentType);
+            Assert.Equal("application/pdf", loaded.DeclaredContentType);
+            Assert.False(loaded.IsDisabled);
+        });
+    }
+
+    [Fact]
     public async Task GetDocumentByIdAsync_returns_null_for_missing_document()
     {
         await UsingTempRootAsync(async rootPath =>

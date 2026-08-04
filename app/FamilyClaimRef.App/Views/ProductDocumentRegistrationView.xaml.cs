@@ -21,7 +21,7 @@ public partial class ProductDocumentRegistrationView : UserControl
 
     private async void SelectFileButton_Click(object sender, RoutedEventArgs e)
     {
-        if (DataContext is DocumentRegistrationViewModel viewModel)
+        if (DataContext is DocumentRegistrationViewModel { IsBusy: false } viewModel)
         {
             await viewModel.SelectFileAsync();
         }
@@ -29,7 +29,7 @@ public partial class ProductDocumentRegistrationView : UserControl
 
     private async void RegisterButton_Click(object sender, RoutedEventArgs e)
     {
-        if (DataContext is DocumentRegistrationViewModel viewModel)
+        if (DataContext is DocumentRegistrationViewModel { IsBusy: false } viewModel)
         {
             await viewModel.RegisterAsync();
         }

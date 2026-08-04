@@ -1,4 +1,5 @@
 using System.IO;
+using FamilyClaimRef.App.Services.Storage;
 using Microsoft.Win32;
 
 namespace FamilyClaimRef.App.Services.UI;
@@ -6,9 +7,22 @@ namespace FamilyClaimRef.App.Services.UI;
 public sealed class WpfFilePickerService : IFilePickerService
 {
     private const string DocumentFilter =
-        "Document files|*.pdf;*.png;*.jpg;*.jpeg;*.webp;*.bmp|All files|*.*";
+        "Document files|*.pdf;*.png;*.jpg;*.jpeg";
 
-    public Task<FilePickerResult?> PickDocumentFileAsync(
+    private readonly DocumentFileValidationService fileValidationService;
+
+    public WpfFilePickerService()
+        : this(new DocumentFileValidationService())
+    {
+    }
+
+    public WpfFilePickerService(DocumentFileValidationService fileValidationService)
+    {
+        this.fileValidationService = fileValidationService
+            ?? throw new ArgumentNullException(nameof(fileValidationService));
+    }
+
+    public async Task<FilePickerResult?> PickDocumentFileAsync(
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -24,14 +38,18 @@ public sealed class WpfFilePickerService : IFilePickerService
         var selected = dialog.ShowDialog();
         if (selected != true)
         {
-            return Task.FromResult<FilePickerResult?>(null);
+            return null;
         }
 
         var sourceFilePath = dialog.FileName;
+        var validation = await fileValidationService.ValidateSourceAsync(
+            sourceFilePath,
+            cancellationToken);
         var result = new FilePickerResult(
             sourceFilePath,
-            Path.GetFileName(sourceFilePath));
+            validation.SafeDisplayName,
+            validation);
 
-        return Task.FromResult<FilePickerResult?>(result);
+        return result;
     }
 }

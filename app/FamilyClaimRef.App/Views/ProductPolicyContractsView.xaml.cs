@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using FamilyClaimRef.App.Models.Storage;
 using FamilyClaimRef.App.ViewModels;
 
 namespace FamilyClaimRef.App.Views;
@@ -34,5 +35,28 @@ public partial class ProductPolicyContractsView : UserControl
         {
             await viewModel.DisableSelectedPolicyAsync();
         }
+    }
+
+    private void EditPolicyButton_Click(object sender, RoutedEventArgs e)
+    {
+        SelectPolicyAndNavigate(sender, ProductScreenRoutes.PolicyRegister);
+    }
+
+    private void AddPolicyDocumentButton_Click(object sender, RoutedEventArgs e)
+    {
+        SelectPolicyAndNavigate(sender, ProductScreenRoutes.PolicyDocumentRegister);
+    }
+
+    private void SelectPolicyAndNavigate(object sender, string routeId)
+    {
+        if (sender is not FrameworkElement { DataContext: PolicyRecord policy }
+            || DataContext is not PolicyClaimManagementViewModel management
+            || Window.GetWindow(this)?.DataContext is not ProductShellViewModel shell)
+        {
+            return;
+        }
+
+        management.SelectedPolicyId = policy.Id;
+        shell.NavigateTo(routeId);
     }
 }

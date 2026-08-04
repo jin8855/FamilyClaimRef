@@ -1,0 +1,138 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Color x:Key="ProductBackgroundColor">#F3F4F6</Color>
+    <Color x:Key="ProductSurfaceColor">#FFFFFF</Color>
+    <Color x:Key="ProductTextColor">#1F2933</Color>
+    <Color x:Key="ProductMutedTextColor">#53616F</Color>
+    <Color x:Key="ProductBorderColor">#CFD6DD</Color>
+    <Color x:Key="ProductAccentColor">#0F766E</Color>
+    <Color x:Key="ProductAccentSoftColor">#E7F5F2</Color>
+    <Color x:Key="ProductSecondaryColor">#2563EB</Color>
+    <Color x:Key="ProductWarningColor">#B45309</Color>
+
+    <SolidColorBrush x:Key="ProductBackgroundBrush" Color="{StaticResource ProductBackgroundColor}" />
+    <SolidColorBrush x:Key="ProductSurfaceBrush" Color="{StaticResource ProductSurfaceColor}" />
+    <SolidColorBrush x:Key="ProductTextBrush" Color="{StaticResource ProductTextColor}" />
+    <SolidColorBrush x:Key="ProductMutedTextBrush" Color="{StaticResource ProductMutedTextColor}" />
+    <SolidColorBrush x:Key="ProductBorderBrush" Color="{StaticResource ProductBorderColor}" />
+    <SolidColorBrush x:Key="ProductAccentBrush" Color="{StaticResource ProductAccentColor}" />
+    <SolidColorBrush x:Key="ProductAccentSoftBrush" Color="{StaticResource ProductAccentSoftColor}" />
+    <SolidColorBrush x:Key="ProductSecondaryBrush" Color="{StaticResource ProductSecondaryColor}" />
+    <SolidColorBrush x:Key="ProductWarningBrush" Color="{StaticResource ProductWarningColor}" />
+
+    <Style TargetType="{x:Type Window}" x:Key="ProductWindowStyle">
+        <Setter Property="Background" Value="{StaticResource ProductBackgroundBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource ProductTextBrush}" />
+        <Setter Property="FontFamily" Value="Segoe UI" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
+    </Style>
+
+    <Style TargetType="{x:Type TextBlock}" x:Key="ProductPageTitleStyle">
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{StaticResource ProductTextBrush}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <Style TargetType="{x:Type TextBlock}" x:Key="ProductSubtitleStyle">
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Foreground" Value="{StaticResource ProductMutedTextBrush}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <Style TargetType="{x:Type TextBlock}" x:Key="ProductSectionTitleStyle">
+        <Setter Property="FontSize" Value="17" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{StaticResource ProductTextBrush}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <Style TargetType="{x:Type Border}" x:Key="ProductPanelStyle">
+        <Setter Property="Background" Value="{StaticResource ProductSurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource ProductBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="Padding" Value="16" />
+        <Setter Property="Margin" Value="0,0,0,14" />
+    </Style>
+
+    <Style TargetType="{x:Type Button}" x:Key="ProductPrimaryButtonStyle">
+        <Setter Property="Background" Value="{StaticResource ProductAccentBrush}" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="BorderBrush" Value="{StaticResource ProductAccentBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="14,8" />
+        <Setter Property="MinHeight" Value="36" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Margin" Value="0,0,8,8" />
+    </Style>
+
+    <Style TargetType="{x:Type Button}" x:Key="ProductSecondaryButtonStyle">
+        <Setter Property="Background" Value="{StaticResource ProductSurfaceBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource ProductTextBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource ProductBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="12,7" />
+        <Setter Property="MinHeight" Value="34" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Margin" Value="0,0,8,8" />
+    </Style>
+
+    <Style TargetType="{x:Type Button}" x:Key="ProductCardButtonStyle"
+           BasedOn="{StaticResource ProductSecondaryButtonStyle}">
+        <Setter Property="MinHeight" Value="112" />
+        <Setter Property="MinWidth" Value="210" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="VerticalContentAlignment" Value="Top" />
+        <Setter Property="Padding" Value="18" />
+        <Setter Property="FontSize" Value="17" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <Style TargetType="{x:Type TextBox}">
+        <Setter Property="MinHeight" Value="34" />
+        <Setter Property="Padding" Value="8,5" />
+        <Setter Property="BorderBrush" Value="{StaticResource ProductBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Background" Value="{StaticResource ProductSurfaceBrush}" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+
+    <Style TargetType="{x:Type ComboBox}">
+        <Setter Property="MinHeight" Value="34" />
+        <Setter Property="Padding" Value="6,3" />
+        <Setter Property="BorderBrush" Value="{StaticResource ProductBorderBrush}" />
+        <Setter Property="Background" Value="{StaticResource ProductSurfaceBrush}" />
+    </Style>
+
+    <Style TargetType="{x:Type DatePicker}">
+        <Setter Property="MinHeight" Value="34" />
+        <Setter Property="BorderBrush" Value="{StaticResource ProductBorderBrush}" />
+    </Style>
+
+    <Style TargetType="{x:Type DataGrid}">
+        <Setter Property="Background" Value="{StaticResource ProductSurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource ProductBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="GridLinesVisibility" Value="Horizontal" />
+        <Setter Property="HorizontalGridLinesBrush" Value="#E4E8EC" />
+        <Setter Property="RowBackground" Value="{StaticResource ProductSurfaceBrush}" />
+        <Setter Property="AlternatingRowBackground" Value="#F8FAFC" />
+        <Setter Property="HeadersVisibility" Value="Column" />
+        <Setter Property="CanUserAddRows" Value="False" />
+        <Setter Property="CanUserDeleteRows" Value="False" />
+        <Setter Property="IsReadOnly" Value="True" />
+        <Setter Property="AutoGenerateColumns" Value="False" />
+    </Style>
+
+    <Style TargetType="{x:Type DataGridColumnHeader}">
+        <Setter Property="Background" Value="#F8FAFC" />
+        <Setter Property="Foreground" Value="{StaticResource ProductTextBrush}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Padding" Value="10,8" />
+        <Setter Property="BorderBrush" Value="#E4E8EC" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+    </Style>
+</ResourceDictionary>

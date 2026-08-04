@@ -5,4 +5,5 @@ public sealed record DocumentAttachmentRequest(
     string DocumentScope,
     string DocumentType,
     string DisplayTitle,
-    DateOnly ReferenceDate);
+    DateOnly ReferenceDate,
+    DocumentFileValidationResult? SelectionSnapshot = null);

@@ -325,6 +325,36 @@ public sealed class IFileAttachmentServiceTests
     }
 
     [Fact]
+    public async Task Stage_and_finalize_moves_payload_from_staging_to_documents_without_residue()
+    {
+        await UsingTempRootAsync(async rootPath =>
+        {
+            var service = new LocalFileAttachmentService(rootPath);
+            var sourcePath = await CreateDummySourceFileAsync(rootPath, "source.pdf", "%PDF-1.4");
+            var staged = await service.StageDocumentFileAsync(sourcePath);
+            var validated = staged with
+            {
+                Validation = new DocumentFileValidationResult(
+                    "source.pdf",
+                    "pdf",
+                    "PDF",
+                    8,
+                    new string('a', 64),
+                    DateTimeOffset.UtcNow)
+            };
+
+            var result = await service.FinalizeStagedDocumentFileAsync(
+                validated,
+                "policy-document_20260724_terms_001.pdf");
+
+            Assert.False(File.Exists(staged.FullPath));
+            Assert.True(await service.DocumentFileExistsAsync(result.RelativePath));
+            Assert.Equal("documents/policy-document_20260724_terms_001.pdf", result.RelativePath);
+            Assert.Empty(SnapshotFiles(Path.Combine(rootPath, "staging")));
+        });
+    }
+
+    [Fact]
     public async Task Service_operations_do_not_create_project_root_attachment_or_data_files()
     {
         var projectRoot = FindProjectRoot();

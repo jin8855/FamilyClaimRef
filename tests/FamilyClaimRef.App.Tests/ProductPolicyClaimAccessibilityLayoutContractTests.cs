@@ -8,64 +8,95 @@ public sealed class ProductPolicyClaimAccessibilityLayoutContractTests
     private static readonly XNamespace Presentation =
         "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
 
-    private static readonly XNamespace Xaml =
-        "http://schemas.microsoft.com/winfx/2006/xaml";
-
     [Fact]
-    public void Navigation_items_use_single_selection_and_display_only_automation_names()
+    public void Shell_exposes_stable_primary_navigation_without_development_screen_picker()
     {
         var document = LoadXaml(
             "app",
             "FamilyClaimRef.App",
             "ProductShell",
             "ProductShellWindow.xaml");
-        var navigation = Assert.Single(
-            document.Descendants(Presentation + "ListBox"),
-            element => AttributeValue(element, "ItemsSource") == "{Binding NavigationItems}");
+        var automationIds = document
+            .Descendants(Presentation + "Button")
+            .Select(button => AttributeValue(button, "AutomationId"))
+            .Where(value => value is not null)
+            .ToArray();
 
-        Assert.Equal("Single", AttributeValue(navigation, "SelectionMode"));
-        Assert.Equal(
-            "{Binding SelectedNavigationItem, Mode=TwoWay}",
-            AttributeValue(navigation, "SelectedItem"));
-        Assert.Contains(
-            navigation.Descendants(Presentation + "Setter"),
-            setter =>
-                AttributeValue(setter, "Property") == "AutomationProperties.Name"
-                && AttributeValue(setter, "Value") == "{Binding DisplayText}");
+        Assert.Contains("ProductNav_Home", automationIds);
+        Assert.Contains("ProductNav_Claim", automationIds);
+        Assert.Contains("ProductNav_Policy", automationIds);
+        Assert.Contains("ProductNav_History", automationIds);
+        Assert.Contains("ProductNav_Manage", automationIds);
+
+        Assert.DoesNotContain(
+            document.Descendants(Presentation + "ComboBox"),
+            element => AttributeValue(element, "AutomationId") == "ProductScreenPicker");
+        Assert.DoesNotContain(
+            document.Descendants(Presentation + "TextBlock"),
+            element => AttributeValue(element, "Text")
+                == "{StaticResource Ui.Product.Wireframe.Common.ScreenPickerLabel}");
     }
 
     [Fact]
-    public void Policy_rows_use_display_title_for_automation_name()
+    public void Shell_uses_responsive_approved_dimensions_without_fixed_left_navigation()
     {
         var document = LoadXaml(
+            "app",
+            "FamilyClaimRef.App",
+            "ProductShell",
+            "ProductShellWindow.xaml");
+
+        Assert.Equal("1280", AttributeValue(document.Root!, "Width"));
+        Assert.Equal("840", AttributeValue(document.Root!, "Height"));
+        Assert.Equal("960", AttributeValue(document.Root!, "MinWidth"));
+        Assert.Equal("680", AttributeValue(document.Root!, "MinHeight"));
+        Assert.DoesNotContain(
+            document.Descendants(Presentation + "ColumnDefinition"),
+            column => AttributeValue(column, "Width") == "220");
+        Assert.DoesNotContain(
+            document.Descendants(Presentation + "ListBox"),
+            element => AttributeValue(element, "ItemsSource") == "{Binding NavigationItems}");
+    }
+
+    [Fact]
+    public void Policy_and_claim_controls_use_display_text_and_stable_automation_ids()
+    {
+        var policy = LoadXaml(
             "app",
             "FamilyClaimRef.App",
             "Views",
             "ProductPolicyContractsView.xaml");
-        var policyList = FindItemsControl(document, "ListBox", "{Binding AvailablePolicies}");
+        var policyGrid = Assert.Single(
+            policy.Descendants(Presentation + "DataGrid"),
+            element => AttributeValue(element, "ItemsSource") == "{Binding AvailablePolicies}");
+        Assert.Equal("Id", AttributeValue(policyGrid, "SelectedValuePath"));
+        Assert.Equal("ProductPolicy_List", AttributeValue(policyGrid, "AutomationId"));
+        Assert.Contains(
+            policyGrid.Descendants(Presentation + "DataGridTextColumn"),
+            column => AttributeValue(column, "Binding") == "{Binding DisplayTitle}");
 
-        AssertDisplayOnlyAutomationName(policyList, "{Binding DisplayTitle}");
-    }
-
-    [Fact]
-    public void Claim_policy_selector_and_rows_use_display_title_for_automation_name()
-    {
-        var document = LoadXaml(
+        var claim = LoadXaml(
             "app",
             "FamilyClaimRef.App",
             "Views",
             "ProductClaimCasesView.xaml");
+        var policySelector = FindItemsControl(
+            claim,
+            "ComboBox",
+            "{Binding AvailablePolicies}");
+        var claimList = FindItemsControl(
+            claim,
+            "ListBox",
+            "{Binding AvailableClaims}");
 
-        AssertDisplayOnlyAutomationName(
-            FindItemsControl(document, "ComboBox", "{Binding AvailablePolicies}"),
-            "{Binding DisplayTitle}");
-        AssertDisplayOnlyAutomationName(
-            FindItemsControl(document, "ListBox", "{Binding AvailableClaims}"),
-            "{Binding DisplayTitle}");
+        Assert.Equal("DisplayTitle", AttributeValue(policySelector, "DisplayMemberPath"));
+        Assert.Equal("DisplayTitle", AttributeValue(claimList, "DisplayMemberPath"));
+        Assert.Equal("ProductClaim_Policy", AttributeValue(policySelector, "AutomationId"));
+        Assert.Equal("ProductClaim_List", AttributeValue(claimList, "AutomationId"));
     }
 
     [Fact]
-    public void Registration_target_options_use_display_title_for_automation_name()
+    public void Registration_controls_hide_paths_and_use_display_text()
     {
         var document = LoadXaml(
             "app",
@@ -73,130 +104,118 @@ public sealed class ProductPolicyClaimAccessibilityLayoutContractTests
             "Views",
             "ProductDocumentRegistrationView.xaml");
 
-        AssertDisplayOnlyAutomationName(
-            FindItemsControl(document, "ComboBox", "{Binding AvailablePolicies}"),
-            "{Binding DisplayTitle}");
-        AssertDisplayOnlyAutomationName(
-            FindItemsControl(document, "ComboBox", "{Binding AvailableClaims}"),
-            "{Binding DisplayTitle}");
-    }
-
-    [Fact]
-    public void Registration_document_type_options_use_label_for_automation_name()
-    {
-        var document = LoadXaml(
-            "app",
-            "FamilyClaimRef.App",
-            "Views",
-            "ProductDocumentRegistrationView.xaml");
+        var policySelector = FindItemsControl(
+            document,
+            "ComboBox",
+            "{Binding AvailablePolicies}");
+        var claimSelector = FindItemsControl(
+            document,
+            "ComboBox",
+            "{Binding AvailableClaims}");
         var documentTypeSelector = Assert.Single(
             document.Descendants(Presentation + "ComboBox"),
-            element => AttributeValue(element, "DisplayMemberPath") == "Label");
+            element => AttributeValue(element, "AutomationId") == "ProductRegistration_DocumentType");
 
-        AssertDisplayOnlyAutomationName(documentTypeSelector, "{Binding Label}");
+        Assert.Equal("DisplayTitle", AttributeValue(policySelector, "DisplayMemberPath"));
+        Assert.Equal("DisplayTitle", AttributeValue(claimSelector, "DisplayMemberPath"));
+        Assert.Equal("Label", AttributeValue(documentTypeSelector, "DisplayMemberPath"));
+        Assert.DoesNotContain(
+            document.Descendants(),
+            element => AttributeValue(element, "Text") is "{Binding SelectedSourceFilePath}"
+                or "{Binding TargetId}");
     }
 
     [Fact]
-    public void Management_result_regions_occupy_the_final_fixed_layout_row()
+    public void Status_and_busy_controls_keep_stable_semantic_ids()
     {
-        foreach (var fileName in new[]
-                 {
-                     "ProductPolicyContractsView.xaml",
-                     "ProductClaimCasesView.xaml"
-                 })
+        var files = new[]
+        {
+            "ProductPolicyContractsView.xaml",
+            "ProductClaimCasesView.xaml",
+            "ProductDocumentRegistrationView.xaml",
+            "ProductDocumentListView.xaml"
+        };
+        var automationIds = files
+            .Select(file => LoadXaml(
+                "app",
+                "FamilyClaimRef.App",
+                "Views",
+                file))
+            .SelectMany(document => document.Descendants())
+            .Select(element => AttributeValue(element, "AutomationId"))
+            .Where(value => value is not null)
+            .ToHashSet(StringComparer.Ordinal);
+
+        Assert.Contains("ProductPolicy_Status", automationIds);
+        Assert.Contains("ProductClaim_Status", automationIds);
+        Assert.Contains("ProductRegistration_Validation", automationIds);
+        Assert.Contains("ProductRegistration_Status", automationIds);
+        Assert.Contains("ProductDocumentBox_List", automationIds);
+    }
+
+    [Fact]
+    public void Empty_table_messages_render_below_data_grid_headers()
+    {
+        var expectations = new[]
+        {
+            (
+                File: "ProductPolicyContractsView.xaml",
+                Text: "{StaticResource Ui.Product.PolicyContracts.EmptyMessage}"),
+            (
+                File: "ProductDocumentListView.xaml",
+                Text: "{Binding EmptyMessage}"),
+            (
+                File: "ProductDocumentListView.xaml",
+                Text: "{Binding LoadFailedMessage}")
+        };
+
+        foreach (var expectation in expectations)
         {
             var document = LoadXaml(
                 "app",
                 "FamilyClaimRef.App",
                 "Views",
-                fileName);
-            var rootGrid = Assert.Single(document.Root!.Elements(Presentation + "Grid"));
-            var rowDefinitions = rootGrid
-                .Element(Presentation + "Grid.RowDefinitions")!
-                .Elements(Presentation + "RowDefinition")
-                .Select(row => AttributeValue(row, "Height")!)
-                .ToArray();
-            var statusGroup = Assert.Single(
-                rootGrid.Elements(Presentation + "GroupBox"),
-                group =>
-                    AttributeValue(group, "Header")
-                    == "{StaticResource Ui.Product.Management.StatusLabel}");
+                expectation.File);
+            var message = Assert.Single(
+                document.Descendants(Presentation + "TextBlock"),
+                element => AttributeValue(element, "Text") == expectation.Text);
 
-            Assert.Equal(["Auto", "Auto", "*", "Auto"], rowDefinitions);
-            Assert.Equal("3", AttributeValue(statusGroup, "Grid.Row"));
-            Assert.Empty(rootGrid.Elements(Presentation + "ScrollViewer"));
+            Assert.Equal("8,38,8,0", AttributeValue(message, "Margin"));
+            Assert.Equal("Top", AttributeValue(message, "VerticalAlignment"));
+            Assert.Equal("1", AttributeValue(message, "ZIndex"));
         }
     }
 
     [Fact]
-    public void Accessibility_names_do_not_bind_to_raw_objects_or_internal_fields()
+    public void Accessibility_metadata_does_not_bind_to_raw_internal_values()
     {
-        var paths = new[]
-        {
-            Path.Combine(
-                FindProjectRoot(),
-                "app",
-                "FamilyClaimRef.App",
-                "ProductShell",
-                "ProductShellWindow.xaml"),
-            Path.Combine(
-                FindProjectRoot(),
-                "app",
-                "FamilyClaimRef.App",
-                "Views",
-                "ProductPolicyContractsView.xaml"),
-            Path.Combine(
-                FindProjectRoot(),
-                "app",
-                "FamilyClaimRef.App",
-                "Views",
-                "ProductClaimCasesView.xaml"),
-            Path.Combine(
-                FindProjectRoot(),
-                "app",
-                "FamilyClaimRef.App",
-                "Views",
-                "ProductDocumentRegistrationView.xaml")
-        };
+        var productRoot = Path.Combine(
+            FindProjectRoot(),
+            "app",
+            "FamilyClaimRef.App");
+        var paths = Directory
+            .EnumerateFiles(productRoot, "Product*.xaml", SearchOption.AllDirectories)
+            .Append(Path.Combine(productRoot, "ProductShell", "ProductShellWindow.xaml"));
 
-        var automationNameValues = paths
+        var accessibilityValues = paths
+            .Distinct(StringComparer.OrdinalIgnoreCase)
             .Select(LoadXaml)
             .SelectMany(document => document.Root!.DescendantsAndSelf())
             .SelectMany(element => element.Attributes())
-            .Where(attribute => attribute.Name.LocalName == "Name"
-                                && attribute.Name.NamespaceName.Contains(
-                                    "presentation",
-                                    StringComparison.Ordinal))
+            .Where(attribute =>
+                attribute.Name.LocalName is "Name" or "AutomationId")
             .Select(attribute => attribute.Value)
             .ToArray();
 
         Assert.DoesNotContain(
-            automationNameValues,
+            accessibilityValues,
             value =>
                 value is "{Binding}" or "{Binding .}"
+                || value.Contains("TargetId", StringComparison.Ordinal)
+                || value.Contains("SourceFilePath", StringComparison.Ordinal)
                 || value.Contains("PolicyRecord", StringComparison.Ordinal)
                 || value.Contains("ClaimRecord", StringComparison.Ordinal)
-                || value.Contains(" Id", StringComparison.Ordinal)
-                || value.Contains("CreatedAt", StringComparison.Ordinal)
-                || value.Contains("UpdatedAt", StringComparison.Ordinal)
-                || value.Contains("DisabledAt", StringComparison.Ordinal)
-                || value.Contains("SortOrder", StringComparison.Ordinal));
-    }
-
-    [Fact]
-    public void Product_shell_default_dimensions_are_unchanged()
-    {
-        var document = LoadXaml(
-            "app",
-            "FamilyClaimRef.App",
-            "ProductShell",
-            "ProductShellWindow.xaml");
-
-        Assert.Equal("820", AttributeValue(document.Root!, "Width"));
-        Assert.Equal("520", AttributeValue(document.Root!, "Height"));
-        Assert.Null(document.Root!.Attribute("MinWidth"));
-        Assert.Null(document.Root!.Attribute("MinHeight"));
-        Assert.Null(document.Root!.Attribute("WindowState"));
+                || value.Contains("Exception", StringComparison.Ordinal));
     }
 
     private static XElement FindItemsControl(
@@ -209,23 +228,14 @@ public sealed class ProductPolicyClaimAccessibilityLayoutContractTests
             element => AttributeValue(element, "ItemsSource") == itemsSource);
     }
 
-    private static void AssertDisplayOnlyAutomationName(
-        XElement itemsControl,
-        string expectedBinding)
-    {
-        Assert.Contains(
-            itemsControl.Descendants(Presentation + "Setter"),
-            setter =>
-                AttributeValue(setter, "Property") == "AutomationProperties.Name"
-                && AttributeValue(setter, "Value") == expectedBinding);
-    }
-
     private static string? AttributeValue(XElement element, string localName)
     {
         return element.Attributes()
             .SingleOrDefault(attribute =>
                 attribute.Name.LocalName == localName
-                || attribute.Name == Xaml + localName)
+                || attribute.Name.LocalName.EndsWith(
+                    $".{localName}",
+                    StringComparison.Ordinal))
             ?.Value;
     }
 

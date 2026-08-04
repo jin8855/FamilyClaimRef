@@ -1,0 +1,274 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib"
+                    xml:space="preserve">
+    <sys:String x:Key="Ui.Product.Wireframe.Common.PrimarySectionTitle">주요 내용</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Common.SecondarySectionTitle">상태 및 다음 작업</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Common.FieldsSectionTitle">입력 및 확인</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Common.PresentationOnlyMessage">입력 내용을 이 화면에 유지했습니다. 저장 기능은 별도 데이터 계약 승인 후 제공됩니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Common.EmptySectionMessage">표시할 항목이 없습니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Common.NextActionsTitle">다음 작업</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Common.Brand">FamilyClaimRef</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Common.BrandSubtitle">가족 보험과 청구 자료를 한곳에서 정리합니다</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Common.EmptyValue">미등록</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Common.SaveAction">저장</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Common.HoldAction">보류</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Common.DeleteAction">삭제</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Common.DisableAction">사용 중지</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Common.CloseAction">닫기</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Common.ConfirmAction">확정</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Common.ExcludeAction">제외</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Common.EditValueAction">수정</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Common.ViewDocumentAction">문서 확인</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Common.ViewDetailAction">상세 보기</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Common.RegisterAction">등록</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Common.DisabledActionMessage">현재 저장 계약이 없는 작업은 사용할 수 없습니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Common.ActiveValue">사용</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Common.EditAction">편집</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Common.AddDocumentAction">문서 추가</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Common.OcrAction">OCR 확인</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Home.ClaimCard">보험 청구하기</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Home.PolicyCard">보험 검색</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Home.HistoryCard">이력 보기</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Home.ManageCard">관리하기</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Home.ProgressTitle">진행 요약</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Home.ActiveClaims">진행 중 청구</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Home.RegisteredDocuments">등록 문서</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Home.OcrPending">OCR 확인 필요</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Common.CountSuffix">건</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Policy.Note">보험을 먼저 선택한 뒤 편집 또는 문서 추가 작업으로 이동합니다. 현재 모델에 없는 가족, 보험사, 계약 상태는 미등록으로 표시합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Policy.ColumnPolicy">보험</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Policy.ColumnFamily">가족</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Policy.ColumnCompany">보험사</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Policy.ColumnContractStatus">계약 상태</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Policy.ColumnReferenceDate">기준일</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Policy.ColumnActions">작업</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Claim.DocumentsTitle">서류 또는 이미지 추가</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Claim.GuideTitle">작업 안내</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Claim.GuideOne">1. 청구 서류를 추가합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Claim.GuideTwo">2. OCR 후보값을 확인합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Claim.GuideThree">3. 조건에 맞는 보험을 찾습니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Claim.InputTitle">OCR 또는 직접 입력으로 보완할 청구 입력값</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Claim.ManagementTitle">청구 건 생성 및 관리</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Claim.Step1">1. 청구 시작</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Claim.Step2">2. OCR 확인</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Claim.Step3">3. 보험 찾기</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Claim.Step4">4. 진행 현황</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Claim.Step5">5. 청구 완료</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Claim.ContextTitle">현재 청구 작업</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Claim.ContextPolicyLabel">선택한 보험</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Claim.ContextClaimLabel">선택한 청구 건</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Claim.ContextInputLabel">입력 상태</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Claim.ContextInputValue">단계 이동 중 입력 내용을 유지합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Claim.ContextConfirmationLabel">확정 상태</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Claim.ContextConfirmationValue">확정 전 후보값은 화면에만 유지됩니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.DocumentBox.Note">문서함은 등록 화면이 아닙니다. 등록된 문서와 OCR 확인 상태를 조회하고 다음 작업으로 이동합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.DocumentBox.ManagedTitle">관리 문서</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.DocumentBox.ClaimTitle">청구 서류</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.DocumentBox.ManagedTypes">보험 조회 캡처 · 보험증권 · 계약서 · 약관</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.DocumentBox.ClaimTypes">진단서 · 진료비 영수증 · 약제비 서류 · 통원 확인 서류 · 입퇴원 확인 서류 · 수술 확인 서류</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.DocumentBox.ListTitle">문서 목록</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.DocumentBox.ColumnDocument">문서</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.DocumentBox.ColumnPurpose">문서 목적</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.DocumentBox.ColumnType">문서 유형</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.DocumentBox.ColumnTarget">연결 대상</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.DocumentBox.ColumnOcr">OCR 상태</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.DocumentBox.ColumnCheck">확인</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.DocumentBox.ManagedPurpose">보험 관리용</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.DocumentBox.ClaimPurpose">청구용</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.DocumentBox.PurposeUnavailable">목적 정보 없음</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.DocumentBox.TargetUnavailable">연결 정보 없음</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.DocumentBox.OcrUnavailable">확인 정보 없음</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Registration.SelectedFileTitle">1. 문서 이미지 또는 파일 선택</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Registration.TargetTitle">2. 연결 대상</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Registration.TargetSummaryTitle">선택 대상 요약</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Registration.PolicyTargetSummary">보험 문서는 선택한 보험 계약에 연결됩니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Registration.ClaimTargetSummary">청구 서류는 선택한 청구 건에 연결됩니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Registration.MetadataTitle">3. 문서 내용 확인</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Registration.SecurityNote">로컬 경로와 내부 식별자는 표시하지 않습니다. 선택한 파일 이름과 제품용 상태만 제공합니다.</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.01_home_dashboard.Title">홈 대시보드</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.01_home_dashboard.Subtitle">청구 준비, 진행 현황, 최근 이력을 한눈에 확인합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.01_home_dashboard.Primary">보험 청구하기, 보험 검색, 이력 보기, 관리하기의 주요 업무로 이동합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.01_home_dashboard.Secondary">활성 청구, 등록 문서, OCR 확인 대기 상태를 빈 값이나 안전한 집계로 표시합니다.</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.02_family_members.Title">가족 관리</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.02_family_members.Subtitle">실명 대신 표시명 기준으로 가족 정보를 관리합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.02_family_members.Primary">저장된 가족 정보의 표시명, 관계, 사용 상태를 확인하는 목록입니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.02_family_members.Secondary">가족 등록/편집 화면으로 이동할 수 있습니다. 실제 개인정보나 고유식별정보는 표시하지 않습니다.</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.03_policy_list.Title">보험 검색</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.03_policy_list.Subtitle">진단명, 진료상황, 기간, 키워드 조건으로 등록된 보험 후보를 찾습니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.03_policy_list.Primary">검색 조건을 화면에 유지하고 보험 상세 화면으로 이동합니다. 검색 저장소가 없어 결과는 빈 상태로 표시됩니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.03_policy_list.Secondary">보험 계약 관리는 별도 관리 화면에서 수행합니다. 검색 조건은 저장하거나 외부로 전송하지 않습니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.03_policy_list.Fields">진단명 후보|진료상황|기간|키워드 또는 태그</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.04_policy_detail.Title">보험 상세</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.04_policy_detail.Subtitle">선택한 보험의 담보, 특약, 연결 문서와 참고 정보를 확인합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.04_policy_detail.Primary">보험 요약, 연결 문서, 담보 및 특약 후보를 구분해 표시합니다. 현재 모델에 없는 값은 미등록 상태입니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.04_policy_detail.Secondary">보험 문서 등록으로 이동하거나 보험 검색으로 돌아갈 수 있습니다.</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.05_document_box.Title">문서함</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.05_document_box.Subtitle">등록된 문서를 조회하고 문서 목적과 확인 상태를 관리합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.05_document_box.Primary">관리 문서와 청구 서류를 구분하고 문서 목록의 목적, 유형, 연결 대상, OCR 상태를 표시합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.05_document_box.Secondary">보험 문서 등록, 청구 서류 등록, OCR 확인, 관리 홈으로 이동할 수 있습니다.</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.06_ocr_review.Title">OCR 확인</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.06_ocr_review.Subtitle">문서에서 추출된 후보값과 사용자가 확인할 값을 구분합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.06_ocr_review.Primary">원본 미리보기 영역, 추출 후보, 사용자 확정값, 연결 대상 확인 영역을 제공합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.06_ocr_review.Secondary">OCR 엔진과 저장 계약은 아직 연결하지 않습니다. 입력은 현재 화면에서만 유지됩니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.06_ocr_review.Fields">문서 유형 확인|표시 제목 확인|기준일 확인|연결 대상 확인|사용자 확인 메모</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.07_claim_case.Title">청구 시작</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.07_claim_case.Subtitle">서류를 추가하고 청구 건을 만든 뒤 5단계 흐름을 진행합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.07_claim_case.Primary">청구 서류 추가, 청구 건 생성, 보험 연결, OCR 확인, 진행 상태 이동을 한 화면에서 시작합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.07_claim_case.Secondary">기존 청구 건 생성과 사용 중지 기능을 유지하며 단계 이동 후에도 입력을 보존합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.07_claim_case.Fields">가족 선택|진료일|진료 유형|진단명|진단코드|키워드 또는 태그|병원|금액|약제비 여부|메모</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.08_claim_submission.Title">진행 현황</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.08_claim_submission.Subtitle">청구 제출, 보험사별 이력, 지급 결과와 유사 청구 상태를 확인합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.08_claim_submission.Primary">최근 청구 이력, 지급 결과, 유사 청구 영역을 분리해 표시합니다. 현재 데이터 계약이 없는 영역은 빈 상태입니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.08_claim_submission.Secondary">보험 찾기, 청구 완료, 전체 이력 보기로 이동할 수 있습니다.</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.09_claim_reference_result.Title">보험 찾기</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.09_claim_reference_result.Subtitle">청구 입력값을 기준으로 해당 가능 담보와 유사 청구를 확인합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.09_claim_reference_result.Primary">보험 후보, 담보 후보, 확인 필요 상태를 표시할 준비가 된 검색 화면입니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.09_claim_reference_result.Secondary">검색 엔진과 담보 데이터가 없어 결과는 빈 상태입니다. 청구 시작 또는 진행 현황으로 이동할 수 있습니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.09_claim_reference_result.Fields">진단명 후보|진료상황|기간|키워드 또는 태그</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.10_history_view.Title">이력 보기</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.10_history_view.Subtitle">청구 이력, 지급 결과와 과거 유사 청구를 하나의 목록에서 확인합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.10_history_view.Primary">이력 구분, 상태, 결과, 확인 필요 항목을 표시하는 통합 목록입니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.10_history_view.Secondary">이력 저장 모델이 없어 현재 결과는 빈 상태입니다. 이력 상세 화면은 도달 가능합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.10_history_view.Fields">이력 구분|기간|상태|키워드 또는 태그</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.11_policy_manage.Title">보험 관리</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.11_policy_manage.Subtitle">보험 목록과 등록·편집 진입점을 관리하고 행별로 문서를 연결합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.11_policy_manage.Primary">보험 계약 생성, 활성 목록, 선택, 사용 중지와 문서 등록 이동을 제공합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.11_policy_manage.Secondary">가족, 보험사, 계약 상태처럼 현재 모델에 없는 값은 미등록 상태로 표시합니다.</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.12_policy_register.Title">보험 등록/편집</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.12_policy_register.Subtitle">보험 기본정보를 확인하고 선택한 보험에 문서를 연결합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.12_policy_register.Primary">현재 저장 가능한 보험 계약 이름과 기준일을 중심으로 입력을 유지합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.12_policy_register.Secondary">추가 보험 메타데이터는 영속화하지 않습니다. 보험 관리 또는 문서 등록으로 이동합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.12_policy_register.Fields">보험 계약 이름|가족|보험사|계약 상태|가입일|보험기간|등록 출처</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.13_family_register.Title">가족 등록/편집</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.13_family_register.Subtitle">실명 대신 표시명 기준으로 가족 정보를 입력합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.13_family_register.Primary">표시명, 관계, 사용 여부와 메모를 입력하는 화면입니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.13_family_register.Secondary">저장한 가족 정보는 로컬 JSON 저장소에 유지되며 목록과 편집 화면에서 다시 확인할 수 있습니다. 고유식별정보는 입력하지 않습니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.13_family_register.Fields">표시명|관계|사용 여부|메모</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.14_claim_complete.Title">청구 완료</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.14_claim_complete.Subtitle">보험 청구하기의 마지막 단계에서 완료 상태를 확인합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.14_claim_complete.Primary">완료 요약, 제출 상태, 확인 필요 항목을 빈 상태 또는 안전한 현재 값으로 표시합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.14_claim_complete.Secondary">새 청구 시작, 이력 보기, 홈으로 이동할 수 있습니다.</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.15_manage_home.Title">관리하기</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.15_manage_home.Subtitle">가족, 보험, 문서, 분류 및 태그 관리로 이동합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.15_manage_home.Primary">가족 관리, 보험 관리, 문서함, 분류 및 태그 관리 진입점을 제공합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.15_manage_home.Secondary">화면 바로가기를 통해 승인된 21개 화면에 모두 도달할 수 있습니다.</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.16_category_manage.Title">분류/태그 관리</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.16_category_manage.Subtitle">보험 검색과 이력 검색에서 사용할 일반 분류와 태그를 관리합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.16_category_manage.Primary">분류와 항목 목록을 표시할 준비가 된 관리 화면입니다. 현재 목록은 빈 상태입니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.16_category_manage.Secondary">분류 등록 또는 항목 등록 화면으로 이동할 수 있습니다. 저장소는 추가하지 않습니다.</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.17_policy_document_register.Title">보험 문서 등록</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.17_policy_document_register.Subtitle">선택한 보험 계약에 약관, 계약서, 보험증권 또는 캡처를 연결합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.17_policy_document_register.Primary">보험 계약 대상과 보험 문서 유형을 고정한 실제 등록 화면입니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.17_policy_document_register.Secondary">대상 재조회, 입력 보존, 중복 방지와 실패 후 재시도 계약을 유지합니다.</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.18_claim_document_register.Title">청구 서류 등록</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.18_claim_document_register.Subtitle">선택한 청구 건에 병원 또는 청구 서류를 연결합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.18_claim_document_register.Primary">청구 건 대상과 청구 문서 유형을 고정한 실제 등록 화면입니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.18_claim_document_register.Secondary">대상 재조회, 입력 보존, 중복 방지와 실패 후 재시도 계약을 유지합니다.</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.19_category_register.Title">분류 등록/편집</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.19_category_register.Subtitle">검색 조건과 태그 항목을 묶는 상위 분류를 입력합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.19_category_register.Primary">분류명, 코드 후보, 사용 여부, 정렬 순서와 설명을 입력합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.19_category_register.Secondary">분류 저장소가 없어 입력은 화면에서만 유지됩니다. 관리 화면으로 돌아갈 수 있습니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.19_category_register.Fields">분류명|분류 코드 후보|사용 여부|정렬 순서|설명|시스템 기본값 여부</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.20_category_item_register.Title">항목 등록/편집</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.20_category_item_register.Subtitle">선택한 분류 안에서 검색 조건으로 사용할 항목을 입력합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.20_category_item_register.Primary">상위 분류, 항목명, 코드 후보, 사용 여부와 검색 사용 범위를 입력합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.20_category_item_register.Secondary">항목 저장소가 없어 입력은 화면에서만 유지됩니다. 실제 개인 사례는 입력하지 않습니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.20_category_item_register.Fields">상위 분류|항목명|항목 코드 후보|사용 여부|정렬 순서|설명|보험 검색 사용 여부|이력 검색 사용 여부</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.21_history_detail.Title">이력 상세</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.21_history_detail.Subtitle">선택한 청구 이력, 지급 결과와 유사 청구 정보를 확인합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.21_history_detail.Primary">상세 요약, 연결 정보, 메모와 확인 상태를 구분해 표시합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.21_history_detail.Secondary">이력 저장 모델이 없어 입력은 화면에서만 유지됩니다. 이력 목록으로 돌아갈 수 있습니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.21_history_detail.Fields">사용자 메모|확인 상태|다음 확인 필요 항목</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.02_family_members.GroupTitles">가족 목록|상태 및 다음 작업</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.02_family_members.GroupBodies">등록된 가족 정보가 없습니다.|가족 등록 또는 편집 화면으로 이동할 수 있습니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.02_family_members.GroupFields">표시명|관계|사용 여부|작업||등록|편집|사용 중지</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.02_family_members.Columns">표시명|관계|사용 여부|작업</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.02_family_members.TableTitle">가족 목록</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.03_policy_list.GroupTitles">검색 조건|보험 검색 결과</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.03_policy_list.GroupBodies">진단명, 진료 상황, 기간, 키워드 조건을 입력합니다.|조건에 맞는 보험 후보가 없으면 빈 결과로 표시합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.03_policy_list.GroupFields">진단명 후보|진료상황|기간|키워드 또는 태그||보험|가족|보험사|해당 가능 담보|확인 필요|상세</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.03_policy_list.Columns">보험|가족|보험사|해당 가능 담보|확인 필요|상세</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.03_policy_list.TableTitle">보험 검색 결과</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.04_policy_detail.GroupTitles">보험 요약|연결 문서|담보 및 특약 후보</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.04_policy_detail.GroupBodies">선택된 보험의 요약 정보가 없습니다.|연결된 보험 문서가 없습니다.|확인할 담보 또는 특약 후보가 없습니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.04_policy_detail.GroupFields">보험|가족|보험사|계약 상태||문서 유형|연결 상태|후속 작업||담보 또는 특약|확인 상태|확인 필요</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.06_ocr_review.GroupTitles">진입 정보|문서 후보|OCR 후보값|사용자 확정값</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.06_ocr_review.GroupBodies">선택된 문서와 연결 대상 정보가 없습니다.|검토할 문서 후보가 없습니다.|추출된 OCR 후보값이 없습니다.|사용자가 확정한 값이 없습니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.06_ocr_review.GroupFields">진입 화면|연결 대상|문서 유형||표시 제목|기준일|문서 확인||후보값|신뢰 상태|추출 위치||확정값|확인 상태|사용자 메모</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.08_claim_submission.GroupTitles">보험사별 청구 이력|지급 결과|과거 유사 청구</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.08_claim_submission.GroupBodies">표시할 보험사별 청구 이력이 없습니다.|표시할 지급 결과가 없습니다.|표시할 과거 유사 청구가 없습니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.08_claim_submission.GroupFields">보험사|제출 상태|최근 변경||지급 결과|지급 금액|확인 상태||유사 청구|처리 결과|상세</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.09_claim_reference_result.GroupTitles">해당 가능 담보|확인 필요 담보|과거 유사 청구</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.09_claim_reference_result.GroupBodies">현재 조건에 해당하는 담보 후보가 없습니다.|추가 확인이 필요한 담보가 없습니다.|비교할 과거 유사 청구가 없습니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.09_claim_reference_result.GroupFields">보험|담보 후보|판정 근거||보험|확인 항목|다음 작업||유사 청구|처리 결과|비교 근거</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.10_history_view.GroupTitles">검색 조건|이력 목록</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.10_history_view.GroupBodies">이력 구분, 기간, 상태, 키워드로 조회 조건을 구성합니다.|표시할 청구 또는 지급 이력이 없습니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.10_history_view.GroupFields">가족|상태|진료상황|키워드 또는 태그||구분|일자|보험|결과|상세</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.10_history_view.Columns">구분|일자|보험|키워드 및 태그|상태|상세</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.10_history_view.TableTitle">이력 목록</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.12_policy_register.GroupTitles">보험 요약 정보|이 보험에 연결할 문서|담보 후보 확인</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.12_policy_register.GroupBodies">보험 계약 이름과 기준일을 입력합니다.|연결된 보험 문서가 없습니다.|확인할 담보 후보가 없습니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.12_policy_register.GroupFields">보험 계약 이름|가족|보험사|계약 상태|가입일|보험기간|등록 출처||문서 유형|연결 상태|다음 작업||담보 후보|확인 상태|확인 필요</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.12_policy_register.Columns">문서 유형|상태|다음 작업</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.12_policy_register.TableTitle">연결 문서</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.13_family_register.GroupTitles">가족 등록 및 편집 입력|저장 상태</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.13_family_register.GroupBodies">표시명, 관계 정보, 사용 여부와 메모를 입력합니다.|현재 화면에는 저장된 변경 내용이 없습니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.13_family_register.GroupFields">표시명|관계|사용 여부|메모||저장 상태|확인 필요|다음 작업</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.14_claim_complete.GroupTitles">완료 요약|다음 행동</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.14_claim_complete.GroupBodies">완료된 청구 요약이 없습니다.|새 청구 시작, 이력 보기 또는 홈으로 이동할 수 있습니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.14_claim_complete.GroupFields">청구 건|보험|제출 상태|지급 결과|확인 필요||새 청구 시작|이력 보기|홈</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.15_manage_home.GroupTitles">가족 관리|보험 관리|문서함|분류 및 태그 관리</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.15_manage_home.GroupBodies">가족 목록과 등록 화면으로 이동합니다.|보험 계약 목록과 등록 화면으로 이동합니다.|등록 문서와 OCR 확인 상태를 조회합니다.|검색에 사용할 분류와 태그 항목을 관리합니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.15_manage_home.GroupFields">가족 목록|등록 및 편집||보험 목록|등록 및 편집||문서 목록|OCR 확인||분류 목록|항목 관리</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.16_category_manage.GroupTitles">분류 리스트|선택된 분류의 항목 목록</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.16_category_manage.GroupBodies">등록된 분류가 없습니다.|선택된 분류와 항목이 없습니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.16_category_manage.GroupFields">분류명|사용 여부|항목 수|선택||항목명|사용 여부|설명|편집|삭제</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.16_category_manage.Columns">구분|항목명|사용 여부|설명|편집|삭제</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.16_category_manage.TableTitle">선택한 분류의 항목 목록</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.19_category_register.GroupTitles">분류 입력|저장 상태</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.19_category_register.GroupBodies">분류명, 코드 정보, 사용 여부, 정렬 순서와 설명을 입력합니다.|현재 화면에는 저장된 분류가 없습니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.19_category_register.GroupFields">분류명|분류 코드 후보|사용 여부|정렬 순서|설명|시스템 기본값 여부||저장 상태|삭제 제한|다음 작업</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.20_category_item_register.GroupTitles">항목 입력|검색 사용 범위|저장 상태</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.20_category_item_register.GroupBodies">상위 분류와 항목 기본 정보를 입력합니다.|보험 검색과 이력 검색에서 사용할 범위를 지정합니다.|현재 화면에는 저장된 항목이 없습니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.20_category_item_register.GroupFields">상위 분류|항목명|항목 코드 후보|사용 여부|정렬 순서|설명||보험 검색 사용 여부|이력 검색 사용 여부||저장 상태|삭제 제한|다음 작업</sys:String>
+
+    <sys:String x:Key="Ui.Product.Wireframe.21_history_detail.GroupTitles">상세 요약|연결 정보|메모 및 확인</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.21_history_detail.GroupBodies">선택된 이력의 상세 요약이 없습니다.|연결된 보험, 청구 건 또는 문서가 없습니다.|확정된 사용자 메모와 확인 상태가 없습니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.21_history_detail.GroupFields">이력 구분|가족|보험|진료상황|키워드 또는 태그|상태|결과|확인 포인트||연결 청구 건|연결 보험|연결 문서|유사 청구 기준||사용자 메모|확인 상태|다음 확인 필요 항목</sys:String>
+</ResourceDictionary>

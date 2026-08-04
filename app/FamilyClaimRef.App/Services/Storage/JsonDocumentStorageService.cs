@@ -46,17 +46,24 @@ public sealed class JsonDocumentStorageService : IDocumentStorageService
     {
         ArgumentNullException.ThrowIfNull(draft);
 
+        var gate8Metadata = NormalizeGate8Metadata(draft);
         var documents = (await GetDocumentsAsync(cancellationToken)).ToList();
         var timestamp = DateTimeOffset.UtcNow;
         var record = new DocumentRecord(
             CreateId("doc"),
             NormalizeRequiredValue(draft.PhysicalFileName, nameof(draft.PhysicalFileName)),
             NormalizeRequiredValue(draft.DisplayTitle, nameof(draft.DisplayTitle)),
-            NormalizeRequiredValue(draft.Extension, nameof(draft.Extension)),
+            NormalizeRequiredValue(draft.Extension, nameof(draft.Extension)).ToLowerInvariant(),
             NormalizeRequiredValue(draft.RelativePath, nameof(draft.RelativePath)),
             timestamp,
             timestamp,
-            null);
+            null,
+            gate8Metadata?.OriginalDisplayFileName,
+            gate8Metadata?.ValidatedFileType,
+            gate8Metadata?.ByteLength,
+            gate8Metadata?.Sha256,
+            gate8Metadata?.ReferenceDate,
+            gate8Metadata?.DocumentType);
 
         EnsureUniqueId(documents.Select(document => document.Id), record.Id);
 
@@ -220,6 +227,36 @@ public sealed class JsonDocumentStorageService : IDocumentStorageService
         await claimDocumentStore.SaveAsync(records, cancellationToken);
     }
 
+    public async Task<bool> ActiveTargetDocumentWithSha256ExistsAsync(
+        string targetKind,
+        string targetId,
+        string sha256,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedTargetKind = NormalizeRequiredValue(targetKind, nameof(targetKind)).ToLowerInvariant();
+        var normalizedTargetId = NormalizeRequiredValue(targetId, nameof(targetId));
+        var normalizedSha256 = NormalizeSha256(sha256, nameof(sha256));
+
+        IReadOnlyList<string> activeDocumentIds = normalizedTargetKind switch
+        {
+            PolicyScope => (await GetPolicyDocumentsAsync(normalizedTargetId, cancellationToken))
+                .Where(link => link.DisabledAt is null)
+                .Select(link => link.DocumentId)
+                .ToList(),
+            ClaimScope => (await GetClaimDocumentsAsync(normalizedTargetId, cancellationToken))
+                .Where(link => link.DisabledAt is null)
+                .Select(link => link.DocumentId)
+                .ToList(),
+            _ => throw new ArgumentException("Target kind must be policy or claim.", nameof(targetKind))
+        };
+
+        var documents = await GetDocumentsAsync(cancellationToken);
+        return documents.Any(document =>
+            activeDocumentIds.Contains(document.Id, StringComparer.Ordinal)
+            && document.DisabledAt is null
+            && string.Equals(document.Sha256, normalizedSha256, StringComparison.Ordinal));
+    }
+
     private static string CreateId(string prefix)
     {
         return $"{prefix}_{Guid.NewGuid():N}";
@@ -247,6 +284,84 @@ public sealed class JsonDocumentStorageService : IDocumentStorageService
         return normalizedDocumentType;
     }
 
+    private static Gate8DocumentMetadata? NormalizeGate8Metadata(DocumentDraft draft)
+    {
+        var values = new object?[]
+        {
+            draft.OriginalDisplayFileName,
+            draft.ValidatedFileType,
+            draft.ByteLength,
+            draft.Sha256,
+            draft.ReferenceDate,
+            draft.DocumentType
+        };
+        var suppliedCount = values.Count(value => value is not null);
+        if (suppliedCount == 0)
+        {
+            return null;
+        }
+
+        if (suppliedCount != values.Length)
+        {
+            throw new ArgumentException("Gate8 Document metadata must be supplied as a complete set.", nameof(draft));
+        }
+
+        var originalDisplayFileName = NormalizeRequiredValue(
+            draft.OriginalDisplayFileName!,
+            nameof(draft.OriginalDisplayFileName));
+        if (originalDisplayFileName.Length > 255)
+        {
+            throw new ArgumentException("Original display file name is too long.", nameof(draft));
+        }
+
+        var normalizedExtension = NormalizeRequiredValue(draft.Extension, nameof(draft.Extension))
+            .ToLowerInvariant();
+        var validatedFileType = NormalizeRequiredValue(
+            draft.ValidatedFileType!,
+            nameof(draft.ValidatedFileType))
+            .ToUpperInvariant();
+        var expectedValidatedType = normalizedExtension switch
+        {
+            "pdf" => "PDF",
+            "jpg" or "jpeg" => "JPEG",
+            "png" => "PNG",
+            _ => throw new ArgumentException("Document extension is not supported.", nameof(draft))
+        };
+        if (!string.Equals(validatedFileType, expectedValidatedType, StringComparison.Ordinal))
+        {
+            throw new ArgumentException("Validated file type does not match the extension.", nameof(draft));
+        }
+
+        if (draft.ByteLength is null or <= 0 or > DocumentFileValidationService.MaximumFileSizeBytes)
+        {
+            throw new ArgumentException("Document byte length is invalid.", nameof(draft));
+        }
+
+        if (draft.ReferenceDate is null || draft.ReferenceDate == default)
+        {
+            throw new ArgumentException("Reference date is required.", nameof(draft));
+        }
+
+        return new Gate8DocumentMetadata(
+            originalDisplayFileName,
+            validatedFileType,
+            draft.ByteLength.Value,
+            NormalizeSha256(draft.Sha256!, nameof(draft.Sha256)),
+            draft.ReferenceDate.Value,
+            NormalizeRequiredValue(draft.DocumentType!, nameof(draft.DocumentType)).ToLowerInvariant());
+    }
+
+    private static string NormalizeSha256(string sha256, string parameterName)
+    {
+        var normalized = NormalizeRequiredValue(sha256, parameterName).ToLowerInvariant();
+        if (normalized.Length != 64 || normalized.Any(character => !Uri.IsHexDigit(character)))
+        {
+            throw new ArgumentException("SHA-256 must be a 64-character hexadecimal value.", parameterName);
+        }
+
+        return normalized;
+    }
+
     private static void EnsureUniqueId(IEnumerable<string> ids, string id)
     {
         if (ids.Contains(id, StringComparer.Ordinal))
@@ -268,4 +383,12 @@ public sealed class JsonDocumentStorageService : IDocumentStorageService
             throw new InvalidOperationException("Referenced document is disabled.");
         }
     }
+
+    private sealed record Gate8DocumentMetadata(
+        string OriginalDisplayFileName,
+        string ValidatedFileType,
+        long ByteLength,
+        string Sha256,
+        DateOnly ReferenceDate,
+        string DocumentType);
 }

@@ -30,6 +30,17 @@ public sealed class DocumentAttachmentCoordinatorTests
     }
 
     [Fact]
+    public void Constructor_rejects_null_file_validation_service()
+    {
+        var exception = Record.Exception(() => new DocumentAttachmentCoordinator(
+            new InMemoryDocumentStorageService(),
+            new SpyFileAttachmentService(),
+            null!));
+
+        Assert.IsType<ArgumentNullException>(exception);
+    }
+
+    [Fact]
     public async Task AttachDocumentAsync_copies_file_and_saves_document_metadata()
     {
         await UsingTempRootsAsync(async (metadataRoot, attachmentRoot) =>

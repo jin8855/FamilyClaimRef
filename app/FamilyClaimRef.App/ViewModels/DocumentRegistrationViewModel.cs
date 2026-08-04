@@ -16,9 +16,12 @@ public sealed class DocumentRegistrationViewModel : INotifyPropertyChanged
     private readonly IFilePickerService filePickerService;
     private readonly IPolicyClaimStorageService policyClaimStorageService;
     private readonly IUiTextProvider uiTextProvider;
+    private readonly DocumentFileValidationService fileValidationService;
+    private readonly SemaphoreSlim operationGate = new(1, 1);
 
     private IReadOnlyList<PolicyRecord> availablePolicies = [];
     private IReadOnlyList<ClaimRecord> availableClaims = [];
+    private DocumentFileValidationResult? selectedFileValidation;
     private string? selectedSourceFilePath;
     private string? selectedSourceFileDisplayName;
     private string targetKind = PolicyTargetKind;
@@ -34,12 +37,28 @@ public sealed class DocumentRegistrationViewModel : INotifyPropertyChanged
     private string? statusMessage;
     private string? targetSelectionMessage;
     private string? lastRegistrationSummary;
+    private bool refreshTargetsAfterOperation;
 
     public DocumentRegistrationViewModel(
         DocumentRegistrationWorkflow registrationWorkflow,
         IFilePickerService filePickerService,
         IPolicyClaimStorageService policyClaimStorageService,
         IUiTextProvider uiTextProvider)
+        : this(
+            registrationWorkflow,
+            filePickerService,
+            policyClaimStorageService,
+            uiTextProvider,
+            new DocumentFileValidationService())
+    {
+    }
+
+    public DocumentRegistrationViewModel(
+        DocumentRegistrationWorkflow registrationWorkflow,
+        IFilePickerService filePickerService,
+        IPolicyClaimStorageService policyClaimStorageService,
+        IUiTextProvider uiTextProvider,
+        DocumentFileValidationService fileValidationService)
     {
         this.registrationWorkflow = registrationWorkflow
             ?? throw new ArgumentNullException(nameof(registrationWorkflow));
@@ -49,6 +68,8 @@ public sealed class DocumentRegistrationViewModel : INotifyPropertyChanged
             ?? throw new ArgumentNullException(nameof(policyClaimStorageService));
         this.uiTextProvider = uiTextProvider
             ?? throw new ArgumentNullException(nameof(uiTextProvider));
+        this.fileValidationService = fileValidationService
+            ?? throw new ArgumentNullException(nameof(fileValidationService));
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -84,7 +105,13 @@ public sealed class DocumentRegistrationViewModel : INotifyPropertyChanged
     public string? SelectedSourceFilePath
     {
         get => selectedSourceFilePath;
-        set => SetProperty(ref selectedSourceFilePath, value);
+        set
+        {
+            if (SetProperty(ref selectedSourceFilePath, value))
+            {
+                selectedFileValidation = null;
+            }
+        }
     }
 
     public string? SelectedSourceFileDisplayName
@@ -196,6 +223,175 @@ public sealed class DocumentRegistrationViewModel : INotifyPropertyChanged
 
     public async Task LoadTargetOptionsAsync(CancellationToken cancellationToken = default)
     {
+        if (!operationGate.Wait(0))
+        {
+            refreshTargetsAfterOperation = true;
+            return;
+        }
+
+        IsBusy = true;
+        ValidationMessage = null;
+        StatusMessage = null;
+
+        try
+        {
+            await RefreshTargetOptionsCoreAsync(cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            StatusMessage = uiTextProvider.Get(UiTextKeys.DocumentRegistrationStatusFailed);
+        }
+        finally
+        {
+            IsBusy = false;
+            operationGate.Release();
+        }
+    }
+
+    public async Task SelectFileAsync(CancellationToken cancellationToken = default)
+    {
+        if (!operationGate.Wait(0))
+        {
+            return;
+        }
+
+        IsBusy = true;
+        try
+        {
+            var result = await filePickerService.PickDocumentFileAsync(cancellationToken);
+            if (result is null)
+            {
+                ValidationMessage = null;
+                StatusMessage = uiTextProvider.Get(UiTextKeys.ProductDocumentRegistrationStatusCanceled);
+                return;
+            }
+
+            selectedSourceFilePath = result.SourceFilePath;
+            selectedSourceFileDisplayName = result.SafeDisplayName;
+            selectedFileValidation = result.Validation;
+            OnPropertyChanged(nameof(SelectedSourceFilePath));
+            OnPropertyChanged(nameof(SelectedSourceFileDisplayName));
+            ValidationMessage = null;
+            StatusMessage = uiTextProvider.Get(UiTextKeys.DocumentRegistrationStatusFileSelected);
+        }
+        catch (DocumentRegistrationException exception)
+        {
+            ValidationMessage = GetValidationMessage(exception.ErrorCode);
+            StatusMessage = uiTextProvider.Get(UiTextKeys.ProductDocumentRegistrationStatusRetryAvailable);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            ValidationMessage = uiTextProvider.Get(
+                UiTextKeys.ProductDocumentRegistrationValidationSourceUnavailable);
+            StatusMessage = uiTextProvider.Get(UiTextKeys.ProductDocumentRegistrationStatusRetryAvailable);
+        }
+        finally
+        {
+            IsBusy = false;
+            operationGate.Release();
+        }
+    }
+
+    public async Task RegisterAsync(CancellationToken cancellationToken = default)
+    {
+        if (!operationGate.Wait(0))
+        {
+            return;
+        }
+
+        if (!Validate())
+        {
+            operationGate.Release();
+            return;
+        }
+
+        IsBusy = true;
+        ValidationMessage = null;
+        StatusMessage = null;
+
+        try
+        {
+            var selectionSnapshot = selectedFileValidation;
+            if (selectionSnapshot is null
+                && string.IsNullOrWhiteSpace(SelectedSourceFileDisplayName))
+            {
+                selectionSnapshot = await fileValidationService.ValidateSourceAsync(
+                    SelectedSourceFilePath!,
+                    cancellationToken);
+                selectedFileValidation = selectionSnapshot;
+                selectedSourceFileDisplayName = selectionSnapshot.SafeDisplayName;
+                OnPropertyChanged(nameof(SelectedSourceFileDisplayName));
+            }
+
+            if (string.Equals(TargetKind, PolicyTargetKind, StringComparison.Ordinal))
+            {
+                var result = await registrationWorkflow.RegisterPolicyDocumentAsync(
+                    new PolicyDocumentRegistrationRequest(
+                        SelectedSourceFilePath!,
+                        TargetId!,
+                        DocumentType!,
+                        DisplayTitle!,
+                        ReferenceDate,
+                        selectionSnapshot),
+                    cancellationToken);
+
+                LastRegistrationSummary = CreatePolicySummary(result);
+            }
+            else
+            {
+                var result = await registrationWorkflow.RegisterClaimDocumentAsync(
+                    new ClaimDocumentRegistrationRequest(
+                        SelectedSourceFilePath!,
+                        TargetId!,
+                        DocumentType!,
+                        DisplayTitle!,
+                        ReferenceDate,
+                        selectionSnapshot),
+                    cancellationToken);
+
+                LastRegistrationSummary = CreateClaimSummary(result);
+            }
+
+            StatusMessage = uiTextProvider.Get(UiTextKeys.DocumentRegistrationStatusCompleted);
+            ValidationMessage = null;
+            ResetCompletedDraft();
+            await ClearTargetIfInactiveAsync(CancellationToken.None);
+        }
+        catch (DocumentRegistrationException exception)
+        {
+            HandleRegistrationFailure(exception);
+        }
+        catch (AggregateException)
+        {
+            StatusMessage = uiTextProvider.Get(UiTextKeys.DocumentRegistrationStatusCleanupFailed);
+        }
+        catch (Exception)
+        {
+            StatusMessage = uiTextProvider.Get(UiTextKeys.DocumentRegistrationStatusFailed);
+        }
+        finally
+        {
+            IsBusy = false;
+            operationGate.Release();
+
+            if (refreshTargetsAfterOperation)
+            {
+                refreshTargetsAfterOperation = false;
+                await RefreshTargetOptionsAfterOperationAsync();
+            }
+        }
+    }
+
+    private async Task RefreshTargetOptionsCoreAsync(CancellationToken cancellationToken)
+    {
         var policies = await policyClaimStorageService.GetPoliciesAsync(cancellationToken);
         var claims = await policyClaimStorageService.GetClaimsAsync(cancellationToken);
 
@@ -217,66 +413,18 @@ public sealed class DocumentRegistrationViewModel : INotifyPropertyChanged
         RefreshTargetSelectionMessage();
     }
 
-    public async Task SelectFileAsync(CancellationToken cancellationToken = default)
+    private async Task RefreshTargetOptionsAfterOperationAsync()
     {
-        var result = await filePickerService.PickDocumentFileAsync(cancellationToken);
-        if (result is null)
+        if (!operationGate.Wait(0))
         {
-            return;
-        }
-
-        SelectedSourceFilePath = result.SourceFilePath;
-        SelectedSourceFileDisplayName = result.SafeDisplayName;
-        ValidationMessage = null;
-        StatusMessage = uiTextProvider.Get(UiTextKeys.DocumentRegistrationStatusFileSelected);
-    }
-
-    public async Task RegisterAsync(CancellationToken cancellationToken = default)
-    {
-        if (!Validate())
-        {
+            refreshTargetsAfterOperation = true;
             return;
         }
 
         IsBusy = true;
-        ValidationMessage = null;
-        StatusMessage = null;
-
         try
         {
-            if (string.Equals(TargetKind, PolicyTargetKind, StringComparison.Ordinal))
-            {
-                var result = await registrationWorkflow.RegisterPolicyDocumentAsync(
-                    new PolicyDocumentRegistrationRequest(
-                        SelectedSourceFilePath!,
-                        TargetId!,
-                        DocumentType!,
-                        DisplayTitle!,
-                        ReferenceDate),
-                    cancellationToken);
-
-                LastRegistrationSummary = CreatePolicySummary(result);
-            }
-            else
-            {
-                var result = await registrationWorkflow.RegisterClaimDocumentAsync(
-                    new ClaimDocumentRegistrationRequest(
-                        SelectedSourceFilePath!,
-                        TargetId!,
-                        DocumentType!,
-                        DisplayTitle!,
-                        ReferenceDate),
-                    cancellationToken);
-
-                LastRegistrationSummary = CreateClaimSummary(result);
-            }
-
-            StatusMessage = uiTextProvider.Get(UiTextKeys.DocumentRegistrationStatusCompleted);
-            ValidationMessage = null;
-        }
-        catch (AggregateException)
-        {
-            StatusMessage = uiTextProvider.Get(UiTextKeys.DocumentRegistrationStatusCleanupFailed);
+            await RefreshTargetOptionsCoreAsync(CancellationToken.None);
         }
         catch (Exception)
         {
@@ -285,7 +433,93 @@ public sealed class DocumentRegistrationViewModel : INotifyPropertyChanged
         finally
         {
             IsBusy = false;
+            operationGate.Release();
         }
+    }
+
+    private async Task ClearTargetIfInactiveAsync(CancellationToken cancellationToken)
+    {
+        if (string.Equals(TargetKind, PolicyTargetKind, StringComparison.Ordinal)
+            && !string.IsNullOrWhiteSpace(TargetId)
+            && !await policyClaimStorageService.PolicyExistsAsync(TargetId, cancellationToken))
+        {
+            SelectedPolicyId = null;
+        }
+
+        if (string.Equals(TargetKind, ClaimTargetKind, StringComparison.Ordinal)
+            && !string.IsNullOrWhiteSpace(TargetId)
+            && !await policyClaimStorageService.ClaimExistsAsync(TargetId, cancellationToken))
+        {
+            SelectedClaimId = null;
+        }
+    }
+
+    private void HandleRegistrationFailure(DocumentRegistrationException exception)
+    {
+        if (exception.ErrorCode == DocumentRegistrationErrorCode.TargetUnavailable)
+        {
+            ClearCurrentTarget();
+            ValidationMessage = string.Equals(TargetKind, PolicyTargetKind, StringComparison.Ordinal)
+                ? uiTextProvider.Get(UiTextKeys.DocumentRegistrationValidationSelectPolicyBeforeRegister)
+                : uiTextProvider.Get(UiTextKeys.DocumentRegistrationValidationSelectClaimBeforeRegister);
+            StatusMessage = uiTextProvider.Get(UiTextKeys.ProductDocumentRegistrationStatusRetryAvailable);
+            return;
+        }
+
+        if (exception.ErrorCode == DocumentRegistrationErrorCode.CleanupFailed)
+        {
+            StatusMessage = uiTextProvider.Get(UiTextKeys.DocumentRegistrationStatusCleanupFailed);
+            return;
+        }
+
+        ValidationMessage = GetValidationMessage(exception.ErrorCode);
+        StatusMessage = uiTextProvider.Get(UiTextKeys.ProductDocumentRegistrationStatusRetryAvailable);
+    }
+
+    private string GetValidationMessage(DocumentRegistrationErrorCode errorCode)
+    {
+        var key = errorCode switch
+        {
+            DocumentRegistrationErrorCode.UnsupportedFileType =>
+                UiTextKeys.ProductDocumentRegistrationValidationUnsupportedFileType,
+            DocumentRegistrationErrorCode.EmptyFile =>
+                UiTextKeys.ProductDocumentRegistrationValidationEmptyFile,
+            DocumentRegistrationErrorCode.FileTooLarge =>
+                UiTextKeys.ProductDocumentRegistrationValidationFileTooLarge,
+            DocumentRegistrationErrorCode.SourceChanged =>
+                UiTextKeys.ProductDocumentRegistrationValidationSourceChanged,
+            DocumentRegistrationErrorCode.DuplicateDocument =>
+                UiTextKeys.ProductDocumentRegistrationValidationDuplicateDocument,
+            _ => UiTextKeys.ProductDocumentRegistrationValidationSourceUnavailable
+        };
+
+        return uiTextProvider.Get(key);
+    }
+
+    private void ResetCompletedDraft()
+    {
+        selectedSourceFilePath = null;
+        selectedSourceFileDisplayName = null;
+        selectedFileValidation = null;
+        DocumentType = null;
+        DisplayTitle = null;
+        ReferenceDate = DateOnly.FromDateTime(DateTime.Today);
+        OnPropertyChanged(nameof(SelectedSourceFilePath));
+        OnPropertyChanged(nameof(SelectedSourceFileDisplayName));
+    }
+
+    private void ClearCurrentTarget()
+    {
+        if (string.Equals(TargetKind, PolicyTargetKind, StringComparison.Ordinal))
+        {
+            SelectedPolicyId = null;
+        }
+        else if (string.Equals(TargetKind, ClaimTargetKind, StringComparison.Ordinal))
+        {
+            SelectedClaimId = null;
+        }
+
+        TargetId = null;
     }
 
     private bool Validate()

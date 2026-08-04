@@ -1,0 +1,215 @@
+<UserControl x:Class="FamilyClaimRef.App.Views.ProductFamilyMembersView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:viewModels="clr-namespace:FamilyClaimRef.App.ViewModels"
+             Loaded="UserControl_Loaded">
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  AutomationProperties.AutomationId="ProductScreen_02">
+        <Grid MaxWidth="1420"
+              Margin="28,24,28,36"
+              HorizontalAlignment="Center">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Grid Margin="0,0,0,20">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="{Binding DataContext.CurrentScreen.Breadcrumb, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                               Style="{StaticResource ProductSubtitleStyle}"
+                               Margin="0,0,0,8" />
+                    <TextBlock Text="{Binding DataContext.CurrentScreen.Title, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                               Style="{StaticResource ProductPageTitleStyle}" />
+                    <TextBlock Text="{Binding DataContext.CurrentScreen.Subtitle, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                               Style="{StaticResource ProductSubtitleStyle}"
+                               Margin="0,6,0,0" />
+                </StackPanel>
+                <StackPanel Grid.Column="1"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Bottom">
+                    <Button Content="{StaticResource Ui.Product.Wireframe.Common.RegisterAction}"
+                            Click="RegisterButton_Click"
+                            IsEnabled="{Binding CanUseRowActions}"
+                            AutomationProperties.AutomationId="ProductFamily_Register"
+                            Style="{StaticResource ProductPrimaryButtonStyle}" />
+                    <Button Content="{StaticResource Ui.Product.Wireframe.15_manage_home.Title}"
+                            Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                            CommandParameter="{x:Static viewModels:ProductScreenRoutes.ManageHome}"
+                            AutomationProperties.AutomationId="ProductFamily_ManageHome"
+                            Style="{StaticResource ProductSecondaryButtonStyle}" />
+                </StackPanel>
+            </Grid>
+
+            <Border Grid.Row="1"
+                    Background="#FBFCFD"
+                    Padding="12"
+                    Margin="0,0,0,14">
+                <TextBlock Text="{StaticResource Ui.Product.Wireframe.02_family_members.Primary}"
+                           Style="{StaticResource ProductSubtitleStyle}" />
+            </Border>
+
+            <Border Grid.Row="2"
+                    Style="{StaticResource ProductPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="{StaticResource Ui.Product.FamilyMember.ActiveListLabel}"
+                               Style="{StaticResource ProductSectionTitleStyle}"
+                               Margin="0,0,0,12" />
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding AvailableMembers}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              MinHeight="260"
+                              AutomationProperties.AutomationId="ProductFamily_List">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.FamilyMember.DisplayNameLabel}"
+                                                Binding="{Binding DisplayName}"
+                                                Width="2*" />
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.FamilyMember.RelationLabel}"
+                                                Binding="{Binding Relation}"
+                                                Width="*" />
+                            <DataGridTemplateColumn Header="{StaticResource Ui.Product.FamilyMember.ActiveStateLabel}"
+                                                    Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock>
+                                            <TextBlock.Style>
+                                                <Style TargetType="{x:Type TextBlock}">
+                                                    <Setter Property="Text"
+                                                            Value="{StaticResource Ui.Product.Wireframe.Common.DisableAction}" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding DisabledAt}"
+                                                                     Value="{x:Null}">
+                                                            <Setter Property="Text"
+                                                                    Value="{StaticResource Ui.Product.Wireframe.Common.ActiveValue}" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="{StaticResource Ui.Product.Wireframe.Policy.ColumnActions}"
+                                                    Width="2*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Content="{StaticResource Ui.Product.Wireframe.Common.EditAction}"
+                                                    Click="EditButton_Click"
+                                                    AutomationProperties.Name="{StaticResource Ui.Product.Wireframe.Common.EditAction}">
+                                                <Button.Style>
+                                                    <Style TargetType="{x:Type Button}"
+                                                           BasedOn="{StaticResource ProductSecondaryButtonStyle}">
+                                                        <Setter Property="IsEnabled" Value="False" />
+                                                        <Style.Triggers>
+                                                            <MultiDataTrigger>
+                                                                <MultiDataTrigger.Conditions>
+                                                                    <Condition Binding="{Binding DataContext.CanUseRowActions, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                                               Value="True" />
+                                                                    <Condition Binding="{Binding DisabledAt}"
+                                                                               Value="{x:Null}" />
+                                                                </MultiDataTrigger.Conditions>
+                                                                <Setter Property="IsEnabled" Value="True" />
+                                                            </MultiDataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                            <Button Content="{StaticResource Ui.Product.Wireframe.Common.DeleteAction}"
+                                                    IsEnabled="False"
+                                                    AutomationProperties.Name="{StaticResource Ui.Product.Wireframe.Common.DeleteAction}"
+                                                    Style="{StaticResource ProductSecondaryButtonStyle}" />
+                                            <Button Content="{StaticResource Ui.Product.Wireframe.Common.DisableAction}"
+                                                    Click="DeactivateButton_Click"
+                                                    AutomationProperties.Name="{StaticResource Ui.Product.Wireframe.Common.DisableAction}">
+                                                <Button.Style>
+                                                    <Style TargetType="{x:Type Button}"
+                                                           BasedOn="{StaticResource ProductSecondaryButtonStyle}">
+                                                        <Setter Property="IsEnabled" Value="False" />
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding DisabledAt}"
+                                                                         Value="{x:Null}">
+                                                                <Setter Property="Visibility" Value="Visible" />
+                                                            </DataTrigger>
+                                                            <MultiDataTrigger>
+                                                                <MultiDataTrigger.Conditions>
+                                                                    <Condition Binding="{Binding DataContext.CanUseRowActions, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                                               Value="True" />
+                                                                    <Condition Binding="{Binding DisabledAt}"
+                                                                               Value="{x:Null}" />
+                                                                </MultiDataTrigger.Conditions>
+                                                                <Setter Property="IsEnabled" Value="True" />
+                                                            </MultiDataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                            <Button Content="{StaticResource Ui.Product.FamilyMember.ReactivateAction}"
+                                                    Click="ReactivateButton_Click"
+                                                    IsEnabled="{Binding DataContext.CanUseRowActions, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                    AutomationProperties.AutomationId="ProductFamily_Reactivate"
+                                                    AutomationProperties.Name="{StaticResource Ui.Product.FamilyMember.ReactivateAction}">
+                                                <Button.Style>
+                                                    <Style TargetType="{x:Type Button}"
+                                                           BasedOn="{StaticResource ProductSecondaryButtonStyle}">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding DisabledAt}"
+                                                                         Value="{x:Null}">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <TextBlock Grid.Row="1"
+                               Text="{StaticResource Ui.Product.FamilyMember.EmptyMessage}"
+                               Margin="8,38,8,0"
+                               VerticalAlignment="Top"
+                               Panel.ZIndex="1">
+                        <TextBlock.Style>
+                            <Style TargetType="{x:Type TextBlock}"
+                                   BasedOn="{StaticResource ProductSubtitleStyle}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasAvailableMembers}" Value="False">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Grid>
+            </Border>
+
+            <Border Grid.Row="3"
+                    Style="{StaticResource ProductPanelStyle}">
+                <StackPanel>
+                    <TextBlock Text="{StaticResource Ui.Product.Management.StatusLabel}"
+                               Style="{StaticResource ProductSectionTitleStyle}"
+                               Margin="0,0,0,8" />
+                    <TextBlock Text="{Binding ManagementMessage}"
+                               TextWrapping="Wrap"
+                               AutomationProperties.AutomationId="ProductFamily_Status" />
+                </StackPanel>
+            </Border>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

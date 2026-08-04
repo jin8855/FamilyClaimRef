@@ -106,7 +106,7 @@ public sealed class ProductShellDefaultStartupContractTests
     }
 
     [Fact]
-    public void Product_shell_default_dimensions_remain_820_by_520()
+    public void Product_shell_uses_approved_responsive_desktop_dimensions()
     {
         var xamlPath = Path.Combine(
             FindProjectRoot(),
@@ -117,8 +117,10 @@ public sealed class ProductShellDefaultStartupContractTests
         var root = XDocument.Load(xamlPath).Root;
 
         Assert.NotNull(root);
-        Assert.Equal("820", root.Attribute("Width")?.Value);
-        Assert.Equal("520", root.Attribute("Height")?.Value);
+        Assert.Equal("1280", root.Attribute("Width")?.Value);
+        Assert.Equal("840", root.Attribute("Height")?.Value);
+        Assert.Equal("960", root.Attribute("MinWidth")?.Value);
+        Assert.Equal("680", root.Attribute("MinHeight")?.Value);
     }
 
     [Fact]

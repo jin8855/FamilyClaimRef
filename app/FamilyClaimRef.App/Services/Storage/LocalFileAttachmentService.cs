@@ -5,6 +5,7 @@ namespace FamilyClaimRef.App.Services.Storage;
 public sealed class LocalFileAttachmentService : IFileAttachmentService
 {
     private const string DocumentsFolderName = "documents";
+    private const string StagingFolderName = "staging";
 
     private readonly string attachmentRootPath;
 
@@ -16,6 +17,116 @@ public sealed class LocalFileAttachmentService : IFileAttachmentService
         }
 
         this.attachmentRootPath = Path.GetFullPath(attachmentRootPath);
+    }
+
+    public async Task<StagedFileAttachment> StageDocumentFileAsync(
+        string sourceFilePath,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var sourceFullPath = NormalizeSourceFilePath(sourceFilePath);
+        var attributes = File.GetAttributes(sourceFullPath);
+        if (attributes.HasFlag(FileAttributes.Directory)
+            || attributes.HasFlag(FileAttributes.ReparsePoint))
+        {
+            throw new IOException("Source must be a regular file.");
+        }
+
+        var relativePath = $"{StagingFolderName}/{Guid.NewGuid():N}.tmp";
+        var stagingFullPath = GetFullPathUnderAttachmentRoot(relativePath);
+        var stagingDirectory = Path.GetDirectoryName(stagingFullPath);
+        if (!string.IsNullOrWhiteSpace(stagingDirectory))
+        {
+            Directory.CreateDirectory(stagingDirectory);
+        }
+
+        try
+        {
+            await using var source = new FileStream(
+                sourceFullPath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read,
+                bufferSize: 81920,
+                FileOptions.Asynchronous | FileOptions.SequentialScan);
+            await using var staging = new FileStream(
+                stagingFullPath,
+                FileMode.CreateNew,
+                FileAccess.Write,
+                FileShare.None,
+                bufferSize: 81920,
+                FileOptions.Asynchronous | FileOptions.SequentialScan);
+
+            await source.CopyToAsync(staging, cancellationToken);
+        }
+        catch
+        {
+            if (File.Exists(stagingFullPath))
+            {
+                File.Delete(stagingFullPath);
+            }
+
+            throw;
+        }
+
+        return new StagedFileAttachment(relativePath, stagingFullPath);
+    }
+
+    public Task<FileAttachmentCopyResult> FinalizeStagedDocumentFileAsync(
+        StagedFileAttachment stagedFile,
+        string physicalFileName,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(stagedFile);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var stagingFullPath = ValidateStagedFile(stagedFile);
+        var normalizedPhysicalFileName = NormalizePhysicalFileName(physicalFileName);
+        var relativePath = CreateDocumentRelativePath(normalizedPhysicalFileName);
+        var targetFullPath = GetFullPathUnderAttachmentRoot(relativePath);
+
+        if (File.Exists(targetFullPath))
+        {
+            throw new IOException("Target file already exists.");
+        }
+
+        var targetDirectory = Path.GetDirectoryName(targetFullPath);
+        if (!string.IsNullOrWhiteSpace(targetDirectory))
+        {
+            Directory.CreateDirectory(targetDirectory);
+        }
+
+        File.Move(stagingFullPath, targetFullPath);
+
+        var validation = stagedFile.Validation;
+        var result = new FileAttachmentCopyResult(
+            relativePath,
+            normalizedPhysicalFileName,
+            GetExtension(normalizedPhysicalFileName),
+            validation?.ByteLength ?? new FileInfo(targetFullPath).Length,
+            validation?.ValidatedFileType,
+            validation?.Sha256,
+            validation?.SafeDisplayName);
+
+        return Task.FromResult(result);
+    }
+
+    public Task DeleteStagedFileIfExistsAsync(
+        StagedFileAttachment stagedFile,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(stagedFile);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var stagingFullPath = GetFullPathUnderAttachmentRoot(stagedFile.RelativePath);
+        EnsureStagingRelativePath(stagedFile.RelativePath);
+        if (File.Exists(stagingFullPath))
+        {
+            File.Delete(stagingFullPath);
+        }
+
+        return Task.CompletedTask;
     }
 
     public Task<FileAttachmentCopyResult> CopyDocumentFileAsync(
@@ -135,6 +246,34 @@ public sealed class LocalFileAttachmentService : IFileAttachmentService
     private static string CreateDocumentRelativePath(string physicalFileName)
     {
         return $"{DocumentsFolderName}/{physicalFileName}";
+    }
+
+    private string ValidateStagedFile(StagedFileAttachment stagedFile)
+    {
+        EnsureStagingRelativePath(stagedFile.RelativePath);
+        var expectedFullPath = GetFullPathUnderAttachmentRoot(stagedFile.RelativePath);
+        var suppliedFullPath = Path.GetFullPath(stagedFile.FullPath);
+        if (!string.Equals(expectedFullPath, suppliedFullPath, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException("Staged file path does not match its relative path.", nameof(stagedFile));
+        }
+
+        if (!File.Exists(expectedFullPath))
+        {
+            throw new FileNotFoundException("Staged file was not found.");
+        }
+
+        return expectedFullPath;
+    }
+
+    private static void EnsureStagingRelativePath(string relativePath)
+    {
+        var normalized = relativePath.Replace('\\', '/');
+        if (!normalized.StartsWith($"{StagingFolderName}/", StringComparison.Ordinal)
+            || !normalized.EndsWith(".tmp", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException("Staged relative path is invalid.", nameof(relativePath));
+        }
     }
 
     private static string GetExtension(string physicalFileName)

@@ -6,6 +6,8 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Resources/UiStrings.xaml" />
+                <ResourceDictionary Source="Resources/ProductScreenContent.xaml" />
+                <ResourceDictionary Source="Resources/ProductStyles.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

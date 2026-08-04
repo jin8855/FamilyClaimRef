@@ -5,4 +5,5 @@ public sealed record ClaimDocumentRegistrationRequest(
     string ClaimId,
     string DocumentType,
     string DisplayTitle,
-    DateOnly ReferenceDate);
+    DateOnly ReferenceDate,
+    DocumentFileValidationResult? SelectionSnapshot = null);

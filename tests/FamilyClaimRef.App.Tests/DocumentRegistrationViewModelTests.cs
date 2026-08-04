@@ -104,7 +104,7 @@ public sealed class DocumentRegistrationViewModelTests
         Assert.Equal("C:\\Temp\\previous.pdf", viewModel.SelectedSourceFilePath);
         Assert.Equal("previous.pdf", viewModel.SelectedSourceFileDisplayName);
         Assert.Null(viewModel.ValidationMessage);
-        Assert.Null(viewModel.StatusMessage);
+        Assert.Equal("파일 선택을 취소했습니다.", viewModel.StatusMessage);
     }
 
     [Fact]
@@ -464,7 +464,7 @@ public sealed class DocumentRegistrationViewModelTests
     }
 
     [Fact]
-    public async Task RegisterAsync_workflow_failure_updates_user_message()
+    public async Task RegisterAsync_source_unavailable_retains_inputs_for_retry()
     {
         var missingSourcePath = Path.Combine(Path.GetTempPath(), "FamilyClaimRef.App.Tests", "missing.pdf");
         var viewModel = CreateReadyPolicyViewModel();
@@ -472,7 +472,12 @@ public sealed class DocumentRegistrationViewModelTests
 
         await viewModel.RegisterAsync();
 
-        Assert.Equal("문서 등록에 실패했습니다.", viewModel.StatusMessage);
+        Assert.Equal(
+            "선택한 파일을 읽을 수 없습니다. 다시 선택해 주세요.",
+            viewModel.ValidationMessage);
+        Assert.Equal(
+            "입력 내용을 유지했습니다. 확인 후 다시 시도해 주세요.",
+            viewModel.StatusMessage);
         Assert.False(viewModel.IsBusy);
         Assert.Null(viewModel.LastRegistrationSummary);
     }
@@ -589,15 +594,17 @@ public sealed class DocumentRegistrationViewModelTests
         IDocumentStorageService storage,
         IFileAttachmentService fileAttachment)
     {
+        var policyClaimStorage = new FakePolicyClaimStorageService(
+            ["policy_001"],
+            ["claim_001"]);
         return new DocumentRegistrationWorkflow(
             new DocumentAttachmentCoordinator(storage, fileAttachment),
             new DocumentLinkCoordinator(
                 storage,
-                new FakePolicyClaimStorageService(
-                    ["policy_001"],
-                    ["claim_001"])),
+                policyClaimStorage),
             storage,
-            fileAttachment);
+            fileAttachment,
+            policyClaimStorage);
     }
 
     private static IUiTextProvider CreateUiTextProvider()
@@ -621,6 +628,23 @@ public sealed class DocumentRegistrationViewModelTests
             [UiTextKeys.DocumentRegistrationValidationSelectDocumentType] = "문서 유형을 선택해 주세요.",
             [UiTextKeys.DocumentRegistrationValidationEnterDisplayTitle] = "표시 제목을 입력해 주세요.",
             [UiTextKeys.DocumentRegistrationValidationSelectReferenceDate] = "기준일을 선택해 주세요."
+            ,
+            [UiTextKeys.ProductDocumentRegistrationValidationUnsupportedFileType] =
+                "지원하지 않는 파일 형식입니다.",
+            [UiTextKeys.ProductDocumentRegistrationValidationEmptyFile] =
+                "빈 파일은 등록할 수 없습니다.",
+            [UiTextKeys.ProductDocumentRegistrationValidationFileTooLarge] =
+                "파일 크기는 25MB 이하여야 합니다.",
+            [UiTextKeys.ProductDocumentRegistrationValidationSourceUnavailable] =
+                "선택한 파일을 읽을 수 없습니다. 다시 선택해 주세요.",
+            [UiTextKeys.ProductDocumentRegistrationValidationSourceChanged] =
+                "선택 후 파일이 변경되었습니다. 다시 선택해 주세요.",
+            [UiTextKeys.ProductDocumentRegistrationValidationDuplicateDocument] =
+                "같은 대상에 동일한 문서가 이미 등록되어 있습니다.",
+            [UiTextKeys.ProductDocumentRegistrationStatusCanceled] =
+                "파일 선택을 취소했습니다.",
+            [UiTextKeys.ProductDocumentRegistrationStatusRetryAvailable] =
+                "입력 내용을 유지했습니다. 확인 후 다시 시도해 주세요."
         });
     }
 
@@ -629,7 +653,18 @@ public sealed class DocumentRegistrationViewModelTests
         var sourceDirectory = Path.Combine(rootPath, "source");
         Directory.CreateDirectory(sourceDirectory);
         var sourcePath = Path.Combine(sourceDirectory, fileName);
-        await File.WriteAllTextAsync(sourcePath, "dummy content");
+        var extension = Path.GetExtension(fileName).ToLowerInvariant();
+        var content = extension switch
+        {
+            ".pdf" => System.Text.Encoding.ASCII.GetBytes("%PDF-1.4\nsynthetic"),
+            ".png" => new byte[]
+            {
+                0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x01
+            },
+            ".jpg" or ".jpeg" => new byte[] { 0xFF, 0xD8, 0xFF, 0x01 },
+            _ => System.Text.Encoding.ASCII.GetBytes("unsupported")
+        };
+        await File.WriteAllBytesAsync(sourcePath, content);
 
         return sourcePath;
     }
@@ -719,6 +754,47 @@ public sealed class DocumentRegistrationViewModelTests
 
         public HashSet<string> CopiedRelativePaths { get; } = new(StringComparer.Ordinal);
 
+        public Task<StagedFileAttachment> StageDocumentFileAsync(
+            string sourceFilePath,
+            CancellationToken cancellationToken = default)
+        {
+            CopyCalled = true;
+            return Task.FromResult(new StagedFileAttachment(
+                $"staging/{Guid.NewGuid():N}.tmp",
+                sourceFilePath));
+        }
+
+        public Task<FileAttachmentCopyResult> FinalizeStagedDocumentFileAsync(
+            StagedFileAttachment stagedFile,
+            string physicalFileName,
+            CancellationToken cancellationToken = default)
+        {
+            var relativePath = $"documents/{physicalFileName}";
+            CopiedRelativePaths.Add(relativePath);
+            return Task.FromResult(new FileAttachmentCopyResult(
+                relativePath,
+                physicalFileName,
+                stagedFile.Validation?.NormalizedExtension
+                    ?? Path.GetExtension(physicalFileName).TrimStart('.').ToLowerInvariant(),
+                stagedFile.Validation?.ByteLength ?? 13,
+                stagedFile.Validation?.ValidatedFileType,
+                stagedFile.Validation?.Sha256,
+                stagedFile.Validation?.SafeDisplayName));
+        }
+
+        public Task DeleteStagedFileIfExistsAsync(
+            StagedFileAttachment stagedFile,
+            CancellationToken cancellationToken = default)
+        {
+            DeleteCalled = true;
+            if (failDelete)
+            {
+                throw new IOException("Delete failed.");
+            }
+
+            return Task.CompletedTask;
+        }
+
         public Task<FileAttachmentCopyResult> CopyDocumentFileAsync(
             string sourceFilePath,
             string physicalFileName,
@@ -801,7 +877,13 @@ public sealed class DocumentRegistrationViewModelTests
                 draft.RelativePath,
                 timestamp,
                 timestamp,
-                null);
+                null,
+                draft.OriginalDisplayFileName,
+                draft.ValidatedFileType,
+                draft.ByteLength,
+                draft.Sha256,
+                draft.ReferenceDate,
+                draft.DocumentType);
 
             documents.Add(record);
 

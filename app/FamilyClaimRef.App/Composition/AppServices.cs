@@ -53,10 +53,14 @@ public sealed class AppServices
 
         IDocumentStorageService documentStorageService = new JsonDocumentStorageService(metadataRootPath);
         IPolicyClaimStorageService policyClaimStorageService = new JsonPolicyClaimStorageService(metadataRootPath);
+        IFamilyMemberStorageService familyMemberStorageService =
+            new JsonFamilyMemberStorageService(metadataRootPath);
         IFileAttachmentService fileAttachmentService = new LocalFileAttachmentService(attachmentRootPath);
+        var fileValidationService = new DocumentFileValidationService();
         var attachmentCoordinator = new DocumentAttachmentCoordinator(
             documentStorageService,
-            fileAttachmentService);
+            fileAttachmentService,
+            fileValidationService);
         var linkCoordinator = new DocumentLinkCoordinator(
             documentStorageService,
             policyClaimStorageService);
@@ -64,14 +68,16 @@ public sealed class AppServices
             attachmentCoordinator,
             linkCoordinator,
             documentStorageService,
-            fileAttachmentService);
-        IFilePickerService filePickerService = new WpfFilePickerService();
+            fileAttachmentService,
+            policyClaimStorageService);
+        IFilePickerService filePickerService = new WpfFilePickerService(fileValidationService);
         var uiTextProvider = CreateUiTextProvider();
         var mainWindowDocumentRegistrationViewModel = new DocumentRegistrationViewModel(
             registrationWorkflow,
             filePickerService,
             policyClaimStorageService,
-            uiTextProvider);
+            uiTextProvider,
+            fileValidationService);
         var mainWindowPolicyClaimManagementViewModel = new PolicyClaimManagementViewModel(
             policyClaimStorageService,
             uiTextProvider);
@@ -82,18 +88,23 @@ public sealed class AppServices
             registrationWorkflow,
             filePickerService,
             policyClaimStorageService,
-            uiTextProvider);
+            uiTextProvider,
+            fileValidationService);
         var productDocumentListViewModel = new ProductDocumentListViewModel(
             documentStorageService,
             uiTextProvider);
         var productShellPolicyClaimManagementViewModel = new PolicyClaimManagementViewModel(
             policyClaimStorageService,
             uiTextProvider);
+        var familyMemberManagementViewModel = new FamilyMemberManagementViewModel(
+            familyMemberStorageService,
+            uiTextProvider);
         var productShellViewModel = new ProductShellViewModel(
             uiTextProvider,
             productShellDocumentRegistrationViewModel,
             productDocumentListViewModel,
-            productShellPolicyClaimManagementViewModel);
+            productShellPolicyClaimManagementViewModel,
+            familyMemberManagementViewModel);
 
         return new AppServices(
             mainWindowViewModel,
@@ -131,6 +142,26 @@ public sealed class AppServices
                 "같은 이름의 활성 보험 계약이 이미 있습니다.",
             [UiTextKeys.ProductClaimCasesDuplicateTitleMessage] =
                 "같은 이름의 활성 청구 건이 이미 있습니다.",
+            [UiTextKeys.ProductFamilyMemberDisplayNameLabel] = "표시명",
+            [UiTextKeys.ProductFamilyMemberRelationLabel] = "관계",
+            [UiTextKeys.ProductFamilyMemberMemoLabel] = "메모",
+            [UiTextKeys.ProductFamilyMemberActiveStateLabel] = "사용 여부",
+            [UiTextKeys.ProductFamilyMemberActiveListLabel] = "가족 목록",
+            [UiTextKeys.ProductFamilyMemberEmptyMessage] = "등록된 가족 정보가 없습니다.",
+            [UiTextKeys.ProductFamilyMemberLoadFailedMessage] =
+                "가족 목록을 불러오지 못했습니다. 다시 시도해 주세요.",
+            [UiTextKeys.ProductFamilyMemberSavedMessage] = "가족 정보를 저장했습니다.",
+            [UiTextKeys.ProductFamilyMemberDeactivatedMessage] = "가족 정보를 사용 중지했습니다.",
+            [UiTextKeys.ProductFamilyMemberDisplayNameRequiredMessage] = "표시명을 입력해 주세요.",
+            [UiTextKeys.ProductFamilyMemberRelationRequiredMessage] = "관계를 선택해 주세요.",
+            [UiTextKeys.ProductFamilyMemberConflictMessage] =
+                "다른 변경이 반영되었습니다. 목록을 다시 불러온 뒤 시도해 주세요.",
+            [UiTextKeys.ProductFamilyMemberTargetUnavailableMessage] =
+                "처리할 가족 정보를 찾을 수 없습니다. 목록을 다시 확인해 주세요.",
+            [UiTextKeys.ProductFamilyMemberOperationFailedMessage] =
+                "가족 정보를 처리하지 못했습니다. 다시 시도해 주세요.",
+            [UiTextKeys.ProductFamilyMemberSavedRefreshFailedMessage] =
+                "저장은 완료되었지만 목록을 새로고치지 못했습니다. 다시 불러와 주세요.",
             [UiTextKeys.DocumentRegistrationStatusCleanupFailed] =
                 "등록 중 일부 정리가 실패했습니다. 다시 시도하거나 관리자에게 문의하세요.",
             [UiTextKeys.DocumentRegistrationMessageNoActiveClaim] = "No active claim is available for selection.",
@@ -148,6 +179,22 @@ public sealed class AppServices
             [UiTextKeys.DocumentRegistrationValidationSelectDocumentType] = "문서 유형을 선택해 주세요.",
             [UiTextKeys.DocumentRegistrationValidationEnterDisplayTitle] = "표시 제목을 입력해 주세요.",
             [UiTextKeys.DocumentRegistrationValidationSelectReferenceDate] = "기준일을 선택해 주세요.",
+            [UiTextKeys.ProductDocumentRegistrationValidationUnsupportedFileType] =
+                "Unsupported file type.",
+            [UiTextKeys.ProductDocumentRegistrationValidationEmptyFile] =
+                "Empty files cannot be registered.",
+            [UiTextKeys.ProductDocumentRegistrationValidationFileTooLarge] =
+                "The file must be 25 MB or smaller.",
+            [UiTextKeys.ProductDocumentRegistrationValidationSourceUnavailable] =
+                "The selected file is unavailable.",
+            [UiTextKeys.ProductDocumentRegistrationValidationSourceChanged] =
+                "The selected file changed.",
+            [UiTextKeys.ProductDocumentRegistrationValidationDuplicateDocument] =
+                "The same document is already registered for this target.",
+            [UiTextKeys.ProductDocumentRegistrationStatusCanceled] =
+                "File selection canceled.",
+            [UiTextKeys.ProductDocumentRegistrationStatusRetryAvailable] =
+                "Inputs were retained for retry.",
             [UiTextKeys.ClaimManagementMessageCreated] = "청구 건을 등록했습니다.",
             [UiTextKeys.ClaimManagementMessageDisabled] = "청구 건을 사용 중지했습니다.",
             [UiTextKeys.ClaimManagementValidationTitleRequired] = "청구 건 이름을 입력해 주세요.",

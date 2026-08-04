@@ -40,9 +40,18 @@ public sealed class AppServicesTests
             services.ProductShellViewModel.DocumentRegistration);
         Assert.NotNull(services.ProductShellViewModel.DocumentList);
         Assert.NotNull(services.ProductShellViewModel.PolicyClaimManagement);
+        Assert.NotNull(services.ProductShellViewModel.FamilyMemberManagement);
         Assert.NotSame(
             services.MainWindowViewModel.PolicyClaimManagement,
             services.ProductShellViewModel.PolicyClaimManagement);
+
+        var workflowField = typeof(DocumentRegistrationViewModel).GetField(
+            "registrationWorkflow",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+            ?? throw new InvalidOperationException("Registration workflow field was not found.");
+        Assert.Same(
+            workflowField.GetValue(services.MainWindowViewModel.DocumentRegistration),
+            workflowField.GetValue(services.ProductShellViewModel.DocumentRegistration));
     }
 
     [Fact]
@@ -60,6 +69,9 @@ public sealed class AppServicesTests
         Assert.NotSame(
             first.ProductShellViewModel.PolicyClaimManagement,
             second.ProductShellViewModel.PolicyClaimManagement);
+        Assert.NotSame(
+            first.ProductShellViewModel.FamilyMemberManagement,
+            second.ProductShellViewModel.FamilyMemberManagement);
     }
 
     [Fact]

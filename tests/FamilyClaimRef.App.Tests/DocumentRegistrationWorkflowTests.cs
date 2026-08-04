@@ -65,6 +65,33 @@ public sealed class DocumentRegistrationWorkflowTests
     }
 
     [Fact]
+    public async Task Gate8_registration_requires_target_storage_composition_before_staging()
+    {
+        var storage = new SpyDocumentStorageService();
+        var fileAttachment = new SpyFileAttachmentService();
+        var workflow = CreateWorkflow(storage, fileAttachment);
+        var snapshot = new DocumentFileValidationResult(
+            "synthetic.pdf",
+            "pdf",
+            "PDF",
+            9,
+            new string('a', 64),
+            DateTimeOffset.UtcNow);
+
+        var exception = await Record.ExceptionAsync(() =>
+            workflow.RegisterPolicyDocumentAsync(new PolicyDocumentRegistrationRequest(
+                "synthetic.pdf",
+                "policy_001",
+                "terms",
+                "Synthetic",
+                new DateOnly(2026, 7, 24),
+                snapshot)));
+
+        Assert.IsType<InvalidOperationException>(exception);
+        Assert.False(fileAttachment.CopyCalled);
+    }
+
+    [Fact]
     public async Task RegisterPolicyDocumentAsync_registers_attachment_and_policy_link()
     {
         await UsingTempRootsAsync(async (metadataRoot, attachmentRoot) =>

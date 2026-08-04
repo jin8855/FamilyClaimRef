@@ -11,6 +11,12 @@ namespace FamilyClaimRef.App.ViewModels;
 public sealed class ProductDocumentListViewModel : INotifyPropertyChanged
 {
     private readonly IDocumentStorageService documentStorageService;
+    private readonly string emptyValue;
+    private readonly string managedPurpose;
+    private readonly string claimPurpose;
+    private readonly string purposeUnavailable;
+    private readonly string targetUnavailable;
+    private readonly string ocrUnavailable;
     private ReadOnlyCollection<ProductDocumentListItemViewModel> items = CreateEmptyItems();
     private bool isLoading;
     private bool isEmpty;
@@ -27,6 +33,12 @@ public sealed class ProductDocumentListViewModel : INotifyPropertyChanged
         Title = uiTextProvider.Get(UiTextKeys.ProductDocumentListTitle);
         EmptyMessage = uiTextProvider.Get(UiTextKeys.ProductDocumentListEmptyMessage);
         LoadFailedMessage = uiTextProvider.Get(UiTextKeys.ProductDocumentListLoadFailedMessage);
+        emptyValue = uiTextProvider.Get(ProductScreenTextKeys.EmptyValue);
+        managedPurpose = uiTextProvider.Get(ProductScreenTextKeys.DocumentManagedPurpose);
+        claimPurpose = uiTextProvider.Get(ProductScreenTextKeys.DocumentClaimPurpose);
+        purposeUnavailable = uiTextProvider.Get(ProductScreenTextKeys.DocumentPurposeUnavailable);
+        targetUnavailable = uiTextProvider.Get(ProductScreenTextKeys.DocumentTargetUnavailable);
+        ocrUnavailable = uiTextProvider.Get(ProductScreenTextKeys.DocumentOcrUnavailable);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -96,7 +108,7 @@ public sealed class ProductDocumentListViewModel : INotifyPropertyChanged
         {
             projectedItems = documents
                 .Where(document => document.DisabledAt is null)
-                .Select(document => new ProductDocumentListItemViewModel(document.DisplayTitle))
+                .Select(ProjectDocument)
                 .ToArray();
         }
         catch (ArgumentNullException)
@@ -114,6 +126,54 @@ public sealed class ProductDocumentListViewModel : INotifyPropertyChanged
         IsLoading = false;
         IsEmpty = Items.Count == 0;
         HasLoadError = false;
+    }
+
+    private ProductDocumentListItemViewModel ProjectDocument(DocumentRecord document)
+    {
+        var seed = DocumentTypeSeeds.All.FirstOrDefault(candidate =>
+            string.Equals(candidate.Code, document.DocumentType, StringComparison.Ordinal));
+        var purpose = GetPurpose(document.DocumentType);
+        var documentType = seed?.Label
+            ?? NormalizeOptional(document.DocumentType)
+            ?? emptyValue;
+        var referenceDate = document.ReferenceDate?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)
+            ?? emptyValue;
+
+        return new ProductDocumentListItemViewModel(
+            document.DisplayTitle,
+            purpose,
+            documentType,
+            targetUnavailable,
+            ocrUnavailable,
+            referenceDate);
+    }
+
+    private string GetPurpose(string? documentType)
+    {
+        if (string.IsNullOrWhiteSpace(documentType)
+            || string.Equals(documentType, "etc", StringComparison.Ordinal))
+        {
+            return purposeUnavailable;
+        }
+
+        if (DocumentTypeSeeds.Policy.Any(seed =>
+                string.Equals(seed.Code, documentType, StringComparison.Ordinal)))
+        {
+            return managedPurpose;
+        }
+
+        if (DocumentTypeSeeds.Claim.Any(seed =>
+                string.Equals(seed.Code, documentType, StringComparison.Ordinal)))
+        {
+            return claimPurpose;
+        }
+
+        return purposeUnavailable;
+    }
+
+    private static string? NormalizeOptional(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 
     private static ReadOnlyCollection<ProductDocumentListItemViewModel> CreateEmptyItems()
