@@ -54,6 +54,57 @@ public sealed class ClaimCaseStorageServiceTests
     }
 
     [Fact]
+    public async Task Unresolved_legacy_owner_blocks_both_disable_paths_without_write_or_residue()
+    {
+        await UsingTempRootAsync(async rootPath =>
+        {
+            var familyStore = new JsonFamilyMemberStorageService(rootPath);
+            var service = new JsonPolicyClaimStorageService(rootPath, familyStore);
+            var legacyService = (IPolicyClaimStorageService)service;
+            var claimsPath = await WriteLegacyClaimAsync(rootPath, "policy_missing");
+            var backupPath = $"{claimsPath}.bak";
+            var backupBytes = Encoding.UTF8.GetBytes("synthetic existing backup");
+            await File.WriteAllBytesAsync(backupPath, backupBytes);
+            var bytesBefore = await File.ReadAllBytesAsync(claimsPath);
+
+            await Assert.ThrowsAsync<ClaimCaseLegacyReviewRequiredException>(() =>
+                service.DisableClaimCaseAsync("claim_legacy", 0));
+
+            Assert.Equal(bytesBefore, await File.ReadAllBytesAsync(claimsPath));
+            Assert.Equal(backupBytes, await File.ReadAllBytesAsync(backupPath));
+            Assert.Empty(FindClaimTempFiles(rootPath));
+
+            await Assert.ThrowsAsync<ClaimCaseLegacyReviewRequiredException>(() =>
+                legacyService.DisableClaimAsync("claim_legacy", 0));
+
+            Assert.Equal(bytesBefore, await File.ReadAllBytesAsync(claimsPath));
+            Assert.Equal(backupBytes, await File.ReadAllBytesAsync(backupPath));
+            Assert.Empty(FindClaimTempFiles(rootPath));
+        });
+    }
+
+    [Fact]
+    public async Task Resolved_legacy_owner_can_be_disabled_without_overblocking()
+    {
+        await UsingTempRootAsync(async rootPath =>
+        {
+            var familyStore = new JsonFamilyMemberStorageService(rootPath);
+            var service = new JsonPolicyClaimStorageService(rootPath, familyStore);
+            var family = await CreateFamilyAsync(familyStore);
+            var policy = await CreatePolicyAsync(service, family.Id);
+            var claimsPath = await WriteLegacyClaimAsync(rootPath, policy.Id);
+            var bytesBefore = await File.ReadAllBytesAsync(claimsPath);
+
+            var disabled = await service.DisableClaimCaseAsync("claim_legacy", 0);
+
+            Assert.NotNull(disabled.DisabledAt);
+            Assert.Equal(1, disabled.Revision);
+            Assert.Equal(bytesBefore, await File.ReadAllBytesAsync($"{claimsPath}.bak"));
+            Assert.Empty(FindClaimTempFiles(rootPath));
+        });
+    }
+
+    [Fact]
     public async Task Family_owned_create_and_reload_persists_normalized_fields_without_policy()
     {
         await UsingTempRootAsync(async rootPath =>

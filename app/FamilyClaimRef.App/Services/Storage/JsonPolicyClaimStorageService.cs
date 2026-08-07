@@ -458,6 +458,13 @@ public sealed class JsonPolicyClaimStorageService :
                 throw new ClaimCaseConcurrencyException();
             }
 
+            var policies = (await policyStore.LoadAsync(cancellationToken)).Items;
+            if (current.Revision == 0 || string.IsNullOrWhiteSpace(current.CaseStatus))
+            {
+                // Schema v1 predates CaseStatus and Revision; the compatibility API writes both.
+                EnsureLegacyOwnershipResolved(current, policies);
+            }
+
             var timestamp = DateTimeOffset.UtcNow;
             var disabledClaim = current with
             {
