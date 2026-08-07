@@ -351,4 +351,51 @@ public static class UiTextKeys
         "Ui.Product.ClaimCases.DraftCreatedMessage";
     public const string ProductClaimCaseSavedMessage = "Ui.Product.ClaimCases.SavedMessage";
     public const string ProductClaimCaseDisabledMessage = "Ui.Product.ClaimCases.DisabledMessage";
+    public const string ProductClaimSubmissionClaimCaseLabel = "Ui.Product.ClaimSubmission.ClaimCaseLabel";
+    public const string ProductClaimSubmissionGuidance = "Ui.Product.ClaimSubmission.Guidance";
+    public const string ProductClaimSubmissionUnsavedNavigationGuidance =
+        "Ui.Product.ClaimSubmission.UnsavedNavigationGuidance";
+    public const string ProductClaimSubmissionListTitle = "Ui.Product.ClaimSubmission.ListTitle";
+    public const string ProductClaimSubmissionPolicyLabel = "Ui.Product.ClaimSubmission.PolicyLabel";
+    public const string ProductClaimSubmissionStatusLabel = "Ui.Product.ClaimSubmission.StatusLabel";
+    public const string ProductClaimSubmissionUpdatedAtLabel = "Ui.Product.ClaimSubmission.UpdatedAtLabel";
+    public const string ProductClaimSubmissionEmptyMessage = "Ui.Product.ClaimSubmission.EmptyMessage";
+    public const string ProductClaimSubmissionNewAction = "Ui.Product.ClaimSubmission.NewAction";
+    public const string ProductClaimSubmissionDetailTitle = "Ui.Product.ClaimSubmission.DetailTitle";
+    public const string ProductClaimSubmissionCoverageLabel = "Ui.Product.ClaimSubmission.CoverageLabel";
+    public const string ProductClaimSubmissionSubmittedDateLabel =
+        "Ui.Product.ClaimSubmission.SubmittedDateLabel";
+    public const string ProductClaimSubmissionSubmittedAmountLabel =
+        "Ui.Product.ClaimSubmission.SubmittedAmountLabel";
+    public const string ProductClaimSubmissionDocumentLabel = "Ui.Product.ClaimSubmission.DocumentLabel";
+    public const string ProductClaimSubmissionMemoLabel = "Ui.Product.ClaimSubmission.MemoLabel";
+    public const string ProductClaimSubmissionCreateAction = "Ui.Product.ClaimSubmission.CreateAction";
+    public const string ProductClaimSubmissionSaveAction = "Ui.Product.ClaimSubmission.SaveAction";
+    public const string ProductClaimSubmissionHistoryAction = "Ui.Product.ClaimSubmission.HistoryAction";
+    public const string ProductClaimSubmissionPaymentFutureTitle =
+        "Ui.Product.ClaimSubmission.PaymentFutureTitle";
+    public const string ProductClaimSubmissionPaymentFutureMessage =
+        "Ui.Product.ClaimSubmission.PaymentFutureMessage";
+    public const string ProductClaimSubmissionValidationMessage =
+        "Ui.Product.ClaimSubmission.ValidationMessage";
+    public const string ProductClaimSubmissionConflictMessage = "Ui.Product.ClaimSubmission.ConflictMessage";
+    public const string ProductClaimSubmissionLegacyReviewMessage =
+        "Ui.Product.ClaimSubmission.LegacyReviewMessage";
+    public const string ProductClaimSubmissionReferenceMessage = "Ui.Product.ClaimSubmission.ReferenceMessage";
+    public const string ProductClaimSubmissionTransitionMessage =
+        "Ui.Product.ClaimSubmission.TransitionMessage";
+    public const string ProductClaimSubmissionOperationFailedMessage =
+        "Ui.Product.ClaimSubmission.OperationFailedMessage";
+    public const string ProductClaimSubmissionCreatedMessage = "Ui.Product.ClaimSubmission.CreatedMessage";
+    public const string ProductClaimSubmissionSavedMessage = "Ui.Product.ClaimSubmission.SavedMessage";
+    public const string ProductClaimSubmissionReferenceUnavailableValue =
+        "Ui.Product.ClaimSubmission.ReferenceUnavailableValue";
+    public const string ProductClaimSubmissionNotEnteredValue = "Ui.Product.ClaimSubmission.NotEnteredValue";
+    public const string ProductClaimSubmissionStatusPreparing = "Ui.Product.ClaimSubmission.Status.Preparing";
+    public const string ProductClaimSubmissionStatusSubmitted = "Ui.Product.ClaimSubmission.Status.Submitted";
+    public const string ProductClaimSubmissionStatusAdditionalDocumentsRequested =
+        "Ui.Product.ClaimSubmission.Status.AdditionalDocumentsRequested";
+    public const string ProductClaimSubmissionStatusReviewing = "Ui.Product.ClaimSubmission.Status.Reviewing";
+    public const string ProductClaimSubmissionStatusCancelled = "Ui.Product.ClaimSubmission.Status.Cancelled";
+    public const string ProductClaimSubmissionStatusCompleted = "Ui.Product.ClaimSubmission.Status.Completed";
 }

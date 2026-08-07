@@ -11,6 +11,7 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
     private ProductNavigationItemViewModel selectedNavigationItem;
     private ProductScreenViewModel currentScreen;
     private bool isSynchronizingNavigation;
+    private readonly ProductRouteCommand navigateCommand;
     private readonly string emptyDisplayValue;
     private readonly string claimContextInputState;
     private readonly string claimContextConfirmationState;
@@ -21,7 +22,8 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
         ProductDocumentListViewModel documentList,
         PolicyClaimManagementViewModel policyClaimManagement,
         FamilyMemberManagementViewModel familyMemberManagement,
-        CategoryManagementViewModel categoryManagement)
+        CategoryManagementViewModel categoryManagement,
+        ClaimSubmissionManagementViewModel claimSubmissionManagement)
     {
         ArgumentNullException.ThrowIfNull(uiTextProvider);
         ArgumentNullException.ThrowIfNull(documentRegistration);
@@ -29,6 +31,7 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
         ArgumentNullException.ThrowIfNull(policyClaimManagement);
         ArgumentNullException.ThrowIfNull(familyMemberManagement);
         ArgumentNullException.ThrowIfNull(categoryManagement);
+        ArgumentNullException.ThrowIfNull(claimSubmissionManagement);
 
         ShellTitle = uiTextProvider.Get(UiTextKeys.ProductShellTitle);
         emptyDisplayValue = uiTextProvider.Get(ProductScreenTextKeys.EmptyValue);
@@ -40,6 +43,7 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
         PolicyClaimManagement = policyClaimManagement;
         FamilyMemberManagement = familyMemberManagement;
         CategoryManagement = categoryManagement;
+        ClaimSubmissionManagement = claimSubmissionManagement;
         NavigationItems = Array.AsReadOnly(
         [
             new ProductNavigationItemViewModel(
@@ -63,8 +67,11 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
         Screens = Array.AsReadOnly(ProductScreenCatalog.Create(uiTextProvider).ToArray());
         ScreensById = Screens.ToDictionary(screen => screen.Id, StringComparer.Ordinal);
         currentScreen = ScreensById[ProductScreenRoutes.HomeDashboard];
-        NavigateCommand = new ProductRouteCommand(NavigateTo, ScreensById.ContainsKey);
+        navigateCommand = new ProductRouteCommand(NavigateTo, CanNavigateTo);
+        NavigateCommand = navigateCommand;
         PolicyClaimManagement.PropertyChanged += OnPolicyClaimManagementPropertyChanged;
+        ClaimSubmissionManagement.PropertyChanged +=
+            OnClaimSubmissionManagementPropertyChanged;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -80,6 +87,8 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
     public FamilyMemberManagementViewModel FamilyMemberManagement { get; }
 
     public CategoryManagementViewModel CategoryManagement { get; }
+
+    public ClaimSubmissionManagementViewModel ClaimSubmissionManagement { get; }
 
     public ReadOnlyCollection<ProductNavigationItemViewModel> NavigationItems { get; }
 
@@ -118,6 +127,7 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
             if (SetProperty(ref currentScreen, value))
             {
                 OnPropertyChanged(nameof(CurrentRouteId));
+                navigateCommand.RaiseCanExecuteChanged();
             }
         }
     }
@@ -149,10 +159,16 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
                 throw new ArgumentException("Selected navigation item must belong to the shell.", nameof(value));
             }
 
+            var routeId = MapNavigationToRoute(value.Id);
+            if (!isSynchronizingNavigation && !CanNavigateTo(routeId))
+            {
+                return;
+            }
+
             if (SetProperty(ref selectedNavigationItem, value)
                 && !isSynchronizingNavigation)
             {
-                NavigateTo(MapNavigationToRoute(value.Id));
+                NavigateTo(routeId);
             }
         }
     }
@@ -161,6 +177,16 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
 
     public void NavigateTo(string routeId)
     {
+        if (!ScreensById.ContainsKey(routeId))
+        {
+            throw new ArgumentException("Unknown product screen route.", nameof(routeId));
+        }
+
+        if (!CanNavigateTo(routeId))
+        {
+            return;
+        }
+
         if (string.Equals(routeId, ProductScreenRoutes.FamilyRegister, StringComparison.Ordinal))
         {
             FamilyMemberManagement.BeginCreate();
@@ -327,6 +353,17 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
         return true;
     }
 
+    private bool CanNavigateTo(string routeId)
+    {
+        return ScreensById.ContainsKey(routeId)
+            && (!string.Equals(
+                    CurrentRouteId,
+                    ProductScreenRoutes.ClaimSubmission,
+                    StringComparison.Ordinal)
+                || string.Equals(routeId, CurrentRouteId, StringComparison.Ordinal)
+                || ClaimSubmissionManagement.CanNavigateAway);
+    }
+
     private void NavigateCore(string routeId)
     {
         if (!ScreensById.TryGetValue(routeId, out var destination))
@@ -334,10 +371,21 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
             throw new ArgumentException("Unknown product screen route.", nameof(routeId));
         }
 
+        ConfigureClaimSubmissionTarget(routeId);
         ConfigureRegistrationTarget(routeId);
         CurrentScreen = destination;
         SynchronizeLegacyNavigation(routeId);
     }
+    private void ConfigureClaimSubmissionTarget(string routeId)
+    {
+        if (string.Equals(routeId, ProductScreenRoutes.ClaimSubmission, StringComparison.Ordinal)
+            && !string.IsNullOrWhiteSpace(PolicyClaimManagement.SelectedClaimId))
+        {
+            ClaimSubmissionManagement.SelectedClaimCaseId =
+                PolicyClaimManagement.SelectedClaimId;
+        }
+    }
+
 
     private void ConfigureRegistrationTarget(string routeId)
     {
@@ -422,6 +470,17 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
             or nameof(PolicyClaimManagementViewModel.NewClaimDisplayTitle))
         {
             OnPropertyChanged(nameof(ClaimContextClaimDisplayTitle));
+        }
+    }
+
+    private void OnClaimSubmissionManagementPropertyChanged(
+        object? sender,
+        PropertyChangedEventArgs eventArgs)
+    {
+        if (eventArgs.PropertyName == nameof(
+                ClaimSubmissionManagementViewModel.CanNavigateAway))
+        {
+            navigateCommand.RaiseCanExecuteChanged();
         }
     }
 

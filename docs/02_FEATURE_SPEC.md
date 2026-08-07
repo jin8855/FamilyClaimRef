@@ -195,28 +195,53 @@ OCR 원문은 확정 데이터가 아니다.
 
 ### 정의
 
-ClaimSubmission은 하나의 청구 사건을 특정 보험사/담보에 청구한 기록이다.
+ClaimSubmission은 하나의 저장된 ClaimCase를 같은 가족의 특정 보험 계약에 청구한 진행 기록이다.
+하나의 ClaimCase는 여러 Policy에 제출할 수 있으며, 같은 ClaimCase와 Policy 조합에도 복수 제출 기록을 둘 수 있다.
 
-### 입력값
+### 저장값
 
-- 청구 사건
-- 보험
-- 담보
-- 청구일
-- 청구금액
-- 제출서류
-- 처리상태
-- 메모
+- immutable string Id
+- ClaimCaseId
+- PolicyId
+- nullable PolicyCoverageId
+- CoverageDisplayName
+- SubmittedDate
+- SubmittedAmount
+- SubmittedClaimDocumentIds
+- Status
+- Memo
+- Revision
+- CreatedAt / UpdatedAt
 
 ### 처리상태
 
-- 준비중
-- 청구완료
-- 추가서류요청
-- 심사중
-- 지급완료
-- 부지급
-- 취소
+- `preparing`
+- `submitted`
+- `additional_documents_requested`
+- `reviewing`
+- `cancelled`
+- `submission_completed`
+
+`paid`, `partially_paid`, `denied` 등 지급 결과 상태는 ClaimSubmission에 저장하지 않고 후속 ClaimPayment가 소유한다.
+
+### 전이와 검증
+
+- 생성 상태는 `preparing`이고 Revision은 1이다.
+- `preparing`에서 `submitted` 또는 `cancelled`로 전이할 수 있다.
+- `submitted`에서 추가 서류 요청, 심사, 처리 완료, 취소로 전이할 수 있다.
+- `additional_documents_requested`와 `reviewing`은 승인된 경로로만 전이한다.
+- `cancelled`와 `submission_completed`는 terminal 상태다.
+- `submitted` 이후에는 청구일, 청구 금액, 담보 표시명이 필수다.
+- 제출 문서는 같은 ClaimCase의 active ClaimDocument link만 허용한다.
+- `preparing`을 벗어난 뒤 이미 제출한 문서는 제거할 수 없고 추가만 허용한다.
+- 저장과 상태 변경은 exact Id와 expected Revision을 요구한다.
+- stale Revision은 conflict와 no-write로 처리하며 자동 retry하지 않는다.
+
+### Product 화면
+
+화면 8은 저장된 ClaimCase를 받아 같은 가족의 청구 가능한 보험 계약, 제출 기록 목록/상세,
+제출 문서와 상태 전이를 관리한다. 저장되지 않은 변경이 있으면 다음 단계 이동을 막고,
+validation, conflict, legacy review, reference, transition 오류를 제품용 안전 문구로 구분한다.
 
 ---
 

@@ -58,6 +58,13 @@ public sealed class AppServices
             new JsonCategoryAggregateStorageService(metadataRootPath);
         IPolicyClaimStorageService policyClaimStorageService =
             new JsonPolicyClaimStorageService(metadataRootPath, familyMemberStorageService);
+        var claimCaseStorageService = (IClaimCaseStorageService)policyClaimStorageService;
+        IClaimSubmissionStorageService claimSubmissionStorageService =
+            new JsonClaimSubmissionStorageService(
+                metadataRootPath,
+                claimCaseStorageService,
+                policyClaimStorageService,
+                documentStorageService);
         IFileAttachmentService fileAttachmentService = new LocalFileAttachmentService(attachmentRootPath);
         var fileValidationService = new DocumentFileValidationService();
         var attachmentCoordinator = new DocumentAttachmentCoordinator(
@@ -111,13 +118,19 @@ public sealed class AppServices
         var categoryManagementViewModel = new CategoryManagementViewModel(
             categoryAggregateStorageService,
             uiTextProvider);
+        var claimSubmissionManagementViewModel = new ClaimSubmissionManagementViewModel(
+            claimSubmissionStorageService,
+            claimCaseStorageService,
+            documentStorageService,
+            uiTextProvider);
         var productShellViewModel = new ProductShellViewModel(
             uiTextProvider,
             productShellDocumentRegistrationViewModel,
             productDocumentListViewModel,
             productShellPolicyClaimManagementViewModel,
             familyMemberManagementViewModel,
-            categoryManagementViewModel);
+            categoryManagementViewModel,
+            claimSubmissionManagementViewModel);
 
         return new AppServices(
             mainWindowViewModel,
@@ -169,6 +182,51 @@ public sealed class AppServices
                 "청구 건 상세를 저장했습니다.",
             [UiTextKeys.ProductClaimCaseDisabledMessage] =
                 "청구 건을 사용 중지했습니다.",
+            [UiTextKeys.ProductClaimSubmissionClaimCaseLabel] = "청구 건",
+            [UiTextKeys.ProductClaimSubmissionGuidance] =
+                "저장된 청구 건과 같은 가족의 보험 계약을 선택해 보험사별 청구 진행 기록을 관리합니다.",
+            [UiTextKeys.ProductClaimSubmissionUnsavedNavigationGuidance] =
+                "변경 내용을 저장한 뒤 다음 단계로 이동할 수 있습니다.",
+            [UiTextKeys.ProductClaimSubmissionListTitle] = "보험사별 청구 기록",
+            [UiTextKeys.ProductClaimSubmissionPolicyLabel] = "보험 계약",
+            [UiTextKeys.ProductClaimSubmissionStatusLabel] = "진행 상태",
+            [UiTextKeys.ProductClaimSubmissionUpdatedAtLabel] = "최근 변경",
+            [UiTextKeys.ProductClaimSubmissionEmptyMessage] = "등록된 보험사 청구 기록이 없습니다.",
+            [UiTextKeys.ProductClaimSubmissionNewAction] = "새 보험사 청구",
+            [UiTextKeys.ProductClaimSubmissionDetailTitle] = "청구 진행 상세",
+            [UiTextKeys.ProductClaimSubmissionCoverageLabel] = "담보명",
+            [UiTextKeys.ProductClaimSubmissionSubmittedDateLabel] = "청구일",
+            [UiTextKeys.ProductClaimSubmissionSubmittedAmountLabel] = "청구 금액",
+            [UiTextKeys.ProductClaimSubmissionDocumentLabel] = "제출 문서",
+            [UiTextKeys.ProductClaimSubmissionMemoLabel] = "메모",
+            [UiTextKeys.ProductClaimSubmissionCreateAction] = "준비중 기록 생성",
+            [UiTextKeys.ProductClaimSubmissionSaveAction] = "진행 상태 저장",
+            [UiTextKeys.ProductClaimSubmissionHistoryAction] = "청구 이력",
+            [UiTextKeys.ProductClaimSubmissionPaymentFutureTitle] = "지급 결과",
+            [UiTextKeys.ProductClaimSubmissionPaymentFutureMessage] =
+                "지급·삭감·부지급 결과는 후속 ClaimPayment 기능에서 관리합니다.",
+            [UiTextKeys.ProductClaimSubmissionValidationMessage] =
+                "보험 계약, 담보명, 청구일, 청구 금액과 진행 상태를 확인해 주세요.",
+            [UiTextKeys.ProductClaimSubmissionConflictMessage] =
+                "다른 변경이 먼저 저장되었습니다. 기록을 다시 불러온 뒤 시도해 주세요.",
+            [UiTextKeys.ProductClaimSubmissionLegacyReviewMessage] =
+                "기존 청구 건 또는 보험 계약의 가족 연결을 확인할 수 없어 처리할 수 없습니다.",
+            [UiTextKeys.ProductClaimSubmissionReferenceMessage] =
+                "청구 건, 보험 계약 또는 제출 문서의 연결 상태를 확인해 주세요.",
+            [UiTextKeys.ProductClaimSubmissionTransitionMessage] =
+                "현재 진행 상태에서는 선택한 상태로 변경할 수 없습니다.",
+            [UiTextKeys.ProductClaimSubmissionOperationFailedMessage] =
+                "보험사 청구 기록을 처리하지 못했습니다. 다시 시도해 주세요.",
+            [UiTextKeys.ProductClaimSubmissionCreatedMessage] = "보험사 청구 준비 기록을 생성했습니다.",
+            [UiTextKeys.ProductClaimSubmissionSavedMessage] = "보험사 청구 진행 상태를 저장했습니다.",
+            [UiTextKeys.ProductClaimSubmissionReferenceUnavailableValue] = "연결 확인 필요",
+            [UiTextKeys.ProductClaimSubmissionNotEnteredValue] = "미입력",
+            [UiTextKeys.ProductClaimSubmissionStatusPreparing] = "준비중",
+            [UiTextKeys.ProductClaimSubmissionStatusSubmitted] = "청구 접수",
+            [UiTextKeys.ProductClaimSubmissionStatusAdditionalDocumentsRequested] = "추가 서류 요청",
+            [UiTextKeys.ProductClaimSubmissionStatusReviewing] = "심사중",
+            [UiTextKeys.ProductClaimSubmissionStatusCancelled] = "취소",
+            [UiTextKeys.ProductClaimSubmissionStatusCompleted] = "청구 처리 완료",
             [UiTextKeys.ProductFamilyMemberDisplayNameLabel] = "표시명",
             [UiTextKeys.ProductFamilyMemberRelationLabel] = "관계",
             [UiTextKeys.ProductFamilyMemberMemoLabel] = "메모",
