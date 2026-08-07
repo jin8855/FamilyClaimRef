@@ -51,6 +51,21 @@
                 DataContext="{Binding DataContext.PolicyClaimManagement, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
         </DataTemplate>
 
+        <DataTemplate x:Key="CategoryManagementContentTemplate">
+            <views:ProductCategoryManagementView
+                DataContext="{Binding DataContext.CategoryManagement, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+        </DataTemplate>
+
+        <DataTemplate x:Key="CategoryEditorContentTemplate">
+            <views:ProductCategoryEditorView
+                DataContext="{Binding DataContext.CategoryManagement, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+        </DataTemplate>
+
+        <DataTemplate x:Key="CategoryItemEditorContentTemplate">
+            <views:ProductCategoryItemEditorView
+                DataContext="{Binding DataContext.CategoryManagement, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+        </DataTemplate>
+
         <DataTemplate x:Key="WireframeContentTemplate">
             <views:ProductWireframeScreenView />
         </DataTemplate>
@@ -165,6 +180,21 @@
                                      Value="12_policy_register">
                             <Setter Property="ContentTemplate"
                                     Value="{StaticResource InsurancePolicyEditorContentTemplate}" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Content.Id, RelativeSource={RelativeSource Self}}"
+                                     Value="16_category_manage">
+                            <Setter Property="ContentTemplate"
+                                    Value="{StaticResource CategoryManagementContentTemplate}" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Content.Id, RelativeSource={RelativeSource Self}}"
+                                     Value="19_category_register">
+                            <Setter Property="ContentTemplate"
+                                    Value="{StaticResource CategoryEditorContentTemplate}" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Content.Id, RelativeSource={RelativeSource Self}}"
+                                     Value="20_category_item_register">
+                            <Setter Property="ContentTemplate"
+                                    Value="{StaticResource CategoryItemEditorContentTemplate}" />
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>

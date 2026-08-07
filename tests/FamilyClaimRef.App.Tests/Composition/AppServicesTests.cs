@@ -41,6 +41,7 @@ public sealed class AppServicesTests
         Assert.NotNull(services.ProductShellViewModel.DocumentList);
         Assert.NotNull(services.ProductShellViewModel.PolicyClaimManagement);
         Assert.NotNull(services.ProductShellViewModel.FamilyMemberManagement);
+        Assert.NotNull(services.ProductShellViewModel.CategoryManagement);
         Assert.NotSame(
             services.MainWindowViewModel.PolicyClaimManagement,
             services.ProductShellViewModel.PolicyClaimManagement);
@@ -72,6 +73,9 @@ public sealed class AppServicesTests
         Assert.NotSame(
             first.ProductShellViewModel.FamilyMemberManagement,
             second.ProductShellViewModel.FamilyMemberManagement);
+        Assert.NotSame(
+            first.ProductShellViewModel.CategoryManagement,
+            second.ProductShellViewModel.CategoryManagement);
     }
 
     [Fact]

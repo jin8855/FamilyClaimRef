@@ -54,6 +54,8 @@ public sealed class AppServices
         IDocumentStorageService documentStorageService = new JsonDocumentStorageService(metadataRootPath);
         IFamilyMemberStorageService familyMemberStorageService =
             new JsonFamilyMemberStorageService(metadataRootPath);
+        ICategoryAggregateStorageService categoryAggregateStorageService =
+            new JsonCategoryAggregateStorageService(metadataRootPath);
         IPolicyClaimStorageService policyClaimStorageService =
             new JsonPolicyClaimStorageService(metadataRootPath, familyMemberStorageService);
         IFileAttachmentService fileAttachmentService = new LocalFileAttachmentService(attachmentRootPath);
@@ -106,12 +108,16 @@ public sealed class AppServices
         var familyMemberManagementViewModel = new FamilyMemberManagementViewModel(
             familyMemberStorageService,
             uiTextProvider);
+        var categoryManagementViewModel = new CategoryManagementViewModel(
+            categoryAggregateStorageService,
+            uiTextProvider);
         var productShellViewModel = new ProductShellViewModel(
             uiTextProvider,
             productShellDocumentRegistrationViewModel,
             productDocumentListViewModel,
             productShellPolicyClaimManagementViewModel,
-            familyMemberManagementViewModel);
+            familyMemberManagementViewModel,
+            categoryManagementViewModel);
 
         return new AppServices(
             mainWindowViewModel,
