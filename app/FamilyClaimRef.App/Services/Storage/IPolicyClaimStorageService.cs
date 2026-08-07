@@ -45,6 +45,7 @@ public interface IPolicyClaimStorageService
 
     Task<ClaimRecord> DisableClaimAsync(
         string id,
+        int expectedRevision,
         CancellationToken cancellationToken = default);
 
     Task<bool> PolicyExistsAsync(

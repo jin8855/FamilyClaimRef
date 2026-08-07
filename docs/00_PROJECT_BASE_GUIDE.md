@@ -117,6 +117,15 @@ HTML 프로토타입은 실제 구현 예정 화면과 최대한 유사하게 �
 
 - 현재 단계: `로컬 제품 구현 및 기능별 검증 진행 단계`
 - 보험 영속화·문서 이력(T3-PER-A-R1): `PASS`
+- 가족 구성원 JSON 영속화(T3-PER-B): `PASS`
+- 분류 aggregate JSON 영속화(T3-PER-C): `PASS`
+- ClaimCase MVP 영속화(T3-CLAIM-A): `IMPLEMENTED_AND_LOCALLY_VALIDATED`
+  - owner: `FamilyMember`
+  - 신규 Product ClaimCase의 `PolicyId`: 기록하지 않음
+  - legacy `PolicyId`: nullable 호환 값으로 보존
+  - mutation concurrency: process-scoped gate + `expectedRevision`
+  - 저장: temp write, flush-to-disk, 재검증, atomic replace와 `.bak` 보존
+  - 최종 로컬 검증: focused `23/23`, full regression `790/790`, build warning/error `0/0`
 - 프로덕션 준비도: `평가하지 않음`
 - 배포: `승인되지 않음`
 - 검토 대상 문서 후보:

@@ -81,18 +81,18 @@ public sealed class ProductPolicyClaimAccessibilityLayoutContractTests
             "FamilyClaimRef.App",
             "Views",
             "ProductClaimCasesView.xaml");
-        var policySelector = FindItemsControl(
+        var familySelector = FindItemsControl(
             claim,
             "ComboBox",
-            "{Binding AvailablePolicies}");
+            "{Binding AvailableClaimFamilyMembers}");
         var claimList = FindItemsControl(
             claim,
             "ListBox",
             "{Binding AvailableClaims}");
 
-        Assert.Equal("DisplayTitle", AttributeValue(policySelector, "DisplayMemberPath"));
+        Assert.Equal("DisplayName", AttributeValue(familySelector, "DisplayMemberPath"));
         Assert.Equal("DisplayTitle", AttributeValue(claimList, "DisplayMemberPath"));
-        Assert.Equal("ProductClaim_Policy", AttributeValue(policySelector, "AutomationId"));
+        Assert.Equal("ProductClaim_Family", AttributeValue(familySelector, "AutomationId"));
         Assert.Equal("ProductClaim_List", AttributeValue(claimList, "AutomationId"));
     }
 

@@ -273,7 +273,7 @@ public sealed class JsonPolicyClaimStorageServiceTests
             var activeClaim = await service.AddClaimAsync(CreateClaimDraft(policy.Id, "Claim Active"));
             var disabledClaim = await service.AddClaimAsync(CreateClaimDraft(policy.Id, "Claim Disabled"));
 
-            await service.DisableClaimAsync(disabledClaim.Id);
+            await service.DisableClaimAsync(disabledClaim.Id, disabledClaim.Revision);
 
             var claims = await service.GetClaimsAsync();
             var policyClaims = await service.GetClaimsByPolicyIdAsync(policy.Id);
@@ -320,7 +320,7 @@ public sealed class JsonPolicyClaimStorageServiceTests
             var policy = await service.AddPolicyAsync(CreatePolicyDraft());
             var claim = await service.AddClaimAsync(CreateClaimDraft(policy.Id));
 
-            var disabledClaim = await service.DisableClaimAsync(claim.Id);
+            var disabledClaim = await service.DisableClaimAsync(claim.Id, claim.Revision);
 
             Assert.NotNull(disabledClaim.DisabledAt);
             Assert.Equal(disabledClaim.DisabledAt, disabledClaim.UpdatedAt);
@@ -334,7 +334,8 @@ public sealed class JsonPolicyClaimStorageServiceTests
         {
             var service = new JsonPolicyClaimStorageService(rootPath);
 
-            var exception = await Record.ExceptionAsync(() => service.DisableClaimAsync("claim_missing"));
+            var exception = await Record.ExceptionAsync(() =>
+                service.DisableClaimAsync("claim_missing", expectedRevision: 0));
 
             Assert.NotNull(exception);
             Assert.IsType<InvalidOperationException>(exception);
@@ -349,9 +350,10 @@ public sealed class JsonPolicyClaimStorageServiceTests
             var service = new JsonPolicyClaimStorageService(rootPath);
             var policy = await service.AddPolicyAsync(CreatePolicyDraft());
             var claim = await service.AddClaimAsync(CreateClaimDraft(policy.Id));
-            await service.DisableClaimAsync(claim.Id);
+            var disabled = await service.DisableClaimAsync(claim.Id, claim.Revision);
 
-            var exception = await Record.ExceptionAsync(() => service.DisableClaimAsync(claim.Id));
+            var exception = await Record.ExceptionAsync(() =>
+                service.DisableClaimAsync(claim.Id, disabled.Revision));
 
             Assert.NotNull(exception);
             Assert.IsType<InvalidOperationException>(exception);

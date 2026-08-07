@@ -8,7 +8,7 @@ using FamilyClaimRef.App.Services.UI;
 
 namespace FamilyClaimRef.App.ViewModels;
 
-public sealed class PolicyClaimManagementViewModel : INotifyPropertyChanged
+public sealed partial class PolicyClaimManagementViewModel : INotifyPropertyChanged
 {
     private const string CaptureDocumentType = "capture";
     private const string PolicyDocumentType = "policy";
@@ -93,6 +93,7 @@ public sealed class PolicyClaimManagementViewModel : INotifyPropertyChanged
     {
         this.policyClaimStorageService = policyClaimStorageService
             ?? throw new ArgumentNullException(nameof(policyClaimStorageService));
+        claimCaseStorageService = policyClaimStorageService as IClaimCaseStorageService;
         this.familyMemberStorageService = familyMemberStorageService;
         this.documentStorageService = documentStorageService;
         this.managedDocumentOpener = managedDocumentOpener;
@@ -1021,7 +1022,19 @@ public sealed class PolicyClaimManagementViewModel : INotifyPropertyChanged
                 return false;
             }
 
-            await policyClaimStorageService.DisableClaimAsync(SelectedClaimId, cancellationToken);
+            var selectedClaim = AvailableClaims.SingleOrDefault(claim =>
+                string.Equals(claim.Id, SelectedClaimId, StringComparison.Ordinal));
+            if (selectedClaim is null)
+            {
+                ManagementMessage = uiTextProvider.Get(
+                    UiTextKeys.ClaimManagementValidationSelectClaimTarget);
+                return false;
+            }
+
+            await policyClaimStorageService.DisableClaimAsync(
+                SelectedClaimId,
+                selectedClaim.Revision,
+                cancellationToken);
             if (await LoadCoreAsync(cancellationToken))
             {
                 ManagementMessage = uiTextProvider.Get(UiTextKeys.ClaimManagementMessageDisabled);
@@ -1082,6 +1095,8 @@ public sealed class PolicyClaimManagementViewModel : INotifyPropertyChanged
             {
                 SelectedPolicyForClaimId = AvailablePolicies.FirstOrDefault()?.Id;
             }
+            await LoadClaimCaseStateAsync(cancellationToken);
+
 
             return true;
         }

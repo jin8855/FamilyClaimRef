@@ -320,4 +320,35 @@ public static class UiTextKeys
     public const string ProductCategoryParentInactiveMessage = "Ui.Product.Category.ParentInactiveMessage";
     public const string ProductCategoryActiveItemsBlockMessage = "Ui.Product.Category.ActiveItemsBlockMessage";
     public const string ProductCategoryOperationFailedMessage = "Ui.Product.Category.OperationFailedMessage";
+    public const string ProductClaimCaseEditorTitle = "Ui.Product.ClaimCases.EditorTitle";
+    public const string ProductClaimCaseFamilyLabel = "Ui.Product.ClaimCases.FamilyLabel";
+    public const string ProductClaimCaseTreatmentDateLabel = "Ui.Product.ClaimCases.TreatmentDateLabel";
+    public const string ProductClaimCaseHospitalNameLabel = "Ui.Product.ClaimCases.HospitalNameLabel";
+    public const string ProductClaimCaseDiagnosisCodeLabel = "Ui.Product.ClaimCases.DiagnosisCodeLabel";
+    public const string ProductClaimCaseDiagnosisNameLabel = "Ui.Product.ClaimCases.DiagnosisNameLabel";
+    public const string ProductClaimCaseVisitTypeLabel = "Ui.Product.ClaimCases.VisitTypeLabel";
+    public const string ProductClaimCaseHasSurgeryLabel = "Ui.Product.ClaimCases.HasSurgeryLabel";
+    public const string ProductClaimCaseHasPrescriptionLabel = "Ui.Product.ClaimCases.HasPrescriptionLabel";
+    public const string ProductClaimCaseCoveredAmountLabel = "Ui.Product.ClaimCases.CoveredAmountLabel";
+    public const string ProductClaimCaseNonCoveredAmountLabel = "Ui.Product.ClaimCases.NonCoveredAmountLabel";
+    public const string ProductClaimCasePrescriptionAmountLabel =
+        "Ui.Product.ClaimCases.PrescriptionAmountLabel";
+    public const string ProductClaimCaseMemoLabel = "Ui.Product.ClaimCases.MemoLabel";
+    public const string ProductClaimCaseNewAction = "Ui.Product.ClaimCases.NewAction";
+    public const string ProductClaimCaseCreateDraftAction = "Ui.Product.ClaimCases.CreateDraftAction";
+    public const string ProductClaimCaseSaveAction = "Ui.Product.ClaimCases.SaveAction";
+    public const string ProductClaimCaseOpenDocumentsAction = "Ui.Product.ClaimCases.OpenDocumentsAction";
+    public const string ProductClaimCaseVisitTypeOutpatient =
+        "Ui.Product.ClaimCases.VisitType.Outpatient";
+    public const string ProductClaimCaseVisitTypeInpatient =
+        "Ui.Product.ClaimCases.VisitType.Inpatient";
+    public const string ProductClaimCaseValidationRequiredMessage =
+        "Ui.Product.ClaimCases.Validation.RequiredMessage";
+    public const string ProductClaimCaseConflictMessage = "Ui.Product.ClaimCases.ConflictMessage";
+    public const string ProductClaimCaseLegacyReviewRequiredMessage =
+        "Ui.Product.ClaimCases.LegacyReviewRequiredMessage";
+    public const string ProductClaimCaseDraftCreatedMessage =
+        "Ui.Product.ClaimCases.DraftCreatedMessage";
+    public const string ProductClaimCaseSavedMessage = "Ui.Product.ClaimCases.SavedMessage";
+    public const string ProductClaimCaseDisabledMessage = "Ui.Product.ClaimCases.DisabledMessage";
 }

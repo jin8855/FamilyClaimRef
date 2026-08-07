@@ -1,15 +1,22 @@
+using System.IO;
 using FamilyClaimRef.App.Models.Storage;
 
 namespace FamilyClaimRef.App.Services.Storage;
 
-public sealed class JsonPolicyClaimStorageService : IPolicyClaimStorageService
+public sealed class JsonPolicyClaimStorageService :
+    IPolicyClaimStorageService,
+    IClaimCaseStorageService
 {
     private const string PoliciesFileName = "policies.json";
     private const string ClaimsFileName = "claims.json";
 
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, SemaphoreSlim>
+        ClaimMutationGates = new(StringComparer.OrdinalIgnoreCase);
+
     private readonly JsonFileStore<PolicyRecord> policyStore;
     private readonly JsonFileStore<ClaimRecord> claimStore;
     private readonly IFamilyMemberStorageService familyMemberStorageService;
+    private readonly SemaphoreSlim claimMutationGate;
 
     public JsonPolicyClaimStorageService(string metadataRootPath)
         : this(metadataRootPath, new JsonFamilyMemberStorageService(metadataRootPath))
@@ -27,8 +34,13 @@ public sealed class JsonPolicyClaimStorageService : IPolicyClaimStorageService
 
         this.familyMemberStorageService = familyMemberStorageService
             ?? throw new ArgumentNullException(nameof(familyMemberStorageService));
+        var claimFilePath = Path.GetFullPath(Path.Combine(metadataRootPath, ClaimsFileName));
         policyStore = new JsonFileStore<PolicyRecord>(metadataRootPath, PoliciesFileName);
-        claimStore = new JsonFileStore<ClaimRecord>(metadataRootPath, ClaimsFileName);
+        claimStore = new JsonFileStore<ClaimRecord>(
+            metadataRootPath,
+            ClaimsFileName,
+            preserveBackupOnReplace: true);
+        claimMutationGate = ClaimMutationGates.GetOrAdd(claimFilePath, _ => new SemaphoreSlim(1, 1));
     }
 
     public async Task<IReadOnlyList<PolicyRecord>> GetPoliciesAsync(
@@ -194,13 +206,21 @@ public sealed class JsonPolicyClaimStorageService : IPolicyClaimStorageService
         return disabledPolicy;
     }
 
-    public async Task<IReadOnlyList<ClaimRecord>> GetClaimsAsync(
+    public Task<IReadOnlyList<ClaimRecord>> GetClaimsAsync(
         CancellationToken cancellationToken = default)
     {
-        var envelope = await claimStore.LoadAsync(cancellationToken);
+        return GetClaimCasesAsync(cancellationToken);
+    }
 
-        return envelope.Items
+    public async Task<IReadOnlyList<ClaimRecord>> GetClaimCasesAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var claims = (await claimStore.LoadAsync(cancellationToken)).Items;
+        var policies = (await policyStore.LoadAsync(cancellationToken)).Items;
+
+        return claims
             .Where(claim => claim.DisabledAt is null)
+            .Select(claim => ProjectClaimCase(claim, policies))
             .ToList();
     }
 
@@ -209,19 +229,29 @@ public sealed class JsonPolicyClaimStorageService : IPolicyClaimStorageService
         CancellationToken cancellationToken = default)
     {
         var normalizedPolicyId = NormalizeRequiredValue(policyId, nameof(policyId));
-        var claims = await GetClaimsAsync(cancellationToken);
+        var claims = await GetClaimCasesAsync(cancellationToken);
 
         return claims
-            .Where(claim => claim.PolicyId == normalizedPolicyId)
+            .Where(claim => string.Equals(
+                claim.PolicyId,
+                normalizedPolicyId,
+                StringComparison.Ordinal))
             .ToList();
     }
 
-    public async Task<ClaimRecord?> GetClaimAsync(
+    public Task<ClaimRecord?> GetClaimAsync(
+        string id,
+        CancellationToken cancellationToken = default)
+    {
+        return GetClaimCaseAsync(id, cancellationToken);
+    }
+
+    public async Task<ClaimRecord?> GetClaimCaseAsync(
         string id,
         CancellationToken cancellationToken = default)
     {
         var normalizedId = NormalizeRequiredValue(id, nameof(id));
-        var claims = await GetClaimsAsync(cancellationToken);
+        var claims = await GetClaimCasesAsync(cancellationToken);
 
         return claims.FirstOrDefault(claim => claim.Id == normalizedId);
     }
@@ -233,55 +263,217 @@ public sealed class JsonPolicyClaimStorageService : IPolicyClaimStorageService
         ArgumentNullException.ThrowIfNull(draft);
 
         var normalizedPolicyId = NormalizeRequiredValue(draft.PolicyId, nameof(draft.PolicyId));
-        await EnsureActivePolicyExistsAsync(normalizedPolicyId, cancellationToken);
+        var policy = await GetPolicyAsync(normalizedPolicyId, cancellationToken)
+            ?? throw new InvalidOperationException("Referenced policy was not found or is disabled.");
 
-        var claims = (await claimStore.LoadAsync(cancellationToken)).Items.ToList();
-        var timestamp = DateTimeOffset.UtcNow;
-        var record = new ClaimRecord(
-            CreateId("claim"),
-            normalizedPolicyId,
-            NormalizeRequiredValue(draft.DisplayTitle, nameof(draft.DisplayTitle)),
-            NormalizeReferenceDate(draft.ReferenceDate, nameof(draft.ReferenceDate)),
-            timestamp,
-            timestamp,
-            null);
+        await claimMutationGate.WaitAsync(cancellationToken);
+        try
+        {
+            var claims = (await claimStore.LoadAsync(cancellationToken)).Items.ToList();
+            var timestamp = DateTimeOffset.UtcNow;
+            var record = new ClaimRecord(
+                Id: CreateId("claim"),
+                PolicyId: normalizedPolicyId,
+                DisplayTitle: NormalizeRequiredValue(
+                    draft.DisplayTitle,
+                    nameof(draft.DisplayTitle)),
+                ReferenceDate: NormalizeReferenceDate(
+                    draft.ReferenceDate,
+                    nameof(draft.ReferenceDate)),
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                DisabledAt: null,
+                FamilyMemberId: policy.FamilyMemberId,
+                CaseStatus: ClaimCaseValues.StatusDraft,
+                Revision: 1);
 
-        EnsureUniqueId(claims.Select(claim => claim.Id), record.Id);
+            EnsureUniqueId(claims.Select(claim => claim.Id), record.Id);
+            claims.Add(record);
+            await claimStore.SaveAsync(claims, cancellationToken);
 
-        claims.Add(record);
-        await claimStore.SaveAsync(claims, cancellationToken);
-
-        return record;
+            return record;
+        }
+        finally
+        {
+            claimMutationGate.Release();
+        }
     }
 
-    public async Task<ClaimRecord> DisableClaimAsync(
-        string id,
+    public async Task<ClaimRecord> CreateClaimCaseAsync(
+        ClaimCaseDraft draft,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(draft);
+
+        var normalizedDraft = NormalizeClaimCaseDraft(draft);
+        await EnsureFamilyReferenceAsync(
+            normalizedDraft.FamilyMemberId,
+            requireActive: true,
+            cancellationToken);
+
+        await claimMutationGate.WaitAsync(cancellationToken);
+        try
+        {
+            var claims = (await claimStore.LoadAsync(cancellationToken)).Items.ToList();
+            var timestamp = DateTimeOffset.UtcNow;
+            var record = new ClaimRecord(
+                Id: CreateId("claim"),
+                PolicyId: null,
+                DisplayTitle: normalizedDraft.DisplayTitle,
+                ReferenceDate: normalizedDraft.TreatmentDate,
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                DisabledAt: null,
+                FamilyMemberId: normalizedDraft.FamilyMemberId,
+                HospitalName: normalizedDraft.HospitalName,
+                DiagnosisCode: normalizedDraft.DiagnosisCode,
+                DiagnosisName: normalizedDraft.DiagnosisName,
+                VisitType: normalizedDraft.VisitType,
+                HasSurgery: normalizedDraft.HasSurgery,
+                HasPrescription: normalizedDraft.HasPrescription,
+                CoveredAmount: normalizedDraft.CoveredAmount,
+                NonCoveredAmount: normalizedDraft.NonCoveredAmount,
+                PrescriptionAmount: normalizedDraft.PrescriptionAmount,
+                Memo: normalizedDraft.Memo,
+                CaseStatus: ClaimCaseValues.StatusDraft,
+                Revision: 1);
+
+            EnsureUniqueId(claims.Select(claim => claim.Id), record.Id);
+            claims.Add(record);
+            await claimStore.SaveAsync(claims, cancellationToken);
+
+            return record;
+        }
+        finally
+        {
+            claimMutationGate.Release();
+        }
+    }
+
+    public async Task<ClaimRecord> UpdateClaimCaseAsync(
+        string id,
+        int expectedRevision,
+        ClaimCaseDraft draft,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(draft);
+
         var normalizedId = NormalizeRequiredValue(id, nameof(id));
-        var claims = (await claimStore.LoadAsync(cancellationToken)).Items.ToList();
-        var claimIndex = claims.FindIndex(claim => claim.Id == normalizedId);
-        if (claimIndex < 0)
+        var normalizedDraft = NormalizeClaimCaseDraft(draft);
+
+        await claimMutationGate.WaitAsync(cancellationToken);
+        try
         {
-            throw new InvalidOperationException("Claim was not found.");
+            var claims = (await claimStore.LoadAsync(cancellationToken)).Items.ToList();
+            var claimIndex = claims.FindIndex(claim => claim.Id == normalizedId);
+            if (claimIndex < 0 || claims[claimIndex].DisabledAt is not null)
+            {
+                throw new InvalidOperationException("Claim case was not found or is disabled.");
+            }
+
+            var current = claims[claimIndex];
+            if (current.Revision != expectedRevision)
+            {
+                throw new ClaimCaseConcurrencyException();
+            }
+
+            var policies = (await policyStore.LoadAsync(cancellationToken)).Items;
+            EnsureLegacyOwnershipResolved(current, policies);
+            await EnsureFamilyReferenceAsync(
+                normalizedDraft.FamilyMemberId,
+                requireActive: true,
+                cancellationToken);
+
+            var updated = current with
+            {
+                DisplayTitle = normalizedDraft.DisplayTitle,
+                ReferenceDate = normalizedDraft.TreatmentDate,
+                UpdatedAt = DateTimeOffset.UtcNow,
+                FamilyMemberId = normalizedDraft.FamilyMemberId,
+                HospitalName = normalizedDraft.HospitalName,
+                DiagnosisCode = normalizedDraft.DiagnosisCode,
+                DiagnosisName = normalizedDraft.DiagnosisName,
+                VisitType = normalizedDraft.VisitType,
+                HasSurgery = normalizedDraft.HasSurgery,
+                HasPrescription = normalizedDraft.HasPrescription,
+                CoveredAmount = normalizedDraft.CoveredAmount,
+                NonCoveredAmount = normalizedDraft.NonCoveredAmount,
+                PrescriptionAmount = normalizedDraft.PrescriptionAmount,
+                Memo = normalizedDraft.Memo,
+                CaseStatus = ClaimCaseValues.StatusSaved,
+                Revision = checked(current.Revision + 1)
+            };
+            claims[claimIndex] = updated;
+            await claimStore.SaveAsync(claims, cancellationToken);
+
+            return updated;
         }
-
-        if (claims[claimIndex].DisabledAt is not null)
+        finally
         {
-            throw new InvalidOperationException("Claim is already disabled.");
+            claimMutationGate.Release();
         }
+    }
 
-        var timestamp = DateTimeOffset.UtcNow;
-        var disabledClaim = claims[claimIndex] with
+    public Task<ClaimRecord> DisableClaimAsync(
+        string id,
+        int expectedRevision,
+        CancellationToken cancellationToken = default)
+    {
+        return DisableClaimCoreAsync(id, expectedRevision, cancellationToken);
+    }
+
+    public Task<ClaimRecord> DisableClaimCaseAsync(
+        string id,
+        int expectedRevision,
+        CancellationToken cancellationToken = default)
+    {
+        return DisableClaimCoreAsync(id, expectedRevision, cancellationToken);
+    }
+
+    private async Task<ClaimRecord> DisableClaimCoreAsync(
+        string id,
+        int expectedRevision,
+        CancellationToken cancellationToken)
+    {
+        var normalizedId = NormalizeRequiredValue(id, nameof(id));
+
+        await claimMutationGate.WaitAsync(cancellationToken);
+        try
         {
-            UpdatedAt = timestamp,
-            DisabledAt = timestamp
-        };
-        claims[claimIndex] = disabledClaim;
+            var claims = (await claimStore.LoadAsync(cancellationToken)).Items.ToList();
+            var claimIndex = claims.FindIndex(claim => claim.Id == normalizedId);
+            if (claimIndex < 0)
+            {
+                throw new InvalidOperationException("Claim was not found.");
+            }
 
-        await claimStore.SaveAsync(claims, cancellationToken);
+            var current = claims[claimIndex];
+            if (current.DisabledAt is not null)
+            {
+                throw new InvalidOperationException("Claim is already disabled.");
+            }
 
-        return disabledClaim;
+            if (current.Revision != expectedRevision)
+            {
+                throw new ClaimCaseConcurrencyException();
+            }
+
+            var timestamp = DateTimeOffset.UtcNow;
+            var disabledClaim = current with
+            {
+                UpdatedAt = timestamp,
+                DisabledAt = timestamp,
+                Revision = checked(current.Revision + 1)
+            };
+            claims[claimIndex] = disabledClaim;
+            await claimStore.SaveAsync(claims, cancellationToken);
+
+            return disabledClaim;
+        }
+        finally
+        {
+            claimMutationGate.Release();
+        }
     }
 
     public async Task<bool> PolicyExistsAsync(
@@ -321,6 +513,100 @@ public sealed class JsonPolicyClaimStorageService : IPolicyClaimStorageService
         }
 
         return value;
+    }
+
+    private static ClaimCaseDraft NormalizeClaimCaseDraft(ClaimCaseDraft draft)
+    {
+        return draft with
+        {
+            DisplayTitle = NormalizeRequiredValue(
+                draft.DisplayTitle,
+                nameof(draft.DisplayTitle)),
+            FamilyMemberId = NormalizeRequiredValue(
+                draft.FamilyMemberId,
+                nameof(draft.FamilyMemberId)),
+            TreatmentDate = NormalizeReferenceDate(
+                draft.TreatmentDate,
+                nameof(draft.TreatmentDate)),
+            HospitalName = NormalizeRequiredValue(
+                draft.HospitalName,
+                nameof(draft.HospitalName)),
+            DiagnosisCode = NormalizeOptionalValue(draft.DiagnosisCode)?.ToUpperInvariant(),
+            DiagnosisName = NormalizeOptionalValue(draft.DiagnosisName),
+            VisitType = NormalizeAllowedValue(
+                draft.VisitType,
+                ClaimCaseValues.VisitTypes,
+                nameof(draft.VisitType)),
+            CoveredAmount = NormalizeClaimAmount(
+                draft.CoveredAmount,
+                nameof(draft.CoveredAmount)),
+            NonCoveredAmount = NormalizeClaimAmount(
+                draft.NonCoveredAmount,
+                nameof(draft.NonCoveredAmount)),
+            PrescriptionAmount = NormalizeClaimAmount(
+                draft.PrescriptionAmount,
+                nameof(draft.PrescriptionAmount)),
+            Memo = NormalizeOptionalValue(draft.Memo)
+        };
+    }
+
+    private static string? NormalizeOptionalValue(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
+    private static long? NormalizeClaimAmount(long? value, string parameterName)
+    {
+        if (value < 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                parameterName,
+                "Claim amount must be a non-negative whole number.");
+        }
+
+        return value;
+    }
+
+    private static ClaimRecord ProjectClaimCase(
+        ClaimRecord claim,
+        IReadOnlyList<PolicyRecord> policies)
+    {
+        var familyMemberId = claim.FamilyMemberId;
+        if (string.IsNullOrWhiteSpace(familyMemberId)
+            && !string.IsNullOrWhiteSpace(claim.PolicyId))
+        {
+            familyMemberId = policies.FirstOrDefault(policy => string.Equals(
+                policy.Id,
+                claim.PolicyId,
+                StringComparison.Ordinal))?.FamilyMemberId;
+        }
+
+        return claim with
+        {
+            FamilyMemberId = familyMemberId,
+            CaseStatus = string.IsNullOrWhiteSpace(claim.CaseStatus)
+                ? ClaimCaseValues.StatusSaved
+                : claim.CaseStatus
+        };
+    }
+
+    private static void EnsureLegacyOwnershipResolved(
+        ClaimRecord claim,
+        IReadOnlyList<PolicyRecord> policies)
+    {
+        if (!string.IsNullOrWhiteSpace(claim.FamilyMemberId))
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(claim.PolicyId)
+            || string.IsNullOrWhiteSpace(policies.FirstOrDefault(policy => string.Equals(
+                policy.Id,
+                claim.PolicyId,
+                StringComparison.Ordinal))?.FamilyMemberId))
+        {
+            throw new ClaimCaseLegacyReviewRequiredException();
+        }
     }
 
     private static InsurancePolicyDraft NormalizeInsurancePolicyDraft(

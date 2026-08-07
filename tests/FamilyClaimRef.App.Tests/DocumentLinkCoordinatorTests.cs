@@ -229,7 +229,7 @@ public sealed class DocumentLinkCoordinatorTests
             var policyClaimStorage = new JsonPolicyClaimStorageService(rootPath);
             var policy = await policyClaimStorage.AddPolicyAsync(CreatePolicyDraft());
             var claim = await policyClaimStorage.AddClaimAsync(CreateClaimDraft(policy.Id));
-            await policyClaimStorage.DisableClaimAsync(claim.Id);
+            await policyClaimStorage.DisableClaimAsync(claim.Id, claim.Revision);
             var document = await documentStorage.AddDocumentAsync(CreateDocumentDraft());
             var coordinator = new DocumentLinkCoordinator(documentStorage, policyClaimStorage);
 
@@ -690,6 +690,7 @@ public sealed class DocumentLinkCoordinatorTests
 
         public Task<ClaimRecord> DisableClaimAsync(
             string id,
+            int expectedRevision,
             CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();

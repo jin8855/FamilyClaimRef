@@ -15,8 +15,16 @@ public partial class ProductClaimCasesView : UserControl
     {
         if (DataContext is PolicyClaimManagementViewModel viewModel)
         {
-            viewModel.ClearManagementMessage();
+            viewModel.ClearClaimCaseMessages();
             await viewModel.LoadAsync();
+        }
+    }
+
+    private void NewButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is PolicyClaimManagementViewModel viewModel)
+        {
+            viewModel.StartNewClaimCase();
         }
     }
 
@@ -24,7 +32,15 @@ public partial class ProductClaimCasesView : UserControl
     {
         if (DataContext is PolicyClaimManagementViewModel viewModel)
         {
-            await viewModel.CreateClaimAsync();
+            await viewModel.CreateClaimCaseRecordAsync();
+        }
+    }
+
+    private async void SaveButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is PolicyClaimManagementViewModel viewModel)
+        {
+            await viewModel.SaveClaimCaseAsync();
         }
     }
 
@@ -32,7 +48,16 @@ public partial class ProductClaimCasesView : UserControl
     {
         if (DataContext is PolicyClaimManagementViewModel viewModel)
         {
-            await viewModel.DisableSelectedClaimAsync();
+            await viewModel.DisableSelectedClaimCaseAsync();
+        }
+    }
+
+    private async void ClaimList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (e.AddedItems.Count > 0
+            && DataContext is PolicyClaimManagementViewModel viewModel)
+        {
+            await viewModel.LoadSelectedClaimCaseAsync();
         }
     }
 }

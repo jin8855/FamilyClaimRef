@@ -914,6 +914,7 @@ public sealed class DocumentRegistrationWorkflowTests
 
         public Task<ClaimRecord> DisableClaimAsync(
             string id,
+            int expectedRevision,
             CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();

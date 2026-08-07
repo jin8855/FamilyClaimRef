@@ -228,7 +228,7 @@ public sealed class PolicyClaimManagementViewModelTests
             var service = new JsonPolicyClaimStorageService(rootPath);
             var policy = await service.AddPolicyAsync(CreatePolicyDraft("policy_title_demo"));
             var claim = await service.AddClaimAsync(CreateClaimDraft(policy.Id, "claim_title_demo"));
-            await service.DisableClaimAsync(claim.Id);
+            await service.DisableClaimAsync(claim.Id, claim.Revision);
             await service.DisablePolicyAsync(policy.Id);
             var viewModel = new PolicyClaimManagementViewModel(service, CreateUiTextProvider())
             {
@@ -361,7 +361,7 @@ public sealed class PolicyClaimManagementViewModelTests
             var service = new JsonPolicyClaimStorageService(rootPath);
             var firstPolicy = await service.AddPolicyAsync(CreatePolicyDraft("reusable_policy"));
             var firstClaim = await service.AddClaimAsync(CreateClaimDraft(firstPolicy.Id, "reusable_claim"));
-            await service.DisableClaimAsync(firstClaim.Id);
+            await service.DisableClaimAsync(firstClaim.Id, firstClaim.Revision);
             await service.DisablePolicyAsync(firstPolicy.Id);
             var viewModel = new PolicyClaimManagementViewModel(service, CreateUiTextProvider())
             {
@@ -880,7 +880,10 @@ public sealed class PolicyClaimManagementViewModelTests
             return Task.FromResult(SeedClaim(draft.PolicyId, draft.DisplayTitle));
         }
 
-        public Task<ClaimRecord> DisableClaimAsync(string id, CancellationToken cancellationToken = default)
+        public Task<ClaimRecord> DisableClaimAsync(
+            string id,
+            int expectedRevision,
+            CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             lock (syncRoot)
@@ -892,11 +895,16 @@ public sealed class PolicyClaimManagementViewModelTests
                 {
                     throw new KeyNotFoundException(id);
                 }
+                if (claims[index].Revision != expectedRevision)
+                {
+                    throw new ClaimCaseConcurrencyException();
+                }
 
                 var disabled = claims[index] with
                 {
                     DisabledAt = DateTimeOffset.UtcNow,
-                    UpdatedAt = DateTimeOffset.UtcNow
+                    UpdatedAt = DateTimeOffset.UtcNow,
+                    Revision = checked(claims[index].Revision + 1)
                 };
                 claims[index] = disabled;
                 return Task.FromResult(disabled);

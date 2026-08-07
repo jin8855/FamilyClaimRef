@@ -155,6 +155,20 @@ public sealed class AppServices
                 "같은 이름의 활성 보험 계약이 이미 있습니다.",
             [UiTextKeys.ProductClaimCasesDuplicateTitleMessage] =
                 "같은 이름의 활성 청구 건이 이미 있습니다.",
+            [UiTextKeys.ProductClaimCaseVisitTypeOutpatient] = "통원",
+            [UiTextKeys.ProductClaimCaseVisitTypeInpatient] = "입원",
+            [UiTextKeys.ProductClaimCaseValidationRequiredMessage] =
+                "가족, 청구 건 이름, 진료일, 병원명, 진료 구분과 금액 입력을 확인해 주세요.",
+            [UiTextKeys.ProductClaimCaseConflictMessage] =
+                "다른 변경이 먼저 저장되었습니다. 목록을 다시 불러온 뒤 다시 시도해 주세요.",
+            [UiTextKeys.ProductClaimCaseLegacyReviewRequiredMessage] =
+                "기존 청구 건의 가족 연결을 확인할 수 없어 편집할 수 없습니다.",
+            [UiTextKeys.ProductClaimCaseDraftCreatedMessage] =
+                "청구 건 초안을 생성했습니다.",
+            [UiTextKeys.ProductClaimCaseSavedMessage] =
+                "청구 건 상세를 저장했습니다.",
+            [UiTextKeys.ProductClaimCaseDisabledMessage] =
+                "청구 건을 사용 중지했습니다.",
             [UiTextKeys.ProductFamilyMemberDisplayNameLabel] = "표시명",
             [UiTextKeys.ProductFamilyMemberRelationLabel] = "관계",
             [UiTextKeys.ProductFamilyMemberMemoLabel] = "메모",
