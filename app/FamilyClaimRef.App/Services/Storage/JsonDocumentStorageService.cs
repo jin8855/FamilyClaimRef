@@ -139,6 +139,53 @@ public sealed class JsonDocumentStorageService : IDocumentStorageService
         return record;
     }
 
+    public async Task<PolicyDocumentRecord> ReplaceActivePolicyDocumentAsync(
+        PolicyDocumentDraft draft,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(draft);
+
+        var normalizedPolicyId = NormalizeRequiredValue(draft.PolicyId, nameof(draft.PolicyId));
+        var normalizedDocumentId = NormalizeRequiredValue(draft.DocumentId, nameof(draft.DocumentId));
+        var normalizedDocumentType = NormalizeDocumentType(
+            PolicyScope,
+            draft.DocumentType,
+            nameof(draft.DocumentType));
+
+        await EnsureActiveDocumentExistsAsync(normalizedDocumentId, cancellationToken);
+
+        var records = (await policyDocumentStore.LoadAsync(cancellationToken)).Items.ToList();
+        var timestamp = DateTimeOffset.UtcNow;
+        for (var index = 0; index < records.Count; index++)
+        {
+            var existing = records[index];
+            if (existing.DisabledAt is null
+                && string.Equals(existing.PolicyId, normalizedPolicyId, StringComparison.Ordinal)
+                && string.Equals(existing.DocumentType, normalizedDocumentType, StringComparison.Ordinal))
+            {
+                records[index] = existing with
+                {
+                    UpdatedAt = timestamp,
+                    DisabledAt = timestamp
+                };
+            }
+        }
+
+        var replacement = new PolicyDocumentRecord(
+            CreateId("pdoc"),
+            normalizedPolicyId,
+            normalizedDocumentId,
+            normalizedDocumentType,
+            timestamp,
+            timestamp,
+            null);
+        EnsureUniqueId(records.Select(policyDocument => policyDocument.Id), replacement.Id);
+        records.Add(replacement);
+        await policyDocumentStore.SaveAsync(records, cancellationToken);
+
+        return replacement;
+    }
+
     public async Task DisablePolicyDocumentAsync(
         string policyDocumentId,
         DateTimeOffset disabledAt,
@@ -159,6 +206,44 @@ public sealed class JsonDocumentStorageService : IDocumentStorageService
         };
 
         await policyDocumentStore.SaveAsync(records, cancellationToken);
+    }
+
+    public async Task<int> DisableActivePolicyDocumentsByTypeAsync(
+        string policyId,
+        string documentType,
+        DateTimeOffset disabledAt,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedPolicyId = NormalizeRequiredValue(policyId, nameof(policyId));
+        var normalizedDocumentType = NormalizeDocumentType(
+            PolicyScope,
+            documentType,
+            nameof(documentType));
+        var records = (await policyDocumentStore.LoadAsync(cancellationToken)).Items.ToList();
+        var disabledCount = 0;
+
+        for (var index = 0; index < records.Count; index++)
+        {
+            var existing = records[index];
+            if (existing.DisabledAt is null
+                && string.Equals(existing.PolicyId, normalizedPolicyId, StringComparison.Ordinal)
+                && string.Equals(existing.DocumentType, normalizedDocumentType, StringComparison.Ordinal))
+            {
+                records[index] = existing with
+                {
+                    UpdatedAt = disabledAt,
+                    DisabledAt = disabledAt
+                };
+                disabledCount++;
+            }
+        }
+
+        if (disabledCount > 0)
+        {
+            await policyDocumentStore.SaveAsync(records, cancellationToken);
+        }
+
+        return disabledCount;
     }
 
     public async Task<IReadOnlyList<ClaimDocumentRecord>> GetClaimDocumentsAsync(
@@ -286,22 +371,21 @@ public sealed class JsonDocumentStorageService : IDocumentStorageService
 
     private static Gate8DocumentMetadata? NormalizeGate8Metadata(DocumentDraft draft)
     {
-        var values = new object?[]
+        var requiredValues = new object?[]
         {
             draft.OriginalDisplayFileName,
             draft.ValidatedFileType,
             draft.ByteLength,
             draft.Sha256,
-            draft.ReferenceDate,
             draft.DocumentType
         };
-        var suppliedCount = values.Count(value => value is not null);
-        if (suppliedCount == 0)
+        var suppliedCount = requiredValues.Count(value => value is not null);
+        if (suppliedCount == 0 && draft.ReferenceDate is null)
         {
             return null;
         }
 
-        if (suppliedCount != values.Length)
+        if (suppliedCount != requiredValues.Length)
         {
             throw new ArgumentException("Gate8 Document metadata must be supplied as a complete set.", nameof(draft));
         }
@@ -337,9 +421,9 @@ public sealed class JsonDocumentStorageService : IDocumentStorageService
             throw new ArgumentException("Document byte length is invalid.", nameof(draft));
         }
 
-        if (draft.ReferenceDate is null || draft.ReferenceDate == default)
+        if (draft.ReferenceDate is { } referenceDate && referenceDate == default)
         {
-            throw new ArgumentException("Reference date is required.", nameof(draft));
+            throw new ArgumentException("Reference date is invalid.", nameof(draft));
         }
 
         return new Gate8DocumentMetadata(
@@ -347,7 +431,7 @@ public sealed class JsonDocumentStorageService : IDocumentStorageService
             validatedFileType,
             draft.ByteLength.Value,
             NormalizeSha256(draft.Sha256!, nameof(draft.Sha256)),
-            draft.ReferenceDate.Value,
+            draft.ReferenceDate,
             NormalizeRequiredValue(draft.DocumentType!, nameof(draft.DocumentType)).ToLowerInvariant());
     }
 
@@ -389,6 +473,6 @@ public sealed class JsonDocumentStorageService : IDocumentStorageService
         string ValidatedFileType,
         long ByteLength,
         string Sha256,
-        DateOnly ReferenceDate,
+        DateOnly? ReferenceDate,
         string DocumentType);
 }

@@ -639,6 +639,21 @@ public sealed class DocumentLinkCoordinatorTests
             throw new NotImplementedException();
         }
 
+        public Task<PolicyRecord> CreateInsurancePolicyAsync(
+            InsurancePolicyDraft draft,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<PolicyRecord> UpdateInsurancePolicyAsync(
+            string id,
+            InsurancePolicyDraft draft,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<PolicyRecord> DisablePolicyAsync(
             string id,
             CancellationToken cancellationToken = default)

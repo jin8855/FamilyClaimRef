@@ -52,9 +52,10 @@ public sealed class AppServices
         var attachmentRootPath = runtimeRootPaths.AttachmentRootPath;
 
         IDocumentStorageService documentStorageService = new JsonDocumentStorageService(metadataRootPath);
-        IPolicyClaimStorageService policyClaimStorageService = new JsonPolicyClaimStorageService(metadataRootPath);
         IFamilyMemberStorageService familyMemberStorageService =
             new JsonFamilyMemberStorageService(metadataRootPath);
+        IPolicyClaimStorageService policyClaimStorageService =
+            new JsonPolicyClaimStorageService(metadataRootPath, familyMemberStorageService);
         IFileAttachmentService fileAttachmentService = new LocalFileAttachmentService(attachmentRootPath);
         var fileValidationService = new DocumentFileValidationService();
         var attachmentCoordinator = new DocumentAttachmentCoordinator(
@@ -89,12 +90,18 @@ public sealed class AppServices
             filePickerService,
             policyClaimStorageService,
             uiTextProvider,
-            fileValidationService);
+            fileValidationService,
+            familyMemberStorageService);
         var productDocumentListViewModel = new ProductDocumentListViewModel(
             documentStorageService,
             uiTextProvider);
+        IManagedDocumentOpener managedDocumentOpener = new ManagedDocumentOpener(
+            attachmentRootPath);
         var productShellPolicyClaimManagementViewModel = new PolicyClaimManagementViewModel(
             policyClaimStorageService,
+            familyMemberStorageService,
+            documentStorageService,
+            managedDocumentOpener,
             uiTextProvider);
         var familyMemberManagementViewModel = new FamilyMemberManagementViewModel(
             familyMemberStorageService,
@@ -162,6 +169,84 @@ public sealed class AppServices
                 "가족 정보를 처리하지 못했습니다. 다시 시도해 주세요.",
             [UiTextKeys.ProductFamilyMemberSavedRefreshFailedMessage] =
                 "저장은 완료되었지만 목록을 새로고치지 못했습니다. 다시 불러와 주세요.",
+            [UiTextKeys.ProductInsurancePolicyFamilyLabel] = "가족",
+            [UiTextKeys.ProductInsurancePolicyInsurerLabel] = "보험사",
+            [UiTextKeys.ProductInsurancePolicyContractStatusLabel] = "계약 상태",
+            [UiTextKeys.ProductInsurancePolicyEnrollmentDateLabel] = "가입일",
+            [UiTextKeys.ProductInsurancePolicyCoveragePeriodLabel] = "보험기간",
+            [UiTextKeys.ProductInsurancePolicyPremiumPaymentPeriodLabel] = "보험료 납입기간",
+            [UiTextKeys.ProductInsurancePolicyTotalPlannedPremiumAmountLabel] = "납입액",
+            [UiTextKeys.ProductInsurancePolicyCurrencySuffix] = "원",
+            [UiTextKeys.ProductInsurancePolicyRenewalTypeLabel] = "갱신 유형",
+            [UiTextKeys.ProductInsurancePolicyRefundTypeLabel] = "환급 유형",
+            [UiTextKeys.ProductInsurancePolicyBusinessTypeLabel] = "보험사 구분",
+            [UiTextKeys.ProductInsurancePolicyProductCategoryLabel] = "상품 구분",
+            [UiTextKeys.ProductInsurancePolicyRegistrationSourceLabel] = "등록 출처",
+            [UiTextKeys.ProductInsurancePolicyBasicInformationSection] = "기본정보",
+            [UiTextKeys.ProductInsurancePolicyCoveragePaymentSection] = "보장·납입정보",
+            [UiTextKeys.ProductInsurancePolicyClassificationSection] = "보험 분류",
+            [UiTextKeys.ProductInsurancePolicyRegistrationInformationSection] = "등록정보",
+            [UiTextKeys.ProductInsurancePolicySelectionRequired] = "선택 필요",
+            [UiTextKeys.ProductInsurancePolicyLegacyValueReviewRequired] = "기존 값 확인 필요",
+            [UiTextKeys.ProductInsurancePolicyUnregisteredValue] = "미등록",
+            [UiTextKeys.ProductInsurancePolicyLoadFailedMessage] =
+                "보험 계약 목록을 불러오지 못했습니다. 다시 시도해 주세요.",
+            [UiTextKeys.ProductInsurancePolicySavedMessage] = "보험 계약 정보를 저장했습니다.",
+            [UiTextKeys.ProductInsurancePolicyRequiredFieldsMessage] =
+                "보험 계약 정보를 모두 입력해 주세요.",
+            [UiTextKeys.ProductInsurancePolicyTargetUnavailableMessage] =
+                "처리할 보험 계약을 찾을 수 없습니다. 목록을 다시 확인해 주세요.",
+            [UiTextKeys.ProductInsurancePolicyFamilyUnavailableMessage] =
+                "연결된 가족 정보를 찾을 수 없습니다. 저장하려면 가족을 다시 선택해 주세요.",
+            [UiTextKeys.ProductInsurancePolicyFamilyUnavailableValue] = "연결 확인 필요",
+            [UiTextKeys.ProductInsurancePolicyOperationFailedMessage] =
+                "보험 계약을 처리하지 못했습니다. 다시 시도해 주세요.",
+            [UiTextKeys.ProductInsurancePolicyTemporarySaveAction] = "임시저장",
+            [UiTextKeys.ProductInsurancePolicySummarySectionTitle] = "보험 요약 정보",
+            [UiTextKeys.ProductInsurancePolicyLinkedDocumentsSectionTitle] =
+                "이 보험에 연결할 문서",
+            [UiTextKeys.ProductInsurancePolicyLinkedDocumentsGuidance] =
+                "보험 문서는 보험 기본정보를 저장한 뒤 연결합니다. 약관, 계약서, 보험증권은 이 보험에 종속된 문서로 관리합니다.",
+            [UiTextKeys.ProductInsurancePolicyDocumentTypeHeader] = "문서 유형",
+            [UiTextKeys.ProductInsurancePolicyDocumentStatusHeader] = "상태",
+            [UiTextKeys.ProductInsurancePolicyDocumentNextActionHeader] = "다음 작업",
+            [UiTextKeys.ProductInsurancePolicyDocumentCaptureType] = "보험 조회 캡처",
+            [UiTextKeys.ProductInsurancePolicyDocumentPolicyType] = "보험증권/계약서",
+            [UiTextKeys.ProductInsurancePolicyDocumentTermsType] = "약관 PDF/DOCX",
+            [UiTextKeys.ProductInsurancePolicyDocumentCreateStatus] = "보험 저장 후 등록 가능",
+            [UiTextKeys.ProductInsurancePolicyDocumentNotRegisteredStatus] = "미등록",
+            [UiTextKeys.ProductInsurancePolicyDocumentStatusUnavailable] =
+                "문서 상태를 불러오지 못했습니다.",
+            [UiTextKeys.ProductInsurancePolicyDocumentStatusGuidance] =
+                "문서 유형별 활성 연결은 1건만 유지하며, 다시 등록하거나 연결을 해제해도 이전 이력과 파일은 보존됩니다.",
+            [UiTextKeys.ProductInsurancePolicyDocumentRegisterAction] = "문서 등록",
+            [UiTextKeys.ProductInsurancePolicyDocumentOpenAction] = "문서 열기",
+            [UiTextKeys.ProductInsurancePolicyDocumentReplaceAction] = "다시 등록",
+            [UiTextKeys.ProductInsurancePolicyDocumentUnlinkAction] = "연결 해제",
+            [UiTextKeys.ProductInsurancePolicyDocumentUnlinkConfirmationTitle] = "문서 연결 해제",
+            [UiTextKeys.ProductInsurancePolicyDocumentUnlinkConfirmationMessage] =
+                "이 보험에서 선택한 문서 연결을 해제하시겠습니까? 문서 이력과 파일은 삭제되지 않습니다.",
+            [UiTextKeys.ProductInsurancePolicyDocumentUnlinkedMessage] = "문서 연결을 해제했습니다.",
+            [UiTextKeys.ProductInsurancePolicyDocumentOpenFailedMessage] =
+                "문서를 열지 못했습니다. 다시 시도해 주세요.",
+            [UiTextKeys.ProductInsurancePolicyDocumentUnlinkFailedMessage] =
+                "문서 연결을 해제하지 못했습니다. 다시 시도해 주세요.",
+            [UiTextKeys.ProductInsurancePolicyDocumentHistoryHeaderFormat] =
+                "문서 이력 보기 ({0}건)",
+            [UiTextKeys.ProductInsurancePolicyDocumentHistoryTitleHeader] = "문서 제목",
+            [UiTextKeys.ProductInsurancePolicyDocumentHistoryRegisteredAtHeader] = "등록일시",
+            [UiTextKeys.ProductInsurancePolicyDocumentHistoryCurrentStatus] = "현재",
+            [UiTextKeys.ProductInsurancePolicyDocumentHistoryArchivedStatus] = "이력",
+            [UiTextKeys.ProductInsurancePolicyCoverageCandidatesSectionTitle] = "담보 후보 확인",
+            [UiTextKeys.ProductInsurancePolicyCoverageCandidatesGuidance] =
+                "담보 후보는 약관 또는 계약서 문서를 연결하고 사용자가 확인한 뒤 표시합니다.",
+            [UiTextKeys.ProductInsurancePolicyCoverageCandidateHeader] = "담보/특약 후보",
+            [UiTextKeys.ProductInsurancePolicyCareTypeCandidateHeader] = "진료구분 후보",
+            [UiTextKeys.ProductInsurancePolicyCostTypeCandidateHeader] = "비용구분 후보",
+            [UiTextKeys.ProductInsurancePolicyKeywordTagHeader] = "키워드/태그",
+            [UiTextKeys.ProductInsurancePolicyReviewRequiredHeader] = "확인 필요",
+            [UiTextKeys.ProductInsurancePolicyCoverageCandidatesEmptyMessage] =
+                "연결 문서를 확인한 뒤 담보 후보를 표시합니다. 현재 자동 분석은 실행하지 않습니다.",
             [UiTextKeys.DocumentRegistrationStatusCleanupFailed] =
                 "등록 중 일부 정리가 실패했습니다. 다시 시도하거나 관리자에게 문의하세요.",
             [UiTextKeys.DocumentRegistrationMessageNoActiveClaim] = "No active claim is available for selection.",
@@ -179,6 +264,9 @@ public sealed class AppServices
             [UiTextKeys.DocumentRegistrationValidationSelectDocumentType] = "문서 유형을 선택해 주세요.",
             [UiTextKeys.DocumentRegistrationValidationEnterDisplayTitle] = "표시 제목을 입력해 주세요.",
             [UiTextKeys.DocumentRegistrationValidationSelectReferenceDate] = "기준일을 선택해 주세요.",
+            [UiTextKeys.DocumentReferenceDateLabel] = "문서 발급·조회 기준일",
+            [UiTextKeys.DocumentReferenceDateHelp] =
+                "문서에 표시된 발급일 또는 보험정보 조회 기준일입니다. 보험 가입일과는 다릅니다. 문서에 날짜가 없으면 비워두세요.",
             [UiTextKeys.ProductDocumentRegistrationValidationUnsupportedFileType] =
                 "Unsupported file type.",
             [UiTextKeys.ProductDocumentRegistrationValidationEmptyFile] =

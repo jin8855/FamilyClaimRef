@@ -68,7 +68,8 @@ public sealed class ProductPolicyClaimAccessibilityLayoutContractTests
             "ProductPolicyContractsView.xaml");
         var policyGrid = Assert.Single(
             policy.Descendants(Presentation + "DataGrid"),
-            element => AttributeValue(element, "ItemsSource") == "{Binding AvailablePolicies}");
+            element => AttributeValue(element, "ItemsSource")
+                == "{Binding AvailableInsurancePolicies}");
         Assert.Equal("Id", AttributeValue(policyGrid, "SelectedValuePath"));
         Assert.Equal("ProductPolicy_List", AttributeValue(policyGrid, "AutomationId"));
         Assert.Contains(

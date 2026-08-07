@@ -233,6 +233,60 @@ public sealed class JsonDocumentStorageServiceTests
     }
 
     [Fact]
+    public async Task ReplaceActivePolicyDocumentAsync_keeps_history_and_leaves_one_active_type_link()
+    {
+        await UsingTempRootAsync(async rootPath =>
+        {
+            var service = new JsonDocumentStorageService(rootPath);
+            var firstDocument = await service.AddDocumentAsync(CreateDocumentDraft());
+            var secondDocument = await service.AddDocumentAsync(CreateDocumentDraft() with
+            {
+                PhysicalFileName = "claim-claim_001_20260626_receipt_002.pdf",
+                DisplayTitle = "Document B",
+                RelativePath = "claims/claim_001/claim-claim_001_20260626_receipt_002.pdf"
+            });
+            var firstLink = await service.AddPolicyDocumentAsync(new PolicyDocumentDraft(
+                "policy_001",
+                firstDocument.Id,
+                "terms"));
+
+            var replacement = await service.ReplaceActivePolicyDocumentAsync(
+                new PolicyDocumentDraft("policy_001", secondDocument.Id, "terms"));
+
+            var links = await service.GetPolicyDocumentsAsync("policy_001");
+            Assert.Equal(2, links.Count);
+            Assert.Equal(firstLink.Id, Assert.Single(links, link => link.DisabledAt is not null).Id);
+            Assert.Equal(replacement.Id, Assert.Single(links, link => link.DisabledAt is null).Id);
+            Assert.Equal(secondDocument.Id, replacement.DocumentId);
+            Assert.Equal(2, (await service.GetDocumentsAsync()).Count);
+        });
+    }
+
+    [Fact]
+    public async Task DisableActivePolicyDocumentsByTypeAsync_preserves_link_and_document_history()
+    {
+        await UsingTempRootAsync(async rootPath =>
+        {
+            var service = new JsonDocumentStorageService(rootPath);
+            var document = await service.AddDocumentAsync(CreateDocumentDraft());
+            await service.AddPolicyDocumentAsync(new PolicyDocumentDraft(
+                "policy_001",
+                document.Id,
+                "terms"));
+            var disabledAt = DateTimeOffset.UtcNow.AddMinutes(3);
+
+            var disabledCount = await service.DisableActivePolicyDocumentsByTypeAsync(
+                "policy_001",
+                "terms",
+                disabledAt);
+
+            Assert.Equal(1, disabledCount);
+            Assert.NotNull(Assert.Single(await service.GetPolicyDocumentsAsync("policy_001")).DisabledAt);
+            Assert.Null((await service.GetDocumentByIdAsync(document.Id))?.DisabledAt);
+        });
+    }
+
+    [Fact]
     public async Task AddClaimDocumentAsync_accepts_existing_active_document()
     {
         await UsingTempRootAsync(async rootPath =>

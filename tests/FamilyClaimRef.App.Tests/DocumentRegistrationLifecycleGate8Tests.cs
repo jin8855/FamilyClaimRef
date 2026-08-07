@@ -161,7 +161,7 @@ public sealed class DocumentRegistrationLifecycleGate8Tests
             Assert.Null(viewModel.SelectedSourceFileDisplayName);
             Assert.Null(viewModel.DocumentType);
             Assert.Null(viewModel.DisplayTitle);
-            Assert.Equal(DateOnly.FromDateTime(DateTime.Today), viewModel.ReferenceDate);
+            Assert.Null(viewModel.ReferenceDate);
             Assert.Equal(policy.Id, viewModel.SelectedPolicyId);
             Assert.Equal(policy.Id, viewModel.TargetId);
             Assert.Equal("문서 등록이 완료되었습니다.", viewModel.StatusMessage);
@@ -327,7 +327,7 @@ public sealed class DocumentRegistrationLifecycleGate8Tests
     }
 
     [Fact]
-    public void C05_resource_constants_have_116_116_and_product_60_60_parity()
+    public void C05_resource_constants_have_180_180_and_product_123_123_parity()
     {
         var resources = LoadResources();
         var constants = typeof(UiTextKeys)
@@ -336,13 +336,13 @@ public sealed class DocumentRegistrationLifecycleGate8Tests
             .Select(field => (string)field.GetRawConstantValue()!)
             .ToArray();
 
-        Assert.Equal(116, resources.Count);
-        Assert.Equal(116, constants.Length);
+        Assert.Equal(180, resources.Count);
+        Assert.Equal(180, constants.Length);
         Assert.Equal(
             resources.Keys.Order(StringComparer.Ordinal),
             constants.Order(StringComparer.Ordinal));
-        Assert.Equal(60, resources.Keys.Count(key => key.StartsWith("Ui.Product.", StringComparison.Ordinal)));
-        Assert.Equal(60, constants.Count(key => key.StartsWith("Ui.Product.", StringComparison.Ordinal)));
+        Assert.Equal(123, resources.Keys.Count(key => key.StartsWith("Ui.Product.", StringComparison.Ordinal)));
+        Assert.Equal(123, constants.Count(key => key.StartsWith("Ui.Product.", StringComparison.Ordinal)));
     }
 
     [Fact]

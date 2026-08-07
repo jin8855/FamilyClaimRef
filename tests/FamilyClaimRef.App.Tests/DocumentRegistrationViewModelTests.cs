@@ -274,7 +274,7 @@ public sealed class DocumentRegistrationViewModelTests
             viewModel.TargetId = null;
             await viewModel.LoadTargetOptionsAsync();
 
-            await viewModel.RegisterAsync();
+            Assert.False(await viewModel.RegisterAsync());
 
             Assert.Equal("문서를 등록하기 전에 연결할 보험 계약을 선택해 주세요.", viewModel.ValidationMessage);
             Assert.False(fileAttachment.CopyCalled);
@@ -295,7 +295,7 @@ public sealed class DocumentRegistrationViewModelTests
             viewModel.TargetId = null;
             await viewModel.LoadTargetOptionsAsync();
 
-            await viewModel.RegisterAsync();
+            Assert.False(await viewModel.RegisterAsync());
 
             Assert.Equal("문서를 등록하기 전에 연결할 청구 건을 선택해 주세요.", viewModel.ValidationMessage);
             Assert.False(fileAttachment.CopyCalled);
@@ -398,20 +398,28 @@ public sealed class DocumentRegistrationViewModelTests
     }
 
     [Fact]
-    public async Task RegisterAsync_default_reference_date_rejects()
+    public async Task RegisterAsync_null_reference_date_is_allowed_and_preserved()
     {
-        await UsingTempRootsAsync(async (_, attachmentRoot) =>
+        await UsingTempRootsAsync(async (metadataRoot, attachmentRoot) =>
         {
             var sourcePath = await CreateDummySourceFileAsync(attachmentRoot, "source.pdf");
-            var fileAttachment = new SpyFileAttachmentService();
-            var viewModel = CreateReadyPolicyViewModel(fileAttachment);
+            var storage = new JsonDocumentStorageService(metadataRoot);
+            var viewModel = CreateReadyPolicyViewModel(CreateWorkflow(
+                storage,
+                new LocalFileAttachmentService(attachmentRoot)));
             viewModel.SelectedSourceFilePath = sourcePath;
             viewModel.ReferenceDate = default;
 
             await viewModel.RegisterAsync();
 
-            Assert.Equal("기준일을 선택해 주세요.", viewModel.ValidationMessage);
-            Assert.False(fileAttachment.CopyCalled);
+            Assert.Null(viewModel.ValidationMessage);
+            Assert.Null(viewModel.ReferenceDate);
+            var document = Assert.Single(await storage.GetDocumentsAsync());
+            Assert.Null(document.ReferenceDate);
+            var managedFile = Assert.Single(
+                Directory.GetFiles(attachmentRoot, "*", SearchOption.AllDirectories),
+                path => !string.Equals(path, sourcePath, StringComparison.Ordinal));
+            Assert.Contains("_00010101_", Path.GetFileName(managedFile), StringComparison.Ordinal);
         });
     }
 
@@ -427,7 +435,7 @@ public sealed class DocumentRegistrationViewModelTests
             var viewModel = CreateReadyPolicyViewModel(workflow);
             viewModel.SelectedSourceFilePath = sourcePath;
 
-            await viewModel.RegisterAsync();
+            Assert.True(await viewModel.RegisterAsync());
 
             Assert.Null(viewModel.ValidationMessage);
             Assert.Equal("문서 등록이 완료되었습니다.", viewModel.StatusMessage);
@@ -1027,6 +1035,21 @@ public sealed class DocumentRegistrationViewModelTests
 
         public Task<PolicyRecord> AddPolicyAsync(
             PolicyDraft draft,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<PolicyRecord> CreateInsurancePolicyAsync(
+            InsurancePolicyDraft draft,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<PolicyRecord> UpdateInsurancePolicyAsync(
+            string id,
+            InsurancePolicyDraft draft,
             CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();

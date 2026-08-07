@@ -285,6 +285,20 @@ public sealed class ProductShellViewModelTests
     }
 
     [Fact]
+    public void Policy_document_action_presets_policy_target_and_document_type()
+    {
+        var viewModel = CreateViewModel();
+        viewModel.PolicyClaimManagement.SelectedPolicyId = "policy_synthetic";
+
+        Assert.True(viewModel.NavigateToPolicyDocumentRegistration("terms"));
+
+        Assert.Equal(ProductScreenRoutes.PolicyDocumentRegister, viewModel.CurrentScreen.Id);
+        Assert.Equal(DocumentRegistrationViewModel.PolicyTargetKind, viewModel.DocumentRegistration.TargetKind);
+        Assert.Equal("policy_synthetic", viewModel.DocumentRegistration.SelectedPolicyId);
+        Assert.Equal("terms", viewModel.DocumentRegistration.DocumentType);
+    }
+
+    [Fact]
     public void Presentation_input_is_retained_when_navigating_away_and_back()
     {
         var viewModel = CreateViewModel();
@@ -329,36 +343,46 @@ public sealed class ProductShellViewModelTests
     public async Task Family_edit_navigation_uses_explicit_id_and_direct_route_resets_to_create_mode()
     {
         var uiTextProvider = CreateUiTextProvider();
-        var metadataRoot = Path.Combine(
+        var testRoot = Path.Combine(
             Path.GetTempPath(),
             "FamilyClaimRef.App.Tests",
             "ProductShellViewModelTests",
-            Guid.NewGuid().ToString("N"),
-            "data",
-            "local");
-        var storage = new JsonFamilyMemberStorageService(metadataRoot);
-        var record = await storage.CreateFamilyMemberAsync(new FamilyMemberDraft(
-            "synthetic family",
-            FamilyMemberRelationValues.Mother,
-            null));
-        var family = new FamilyMemberManagementViewModel(storage, uiTextProvider);
-        var viewModel = new ProductShellViewModel(
-            uiTextProvider,
-            CreateDocumentRegistrationViewModel(uiTextProvider),
-            CreateDocumentListViewModel(uiTextProvider),
-            CreatePolicyClaimManagementViewModel(uiTextProvider),
-            family);
+            Guid.NewGuid().ToString("N"));
+        var metadataRoot = Path.Combine(testRoot, "data", "local");
 
-        Assert.True(await viewModel.NavigateToFamilyEditAsync(record.Id, record.Version));
-        Assert.Equal(ProductScreenRoutes.FamilyRegister, viewModel.CurrentRouteId);
-        Assert.True(family.IsEditMode);
-        Assert.Equal(record.Id, family.EditingTargetId);
+        try
+        {
+            var storage = new JsonFamilyMemberStorageService(metadataRoot);
+            var record = await storage.CreateFamilyMemberAsync(new FamilyMemberDraft(
+                "synthetic family",
+                FamilyMemberRelationValues.Mother,
+                null));
+            var family = new FamilyMemberManagementViewModel(storage, uiTextProvider);
+            var viewModel = new ProductShellViewModel(
+                uiTextProvider,
+                CreateDocumentRegistrationViewModel(uiTextProvider),
+                CreateDocumentListViewModel(uiTextProvider),
+                CreatePolicyClaimManagementViewModel(uiTextProvider),
+                family);
 
-        viewModel.NavigateTo(ProductScreenRoutes.FamilyRegister);
+            Assert.True(await viewModel.NavigateToFamilyEditAsync(record.Id, record.Version));
+            Assert.Equal(ProductScreenRoutes.FamilyRegister, viewModel.CurrentRouteId);
+            Assert.True(family.IsEditMode);
+            Assert.Equal(record.Id, family.EditingTargetId);
 
-        Assert.False(family.IsEditMode);
-        Assert.Null(family.EditingTargetId);
-        Assert.False(family.CanDeactivate);
+            viewModel.NavigateTo(ProductScreenRoutes.FamilyRegister);
+
+            Assert.False(family.IsEditMode);
+            Assert.Null(family.EditingTargetId);
+            Assert.False(family.CanDeactivate);
+        }
+        finally
+        {
+            if (Directory.Exists(testRoot))
+            {
+                Directory.Delete(testRoot, recursive: true);
+            }
+        }
     }
 
     [Fact]
@@ -435,6 +459,96 @@ public sealed class ProductShellViewModelTests
         Assert.False(File.Exists(Path.Combine(
             metadataRoot,
             JsonFamilyMemberStorageService.StoreFileName)));
+    }
+
+    [Fact]
+    public async Task Insurance_create_and_edit_save_return_to_refreshed_policy_list()
+    {
+        var uiTextProvider = CreateUiTextProvider();
+        var testRoot = Path.Combine(
+            Path.GetTempPath(),
+            "FamilyClaimRef.App.Tests",
+            "ProductShellViewModelTests",
+            Guid.NewGuid().ToString("N"));
+        var metadataRoot = Path.Combine(testRoot, "data", "local");
+
+        try
+        {
+            var familyStorage = new JsonFamilyMemberStorageService(metadataRoot);
+            var family = await familyStorage.CreateFamilyMemberAsync(new FamilyMemberDraft(
+                "synthetic family",
+                FamilyMemberRelationValues.Self,
+                null));
+            var policyStorage = new JsonPolicyClaimStorageService(metadataRoot, familyStorage);
+            var management = new PolicyClaimManagementViewModel(
+                policyStorage,
+                familyStorage,
+                uiTextProvider);
+            var shell = CreateViewModel(
+                uiTextProvider,
+                new FamilyMemberManagementViewModel(familyStorage, uiTextProvider),
+                management);
+
+            Assert.True(await shell.NavigateToInsurancePolicyCreateAsync());
+            Assert.Equal(ProductScreenRoutes.PolicyRegister, shell.CurrentRouteId);
+            FillInsuranceEditor(management, family.Id, "synthetic policy");
+
+            Assert.True(await shell.SaveInsurancePolicyAndReturnAsync());
+            Assert.Equal(ProductScreenRoutes.PolicyManage, shell.CurrentRouteId);
+            var created = Assert.Single(management.AvailableInsurancePolicies);
+            Assert.Equal(created.Policy, Assert.Single(management.AvailablePolicies));
+            Assert.Equal("synthetic policy", created.DisplayTitle);
+
+            Assert.True(await shell.NavigateToInsurancePolicyEditAsync(created.Id));
+            Assert.Equal(ProductScreenRoutes.PolicyRegister, shell.CurrentRouteId);
+            Assert.Equal(created.Id, management.SelectedPolicyId);
+            management.InsuranceDisplayTitle = "updated synthetic policy";
+
+            Assert.True(await shell.SaveInsurancePolicyAndReturnAsync());
+            Assert.Equal(ProductScreenRoutes.PolicyManage, shell.CurrentRouteId);
+            var updated = Assert.Single(management.AvailableInsurancePolicies);
+            Assert.Equal(created.Id, updated.Id);
+            Assert.Equal("updated synthetic policy", updated.DisplayTitle);
+            Assert.Equal(updated.Policy, Assert.Single(await policyStorage.GetPoliciesAsync()));
+        }
+        finally
+        {
+            if (Directory.Exists(testRoot))
+            {
+                Directory.Delete(testRoot, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task Insurance_save_failure_stays_on_editor_and_cancel_writes_nothing()
+    {
+        var uiTextProvider = CreateUiTextProvider();
+        var metadataRoot = Path.Combine(
+            Path.GetTempPath(),
+            "FamilyClaimRef.App.Tests",
+            "ProductShellViewModelTests",
+            Guid.NewGuid().ToString("N"),
+            "data",
+            "local");
+        var familyStorage = new JsonFamilyMemberStorageService(metadataRoot);
+        var policyStorage = new JsonPolicyClaimStorageService(metadataRoot, familyStorage);
+        var family = new FamilyMemberManagementViewModel(familyStorage, uiTextProvider);
+        var management = new PolicyClaimManagementViewModel(
+            policyStorage,
+            familyStorage,
+            uiTextProvider);
+        var shell = CreateViewModel(uiTextProvider, family, management);
+
+        Assert.True(await shell.NavigateToInsurancePolicyCreateAsync());
+        Assert.False(await shell.SaveInsurancePolicyAndReturnAsync());
+        Assert.Equal(ProductScreenRoutes.PolicyRegister, shell.CurrentRouteId);
+
+        shell.NavigateTo(ProductScreenRoutes.PolicyManage);
+
+        Assert.Equal(ProductScreenRoutes.PolicyManage, shell.CurrentRouteId);
+        Assert.Empty(await policyStorage.GetPoliciesAsync());
+        Assert.False(File.Exists(Path.Combine(metadataRoot, "policies.json")));
     }
 
     [Fact]
@@ -530,6 +644,38 @@ public sealed class ProductShellViewModelTests
             CreateDocumentListViewModel(uiTextProvider),
             CreatePolicyClaimManagementViewModel(uiTextProvider),
             familyMemberManagement);
+    }
+
+    private static ProductShellViewModel CreateViewModel(
+        IUiTextProvider uiTextProvider,
+        FamilyMemberManagementViewModel familyMemberManagement,
+        PolicyClaimManagementViewModel policyClaimManagement)
+    {
+        return new ProductShellViewModel(
+            uiTextProvider,
+            CreateDocumentRegistrationViewModel(uiTextProvider),
+            CreateDocumentListViewModel(uiTextProvider),
+            policyClaimManagement,
+            familyMemberManagement);
+    }
+
+    private static void FillInsuranceEditor(
+        PolicyClaimManagementViewModel management,
+        string familyMemberId,
+        string displayTitle)
+    {
+        management.InsuranceDisplayTitle = displayTitle;
+        management.SelectedInsuranceFamilyMemberId = familyMemberId;
+        management.InsuranceInsurerName = "synthetic insurer";
+        management.InsuranceContractStatus = InsurancePolicyValues.ContractStatusActive;
+        management.InsuranceEnrollmentDate = new DateTime(2026, 8, 4);
+        management.InsuranceCoveragePeriod = "2026-2027";
+        management.InsurancePremiumPaymentPeriod = "20년납";
+        management.InsuranceTotalPlannedPremiumAmountText = "12,000,000";
+        management.InsuranceRenewalType = InsurancePolicyValues.RenewalTypeFixed;
+        management.InsuranceRefundType = InsurancePolicyValues.RefundTypeRefundable;
+        management.InsuranceBusinessType = InsurancePolicyValues.BusinessTypeLife;
+        management.InsuranceProductCategory = InsurancePolicyValues.ProductCategoryCancer;
     }
 
     private static FamilyMemberManagementViewModel CreateFamilyMemberManagementViewModel(

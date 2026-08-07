@@ -15,6 +15,15 @@ public interface IPolicyClaimStorageService
         PolicyDraft draft,
         CancellationToken cancellationToken = default);
 
+    Task<PolicyRecord> CreateInsurancePolicyAsync(
+        InsurancePolicyDraft draft,
+        CancellationToken cancellationToken = default);
+
+    Task<PolicyRecord> UpdateInsurancePolicyAsync(
+        string id,
+        InsurancePolicyDraft draft,
+        CancellationToken cancellationToken = default);
+
     Task<PolicyRecord> DisablePolicyAsync(
         string id,
         CancellationToken cancellationToken = default);

@@ -84,7 +84,10 @@ public sealed class DocumentRegistrationPersistenceGate8Tests
             await context.RegisterPolicyAsync(policy.Id, source, second);
 
             Assert.Equal(2, (await context.DocumentStorage.GetDocumentsAsync()).Count);
-            Assert.Equal(2, (await context.DocumentStorage.GetPolicyDocumentsAsync(policy.Id)).Count);
+            var policyLinks = await context.DocumentStorage.GetPolicyDocumentsAsync(policy.Id);
+            Assert.Equal(2, policyLinks.Count);
+            Assert.Single(policyLinks, link => link.DisabledAt is null);
+            Assert.Single(policyLinks, link => link.DisabledAt is not null);
         });
     }
 

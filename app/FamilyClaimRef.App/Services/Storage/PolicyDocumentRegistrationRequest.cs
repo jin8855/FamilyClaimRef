@@ -5,5 +5,5 @@ public sealed record PolicyDocumentRegistrationRequest(
     string PolicyId,
     string DocumentType,
     string DisplayTitle,
-    DateOnly ReferenceDate,
+    DateOnly? ReferenceDate,
     DocumentFileValidationResult? SelectionSnapshot = null);

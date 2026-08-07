@@ -79,12 +79,18 @@
     <sys:String x:Key="Ui.Product.Wireframe.DocumentBox.PurposeUnavailable">목적 정보 없음</sys:String>
     <sys:String x:Key="Ui.Product.Wireframe.DocumentBox.TargetUnavailable">연결 정보 없음</sys:String>
     <sys:String x:Key="Ui.Product.Wireframe.DocumentBox.OcrUnavailable">확인 정보 없음</sys:String>
-    <sys:String x:Key="Ui.Product.Wireframe.Registration.SelectedFileTitle">1. 문서 이미지 또는 파일 선택</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Registration.SelectedFileTitle">1. 문서 이미지/파일 연결</sys:String>
     <sys:String x:Key="Ui.Product.Wireframe.Registration.TargetTitle">2. 연결 대상</sys:String>
     <sys:String x:Key="Ui.Product.Wireframe.Registration.TargetSummaryTitle">선택 대상 요약</sys:String>
-    <sys:String x:Key="Ui.Product.Wireframe.Registration.PolicyTargetSummary">보험 문서는 선택한 보험 계약에 연결됩니다.</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Registration.PolicySummaryTitle">선택된 보험 요약</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Registration.ClaimSummaryTitle">선택된 청구 건 요약</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Registration.PolicyTargetSummary">보험이 선택되지 않은 경우 먼저 보험 등록/편집 화면에서 보험 기본정보를 저장해야 합니다.</sys:String>
     <sys:String x:Key="Ui.Product.Wireframe.Registration.ClaimTargetSummary">청구 서류는 선택한 청구 건에 연결됩니다.</sys:String>
-    <sys:String x:Key="Ui.Product.Wireframe.Registration.MetadataTitle">3. 문서 내용 확인</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Registration.MetadataTitle">2. 사용자 문서 내용 확인</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Registration.PolicyOcrAction">보험 문서 OCR 확인</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Registration.ClaimOcrAction">청구 서류 OCR 확인</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Registration.ConnectionStatusLabel">문서 연결 상태</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.Registration.ConnectionStatusPending">현재 화면의 등록 결과에서 확인</sys:String>
     <sys:String x:Key="Ui.Product.Wireframe.Registration.SecurityNote">로컬 경로와 내부 식별자는 표시하지 않습니다. 선택한 파일 이름과 제품용 상태만 제공합니다.</sys:String>
 
     <sys:String x:Key="Ui.Product.Wireframe.01_home_dashboard.Title">홈 대시보드</sys:String>

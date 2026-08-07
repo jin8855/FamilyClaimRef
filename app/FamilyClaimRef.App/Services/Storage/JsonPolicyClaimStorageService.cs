@@ -9,14 +9,24 @@ public sealed class JsonPolicyClaimStorageService : IPolicyClaimStorageService
 
     private readonly JsonFileStore<PolicyRecord> policyStore;
     private readonly JsonFileStore<ClaimRecord> claimStore;
+    private readonly IFamilyMemberStorageService familyMemberStorageService;
 
     public JsonPolicyClaimStorageService(string metadataRootPath)
+        : this(metadataRootPath, new JsonFamilyMemberStorageService(metadataRootPath))
+    {
+    }
+
+    public JsonPolicyClaimStorageService(
+        string metadataRootPath,
+        IFamilyMemberStorageService familyMemberStorageService)
     {
         if (string.IsNullOrWhiteSpace(metadataRootPath))
         {
             throw new ArgumentException("Metadata root path is required.", nameof(metadataRootPath));
         }
 
+        this.familyMemberStorageService = familyMemberStorageService
+            ?? throw new ArgumentNullException(nameof(familyMemberStorageService));
         policyStore = new JsonFileStore<PolicyRecord>(metadataRootPath, PoliciesFileName);
         claimStore = new JsonFileStore<ClaimRecord>(metadataRootPath, ClaimsFileName);
     }
@@ -63,6 +73,95 @@ public sealed class JsonPolicyClaimStorageService : IPolicyClaimStorageService
         await policyStore.SaveAsync(policies, cancellationToken);
 
         return record;
+    }
+
+    public async Task<PolicyRecord> CreateInsurancePolicyAsync(
+        InsurancePolicyDraft draft,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(draft);
+
+        var normalizedDraft = NormalizeInsurancePolicyDraft(draft);
+        await EnsureFamilyReferenceAsync(
+            normalizedDraft.FamilyMemberId,
+            requireActive: true,
+            cancellationToken);
+
+        var policies = (await policyStore.LoadAsync(cancellationToken)).Items.ToList();
+        var timestamp = DateTimeOffset.UtcNow;
+        var record = new PolicyRecord(
+            Id: CreateId("policy"),
+            DisplayTitle: normalizedDraft.DisplayTitle,
+            ReferenceDate: null,
+            CreatedAt: timestamp,
+            UpdatedAt: timestamp,
+            DisabledAt: null,
+            FamilyMemberId: normalizedDraft.FamilyMemberId,
+            InsurerName: normalizedDraft.InsurerName,
+            ContractStatus: normalizedDraft.ContractStatus,
+            EnrollmentDate: normalizedDraft.EnrollmentDate,
+            CoveragePeriod: normalizedDraft.CoveragePeriod,
+            RegistrationSource: InsurancePolicyValues.RegistrationSourceDirectInput,
+            PremiumPaymentPeriod: normalizedDraft.PremiumPaymentPeriod,
+            TotalPlannedPremiumAmount: normalizedDraft.TotalPlannedPremiumAmount,
+            RenewalType: normalizedDraft.RenewalType,
+            RefundType: normalizedDraft.RefundType,
+            InsuranceBusinessType: normalizedDraft.InsuranceBusinessType,
+            ProductCategory: normalizedDraft.ProductCategory);
+
+        EnsureUniqueId(policies.Select(policy => policy.Id), record.Id);
+        policies.Add(record);
+        await policyStore.SaveAsync(policies, cancellationToken);
+
+        return record;
+    }
+
+    public async Task<PolicyRecord> UpdateInsurancePolicyAsync(
+        string id,
+        InsurancePolicyDraft draft,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(draft);
+
+        var normalizedId = NormalizeRequiredValue(id, nameof(id));
+        var normalizedDraft = NormalizeInsurancePolicyDraft(draft);
+        var policies = (await policyStore.LoadAsync(cancellationToken)).Items.ToList();
+        var policyIndex = policies.FindIndex(policy => policy.Id == normalizedId);
+        if (policyIndex < 0 || policies[policyIndex].DisabledAt is not null)
+        {
+            throw new InvalidOperationException("Policy was not found or is disabled.");
+        }
+
+        var current = policies[policyIndex];
+        var changesFamilyReference = !string.Equals(
+            current.FamilyMemberId,
+            normalizedDraft.FamilyMemberId,
+            StringComparison.Ordinal);
+        await EnsureFamilyReferenceAsync(
+            normalizedDraft.FamilyMemberId,
+            requireActive: changesFamilyReference,
+            cancellationToken);
+
+        var updated = current with
+        {
+            DisplayTitle = normalizedDraft.DisplayTitle,
+            UpdatedAt = DateTimeOffset.UtcNow,
+            FamilyMemberId = normalizedDraft.FamilyMemberId,
+            InsurerName = normalizedDraft.InsurerName,
+            ContractStatus = normalizedDraft.ContractStatus,
+            EnrollmentDate = normalizedDraft.EnrollmentDate,
+            CoveragePeriod = normalizedDraft.CoveragePeriod,
+            PremiumPaymentPeriod = normalizedDraft.PremiumPaymentPeriod,
+            TotalPlannedPremiumAmount = normalizedDraft.TotalPlannedPremiumAmount,
+            RenewalType = normalizedDraft.RenewalType,
+            RefundType = normalizedDraft.RefundType,
+            InsuranceBusinessType = normalizedDraft.InsuranceBusinessType,
+            ProductCategory = normalizedDraft.ProductCategory
+        };
+        policies[policyIndex] = updated;
+        await policyStore.SaveAsync(policies, cancellationToken);
+
+        return updated;
     }
 
     public async Task<PolicyRecord> DisablePolicyAsync(
@@ -224,6 +323,70 @@ public sealed class JsonPolicyClaimStorageService : IPolicyClaimStorageService
         return value;
     }
 
+    private static InsurancePolicyDraft NormalizeInsurancePolicyDraft(
+        InsurancePolicyDraft draft)
+    {
+        return new InsurancePolicyDraft(
+            NormalizeRequiredValue(draft.DisplayTitle, nameof(draft.DisplayTitle)),
+            NormalizeRequiredValue(draft.FamilyMemberId, nameof(draft.FamilyMemberId)),
+            NormalizeRequiredValue(draft.InsurerName, nameof(draft.InsurerName)),
+            NormalizeAllowedValue(
+                draft.ContractStatus,
+                InsurancePolicyValues.ContractStatuses,
+                nameof(draft.ContractStatus)),
+            NormalizeReferenceDate(draft.EnrollmentDate, nameof(draft.EnrollmentDate)),
+            NormalizeRequiredValue(draft.CoveragePeriod, nameof(draft.CoveragePeriod)),
+            NormalizeRequiredValue(draft.PremiumPaymentPeriod, nameof(draft.PremiumPaymentPeriod)),
+            NormalizePlannedPremiumAmount(draft.TotalPlannedPremiumAmount),
+            NormalizeAllowedValue(
+                draft.RenewalType,
+                InsurancePolicyValues.RenewalTypes,
+                nameof(draft.RenewalType)),
+            NormalizeAllowedValue(
+                draft.RefundType,
+                InsurancePolicyValues.RefundTypes,
+                nameof(draft.RefundType)),
+            NormalizeAllowedValue(
+                draft.InsuranceBusinessType,
+                InsurancePolicyValues.BusinessTypes,
+                nameof(draft.InsuranceBusinessType)),
+            NormalizeAllowedValue(
+                draft.ProductCategory,
+                InsurancePolicyValues.ProductCategories,
+                nameof(draft.ProductCategory)));
+    }
+
+    private static string NormalizeAllowedValue(
+        string value,
+        IReadOnlyList<string> allowedValues,
+        string parameterName)
+    {
+        var normalized = NormalizeRequiredValue(value, parameterName);
+        if (!allowedValues.Contains(normalized, StringComparer.Ordinal))
+        {
+            throw new ArgumentException("Value is not allowed.", parameterName);
+        }
+
+        return normalized;
+    }
+
+    private static decimal? NormalizePlannedPremiumAmount(decimal? value)
+    {
+        if (value is null)
+        {
+            return null;
+        }
+
+        if (value < 0 || value != decimal.Truncate(value.Value))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(InsurancePolicyDraft.TotalPlannedPremiumAmount),
+                "Planned premium amount must be a non-negative whole number.");
+        }
+
+        return value;
+    }
+
     private static void EnsureUniqueId(IEnumerable<string> ids, string id)
     {
         if (ids.Contains(id, StringComparer.Ordinal))
@@ -239,6 +402,20 @@ public sealed class JsonPolicyClaimStorageService : IPolicyClaimStorageService
         if (!await PolicyExistsAsync(policyId, cancellationToken))
         {
             throw new InvalidOperationException("Referenced policy was not found or is disabled.");
+        }
+    }
+    private async Task EnsureFamilyReferenceAsync(
+        string familyMemberId,
+        bool requireActive,
+        CancellationToken cancellationToken)
+    {
+        var familyMember = await familyMemberStorageService.GetFamilyMemberAsync(
+            familyMemberId,
+            cancellationToken);
+        if (familyMember is null || (requireActive && familyMember.DisabledAt is not null))
+        {
+            throw new InvalidOperationException(
+                "Referenced family member was not found or is unavailable.");
         }
     }
 }

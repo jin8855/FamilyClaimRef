@@ -276,7 +276,7 @@ public sealed class DocumentAttachmentCoordinatorTests
     }
 
     [Fact]
-    public async Task AttachDocumentAsync_rejects_default_reference_date()
+    public async Task AttachDocumentAsync_allows_null_reference_date_without_today_default()
     {
         await UsingTempRootsAsync(async (_, attachmentRoot) =>
         {
@@ -285,11 +285,15 @@ public sealed class DocumentAttachmentCoordinatorTests
                 new InMemoryDocumentStorageService(),
                 new SpyFileAttachmentService());
 
-            var exception = await Record.ExceptionAsync(() => coordinator.AttachDocumentAsync(
-                CreateRequest(sourcePath, referenceDate: new DateOnly())));
+            var result = await coordinator.AttachDocumentAsync(new DocumentAttachmentRequest(
+                sourcePath,
+                "claim",
+                "receipt",
+                "청구 서류 A",
+                null));
 
-            Assert.NotNull(exception);
-            Assert.IsType<ArgumentException>(exception);
+            Assert.Null(result.Document.ReferenceDate);
+            Assert.Contains("_00010101_", result.File.PhysicalFileName, StringComparison.Ordinal);
         });
     }
 

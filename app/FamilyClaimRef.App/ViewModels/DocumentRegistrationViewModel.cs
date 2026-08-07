@@ -15,12 +15,14 @@ public sealed class DocumentRegistrationViewModel : INotifyPropertyChanged
     private readonly DocumentRegistrationWorkflow registrationWorkflow;
     private readonly IFilePickerService filePickerService;
     private readonly IPolicyClaimStorageService policyClaimStorageService;
+    private readonly IFamilyMemberStorageService? familyMemberStorageService;
     private readonly IUiTextProvider uiTextProvider;
     private readonly DocumentFileValidationService fileValidationService;
     private readonly SemaphoreSlim operationGate = new(1, 1);
 
     private IReadOnlyList<PolicyRecord> availablePolicies = [];
     private IReadOnlyList<ClaimRecord> availableClaims = [];
+    private IReadOnlyList<FamilyMemberRecord> availableFamilyMembers = [];
     private DocumentFileValidationResult? selectedFileValidation;
     private string? selectedSourceFilePath;
     private string? selectedSourceFileDisplayName;
@@ -30,7 +32,7 @@ public sealed class DocumentRegistrationViewModel : INotifyPropertyChanged
     private string? selectedClaimId;
     private string? documentType;
     private string? displayTitle;
-    private DateOnly referenceDate = DateOnly.FromDateTime(DateTime.Today);
+    private DateOnly? referenceDate;
     private bool isBusy;
     private bool targetOptionsLoaded;
     private string? validationMessage;
@@ -58,7 +60,8 @@ public sealed class DocumentRegistrationViewModel : INotifyPropertyChanged
         IFilePickerService filePickerService,
         IPolicyClaimStorageService policyClaimStorageService,
         IUiTextProvider uiTextProvider,
-        DocumentFileValidationService fileValidationService)
+        DocumentFileValidationService fileValidationService,
+        IFamilyMemberStorageService? familyMemberStorageService = null)
     {
         this.registrationWorkflow = registrationWorkflow
             ?? throw new ArgumentNullException(nameof(registrationWorkflow));
@@ -66,6 +69,7 @@ public sealed class DocumentRegistrationViewModel : INotifyPropertyChanged
             ?? throw new ArgumentNullException(nameof(filePickerService));
         this.policyClaimStorageService = policyClaimStorageService
             ?? throw new ArgumentNullException(nameof(policyClaimStorageService));
+        this.familyMemberStorageService = familyMemberStorageService;
         this.uiTextProvider = uiTextProvider
             ?? throw new ArgumentNullException(nameof(uiTextProvider));
         this.fileValidationService = fileValidationService
@@ -82,6 +86,7 @@ public sealed class DocumentRegistrationViewModel : INotifyPropertyChanged
             if (SetProperty(ref availablePolicies, value))
             {
                 OnPropertyChanged(nameof(HasAvailablePolicies));
+                OnSelectedPolicySummaryChanged();
             }
         }
     }
@@ -101,6 +106,21 @@ public sealed class DocumentRegistrationViewModel : INotifyPropertyChanged
     public bool HasAvailablePolicies => AvailablePolicies.Count > 0;
 
     public bool HasAvailableClaims => AvailableClaims.Count > 0;
+
+    public PolicyRecord? SelectedPolicy => AvailablePolicies.FirstOrDefault(
+        policy => string.Equals(policy.Id, SelectedPolicyId, StringComparison.Ordinal));
+
+    public string? SelectedPolicyFamilyDisplayName
+    {
+        get
+        {
+            var familyMemberId = SelectedPolicy?.FamilyMemberId;
+            return availableFamilyMembers.FirstOrDefault(member =>
+                string.Equals(member.Id, familyMemberId, StringComparison.Ordinal))?.DisplayName;
+        }
+    }
+
+    public string? SelectedPolicyInsurerName => SelectedPolicy?.InsurerName;
 
     public string? SelectedSourceFilePath
     {
@@ -152,6 +172,7 @@ public sealed class DocumentRegistrationViewModel : INotifyPropertyChanged
                 }
 
                 RefreshTargetSelectionMessage();
+                OnSelectedPolicySummaryChanged();
             }
         }
     }
@@ -185,7 +206,7 @@ public sealed class DocumentRegistrationViewModel : INotifyPropertyChanged
         set => SetProperty(ref displayTitle, value);
     }
 
-    public DateOnly ReferenceDate
+    public DateOnly? ReferenceDate
     {
         get => referenceDate;
         set => SetProperty(ref referenceDate, value);
@@ -300,22 +321,23 @@ public sealed class DocumentRegistrationViewModel : INotifyPropertyChanged
         }
     }
 
-    public async Task RegisterAsync(CancellationToken cancellationToken = default)
+    public async Task<bool> RegisterAsync(CancellationToken cancellationToken = default)
     {
         if (!operationGate.Wait(0))
         {
-            return;
+            return false;
         }
 
         if (!Validate())
         {
             operationGate.Release();
-            return;
+            return false;
         }
 
         IsBusy = true;
         ValidationMessage = null;
         StatusMessage = null;
+        var succeeded = false;
 
         try
         {
@@ -364,6 +386,7 @@ public sealed class DocumentRegistrationViewModel : INotifyPropertyChanged
             ValidationMessage = null;
             ResetCompletedDraft();
             await ClearTargetIfInactiveAsync(CancellationToken.None);
+            succeeded = true;
         }
         catch (DocumentRegistrationException exception)
         {
@@ -388,12 +411,17 @@ public sealed class DocumentRegistrationViewModel : INotifyPropertyChanged
                 await RefreshTargetOptionsAfterOperationAsync();
             }
         }
+
+        return succeeded;
     }
 
     private async Task RefreshTargetOptionsCoreAsync(CancellationToken cancellationToken)
     {
         var policies = await policyClaimStorageService.GetPoliciesAsync(cancellationToken);
         var claims = await policyClaimStorageService.GetClaimsAsync(cancellationToken);
+        availableFamilyMembers = familyMemberStorageService is null
+            ? []
+            : await familyMemberStorageService.GetFamilyMembersAsync(cancellationToken);
 
         targetOptionsLoaded = true;
         AvailablePolicies = policies.ToList();
@@ -411,6 +439,14 @@ public sealed class DocumentRegistrationViewModel : INotifyPropertyChanged
 
         ApplySelectedTargetId();
         RefreshTargetSelectionMessage();
+        OnSelectedPolicySummaryChanged();
+    }
+
+    private void OnSelectedPolicySummaryChanged()
+    {
+        OnPropertyChanged(nameof(SelectedPolicy));
+        OnPropertyChanged(nameof(SelectedPolicyFamilyDisplayName));
+        OnPropertyChanged(nameof(SelectedPolicyInsurerName));
     }
 
     private async Task RefreshTargetOptionsAfterOperationAsync()
@@ -503,7 +539,7 @@ public sealed class DocumentRegistrationViewModel : INotifyPropertyChanged
         selectedFileValidation = null;
         DocumentType = null;
         DisplayTitle = null;
-        ReferenceDate = DateOnly.FromDateTime(DateTime.Today);
+        ReferenceDate = null;
         OnPropertyChanged(nameof(SelectedSourceFilePath));
         OnPropertyChanged(nameof(SelectedSourceFileDisplayName));
     }
@@ -561,13 +597,6 @@ public sealed class DocumentRegistrationViewModel : INotifyPropertyChanged
         if (string.IsNullOrWhiteSpace(DisplayTitle))
         {
             ValidationMessage = uiTextProvider.Get(UiTextKeys.DocumentRegistrationValidationEnterDisplayTitle);
-            StatusMessage = null;
-            return false;
-        }
-
-        if (ReferenceDate == default)
-        {
-            ValidationMessage = uiTextProvider.Get(UiTextKeys.DocumentRegistrationValidationSelectReferenceDate);
             StatusMessage = null;
             return false;
         }

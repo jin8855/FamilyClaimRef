@@ -46,6 +46,11 @@
                 DataContext="{Binding DataContext.FamilyMemberManagement, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
         </DataTemplate>
 
+        <DataTemplate x:Key="InsurancePolicyEditorContentTemplate">
+            <views:ProductInsurancePolicyEditorView
+                DataContext="{Binding DataContext.PolicyClaimManagement, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+        </DataTemplate>
+
         <DataTemplate x:Key="WireframeContentTemplate">
             <views:ProductWireframeScreenView />
         </DataTemplate>
@@ -155,6 +160,11 @@
                                      Value="13_family_register">
                             <Setter Property="ContentTemplate"
                                     Value="{StaticResource FamilyMemberEditorContentTemplate}" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Content.Id, RelativeSource={RelativeSource Self}}"
+                                     Value="12_policy_register">
+                            <Setter Property="ContentTemplate"
+                                    Value="{StaticResource InsurancePolicyEditorContentTemplate}" />
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>

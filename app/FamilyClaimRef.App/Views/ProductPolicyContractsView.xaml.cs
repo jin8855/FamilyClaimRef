@@ -1,6 +1,5 @@
 using System.Windows;
 using System.Windows.Controls;
-using FamilyClaimRef.App.Models.Storage;
 using FamilyClaimRef.App.ViewModels;
 
 namespace FamilyClaimRef.App.Views;
@@ -16,30 +15,35 @@ public partial class ProductPolicyContractsView : UserControl
     {
         if (DataContext is PolicyClaimManagementViewModel viewModel)
         {
-            viewModel.ClearManagementMessage();
-            await viewModel.LoadAsync();
+            viewModel.ClearInsurancePolicyMessage();
+            await viewModel.LoadInsurancePoliciesAsync();
         }
     }
 
-    private async void CreateButton_Click(object sender, RoutedEventArgs e)
+    private async void RegisterButton_Click(object sender, RoutedEventArgs e)
     {
-        if (DataContext is PolicyClaimManagementViewModel viewModel)
+        if (Window.GetWindow(this)?.DataContext is ProductShellViewModel shell)
         {
-            await viewModel.CreatePolicyAsync();
+            await shell.NavigateToInsurancePolicyCreateAsync();
         }
     }
 
     private async void DisableButton_Click(object sender, RoutedEventArgs e)
     {
-        if (DataContext is PolicyClaimManagementViewModel viewModel)
+        if (DataContext is PolicyClaimManagementViewModel viewModel
+            && !string.IsNullOrWhiteSpace(viewModel.SelectedPolicyId))
         {
-            await viewModel.DisableSelectedPolicyAsync();
+            await viewModel.DisableInsurancePolicyAsync(viewModel.SelectedPolicyId);
         }
     }
 
-    private void EditPolicyButton_Click(object sender, RoutedEventArgs e)
+    private async void EditPolicyButton_Click(object sender, RoutedEventArgs e)
     {
-        SelectPolicyAndNavigate(sender, ProductScreenRoutes.PolicyRegister);
+        if (sender is FrameworkElement { DataContext: InsurancePolicyListItemViewModel item }
+            && Window.GetWindow(this)?.DataContext is ProductShellViewModel shell)
+        {
+            await shell.NavigateToInsurancePolicyEditAsync(item.Id);
+        }
     }
 
     private void AddPolicyDocumentButton_Click(object sender, RoutedEventArgs e)
@@ -49,14 +53,14 @@ public partial class ProductPolicyContractsView : UserControl
 
     private void SelectPolicyAndNavigate(object sender, string routeId)
     {
-        if (sender is not FrameworkElement { DataContext: PolicyRecord policy }
+        if (sender is not FrameworkElement { DataContext: InsurancePolicyListItemViewModel item }
             || DataContext is not PolicyClaimManagementViewModel management
             || Window.GetWindow(this)?.DataContext is not ProductShellViewModel shell)
         {
             return;
         }
 
-        management.SelectedPolicyId = policy.Id;
+        management.SelectedPolicyId = item.Id;
         shell.NavigateTo(routeId);
     }
 }

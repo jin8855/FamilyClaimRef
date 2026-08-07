@@ -38,6 +38,27 @@ public sealed class DocumentLinkCoordinator
         return new PolicyDocumentLinkResult(policyDocument);
     }
 
+    public async Task<PolicyDocumentLinkResult> ReplacePolicyDocumentAsync(
+        PolicyDocumentLinkRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var policyId = NormalizeRequiredValue(request.PolicyId, nameof(request.PolicyId));
+        var documentId = NormalizeRequiredValue(request.DocumentId, nameof(request.DocumentId));
+        var documentType = NormalizeRequiredValue(request.DocumentType, nameof(request.DocumentType));
+
+        await EnsureActivePolicyExistsAsync(policyId, cancellationToken);
+        await EnsureNoActivePolicyDuplicateAsync(policyId, documentId, cancellationToken);
+
+        var policyDocument = await documentStorageService.ReplaceActivePolicyDocumentAsync(
+            new PolicyDocumentDraft(policyId, documentId, documentType),
+            cancellationToken);
+
+        return new PolicyDocumentLinkResult(policyDocument);
+    }
+
     public async Task<ClaimDocumentLinkResult> LinkClaimDocumentAsync(
         ClaimDocumentLinkRequest request,
         CancellationToken cancellationToken = default)

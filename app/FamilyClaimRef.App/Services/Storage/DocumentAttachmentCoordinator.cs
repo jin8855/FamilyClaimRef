@@ -6,6 +6,8 @@ namespace FamilyClaimRef.App.Services.Storage;
 
 public sealed class DocumentAttachmentCoordinator
 {
+    // Physical names require a date token; nullable document metadata remains null.
+    private static readonly DateOnly UndatedFileNameDate = DateOnly.MinValue;
     private const string DocumentIdToken = "document";
     private const int MaxDuplicateIndex = 999;
 
@@ -119,7 +121,7 @@ public sealed class DocumentAttachmentCoordinator
             var physicalFileName = FileNamePolicyService.CreatePhysicalFileName(
                 NormalizeRequiredValue(request.DocumentScope, nameof(request.DocumentScope)),
                 DocumentIdToken,
-                request.ReferenceDate,
+                request.ReferenceDate ?? UndatedFileNameDate,
                 NormalizeRequiredValue(request.DocumentType, nameof(request.DocumentType)),
                 validation.NormalizedExtension,
                 duplicateIndex);
@@ -189,11 +191,6 @@ public sealed class DocumentAttachmentCoordinator
         var documentScope = NormalizeRequiredValue(request.DocumentScope, nameof(request.DocumentScope));
         var documentType = NormalizeRequiredValue(request.DocumentType, nameof(request.DocumentType));
         var displayTitle = NormalizeRequiredValue(request.DisplayTitle, nameof(request.DisplayTitle));
-        if (request.ReferenceDate == default)
-        {
-            throw new ArgumentException("Reference date is required.", nameof(request.ReferenceDate));
-        }
-
         var sourceExtension = ExtractSourceExtension(sourceFilePath);
         var existingPhysicalFileNames = await GetExistingPhysicalFileNamesAsync(cancellationToken);
 
@@ -204,7 +201,7 @@ public sealed class DocumentAttachmentCoordinator
             var physicalFileName = FileNamePolicyService.CreatePhysicalFileName(
                 documentScope,
                 DocumentIdToken,
-                request.ReferenceDate,
+                request.ReferenceDate ?? UndatedFileNameDate,
                 documentType,
                 sourceExtension,
                 duplicateIndex);
@@ -307,10 +304,6 @@ public sealed class DocumentAttachmentCoordinator
         NormalizeRequiredValue(request.DocumentScope, nameof(request.DocumentScope));
         NormalizeRequiredValue(request.DocumentType, nameof(request.DocumentType));
         NormalizeRequiredValue(request.DisplayTitle, nameof(request.DisplayTitle));
-        if (request.ReferenceDate == default)
-        {
-            throw new ArgumentException("Reference date is required.", nameof(request.ReferenceDate));
-        }
     }
 
     private static string NormalizeSourceFilePath(string sourceFilePath)

@@ -3,47 +3,28 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:storage="clr-namespace:FamilyClaimRef.App.Models.Storage"
              xmlns:viewModels="clr-namespace:FamilyClaimRef.App.ViewModels"
-             Loaded="UserControl_Loaded">
+             Loaded="UserControl_Loaded"
+             SizeChanged="UserControl_SizeChanged">
     <ScrollViewer VerticalScrollBarVisibility="Auto"
                   AutomationProperties.AutomationId="ProductDocumentRegistrationScreen">
-        <Grid MaxWidth="1420"
-              Margin="28,24,28,36"
-              HorizontalAlignment="Center">
+        <Grid Margin="28,24,28,36"
+              HorizontalAlignment="Stretch">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <Grid Margin="0,0,0,20">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <StackPanel>
-                    <TextBlock Text="{Binding DataContext.CurrentScreen.Breadcrumb, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
-                               Style="{StaticResource ProductSubtitleStyle}"
-                               Margin="0,0,0,8" />
-                    <TextBlock Text="{Binding DataContext.CurrentScreen.Title, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
-                               Style="{StaticResource ProductPageTitleStyle}" />
-                    <TextBlock Text="{Binding DataContext.CurrentScreen.Subtitle, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
-                               Style="{StaticResource ProductSubtitleStyle}"
-                               Margin="0,6,0,0" />
-                </StackPanel>
-                <StackPanel Grid.Column="1"
-                            Orientation="Horizontal"
-                            VerticalAlignment="Bottom">
-                    <Button Content="{StaticResource Ui.Product.Wireframe.Common.OcrAction}"
+            <Border Grid.Row="0"
+                    Style="{StaticResource ProductPanelStyle}"
+                    AutomationProperties.AutomationId="ProductRegistration_CommandBar">
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Right">
+                    <Button Content="{StaticResource Ui.Product.Wireframe.Registration.PolicyOcrAction}"
                             Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
                             CommandParameter="{x:Static viewModels:ProductScreenRoutes.OcrReview}"
-                            AutomationProperties.AutomationId="ProductRegistration_Ocr"
-                            Style="{StaticResource ProductSecondaryButtonStyle}" />
-                    <Button Content="{StaticResource Ui.Product.Wireframe.11_policy_manage.Title}"
-                            Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
-                            CommandParameter="{x:Static viewModels:ProductScreenRoutes.PolicyManage}"
-                            AutomationProperties.AutomationId="ProductRegistration_BackPolicy">
+                            AutomationProperties.AutomationId="ProductRegistration_PolicyOcr">
                         <Button.Style>
                             <Style TargetType="{x:Type Button}"
                                    BasedOn="{StaticResource ProductSecondaryButtonStyle}">
@@ -56,7 +37,39 @@
                             </Style>
                         </Button.Style>
                     </Button>
-                    <Button Content="{StaticResource Ui.Product.Wireframe.07_claim_case.Title}"
+                    <Button Content="{StaticResource Ui.Product.Wireframe.Registration.ClaimOcrAction}"
+                            Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                            CommandParameter="{x:Static viewModels:ProductScreenRoutes.OcrReview}"
+                            AutomationProperties.AutomationId="ProductRegistration_ClaimOcr">
+                        <Button.Style>
+                            <Style TargetType="{x:Type Button}"
+                                   BasedOn="{StaticResource ProductSecondaryButtonStyle}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding TargetKind}" Value="claim">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    <Button Content="{StaticResource Ui.Product.Wireframe.Common.CloseAction}"
+                            Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                            CommandParameter="{x:Static viewModels:ProductScreenRoutes.PolicyRegister}"
+                            AutomationProperties.AutomationId="ProductRegistration_BackPolicyEditor">
+                        <Button.Style>
+                            <Style TargetType="{x:Type Button}"
+                                   BasedOn="{StaticResource ProductSecondaryButtonStyle}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding TargetKind}" Value="policy">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    <Button Content="{StaticResource Ui.Product.Wireframe.Common.CloseAction}"
                             Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
                             CommandParameter="{x:Static viewModels:ProductScreenRoutes.ClaimCase}"
                             AutomationProperties.AutomationId="ProductRegistration_BackClaim">
@@ -73,103 +86,12 @@
                         </Button.Style>
                     </Button>
                 </StackPanel>
-            </Grid>
-
-            <Border Grid.Row="1"
-                    Style="{StaticResource ProductPanelStyle}">
-                <StackPanel>
-                    <TextBlock Text="{StaticResource Ui.Product.Wireframe.Registration.SelectedFileTitle}"
-                               Style="{StaticResource ProductSectionTitleStyle}"
-                               Margin="0,0,0,10" />
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <Button Content="{StaticResource Ui.Action.SelectFile}"
-                                Click="SelectFileButton_Click"
-                                AutomationProperties.AutomationId="ProductRegistration_SelectFile">
-                            <Button.Style>
-                                <Style TargetType="{x:Type Button}"
-                                       BasedOn="{StaticResource ProductPrimaryButtonStyle}">
-                                    <Setter Property="IsEnabled" Value="True" />
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsBusy}" Value="True">
-                                            <Setter Property="IsEnabled" Value="False" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
-                        </Button>
-                        <StackPanel Grid.Column="1"
-                                    Margin="14,0,0,0"
-                                    VerticalAlignment="Center">
-                            <TextBlock Text="{StaticResource Ui.Document.SelectedFileLabel}"
-                                       Style="{StaticResource ProductSubtitleStyle}" />
-                            <TextBlock Text="{Binding SelectedSourceFileDisplayName}"
-                                       FontWeight="SemiBold"
-                                       TextWrapping="Wrap"
-                                       AutomationProperties.AutomationId="ProductRegistration_SelectedFile" />
-                        </StackPanel>
-                    </Grid>
-                    <TextBlock Text="{StaticResource Ui.Product.Wireframe.Registration.SecurityNote}"
-                               Style="{StaticResource ProductSubtitleStyle}"
-                               Margin="0,10,0,0" />
-                </StackPanel>
             </Border>
 
-            <Border Grid.Row="2"
-                    Style="{StaticResource ProductPanelStyle}">
-                <StackPanel>
-                    <TextBlock Text="{StaticResource Ui.Product.Wireframe.Registration.TargetTitle}"
-                               Style="{StaticResource ProductSectionTitleStyle}"
-                               Margin="0,0,0,10" />
-
-                    <Border Background="{StaticResource ProductAccentSoftBrush}"
-                            BorderBrush="{StaticResource ProductBorderBrush}"
-                            BorderThickness="1"
-                            CornerRadius="4"
-                            Padding="12"
-                            Margin="0,0,0,12">
-                        <StackPanel>
-                            <TextBlock Text="{StaticResource Ui.Product.Wireframe.Registration.TargetSummaryTitle}"
-                                       FontWeight="SemiBold"
-                                       Margin="0,0,0,6" />
-                            <StackPanel>
-                                <StackPanel.Style>
-                                    <Style TargetType="{x:Type StackPanel}">
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding TargetKind}" Value="policy">
-                                                <Setter Property="Visibility" Value="Visible" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </StackPanel.Style>
-                                <TextBlock Text="{StaticResource Ui.Product.Wireframe.Registration.PolicyTargetSummary}"
-                                           Style="{StaticResource ProductSubtitleStyle}" />
-                                <TextBlock Text="{Binding ElementName=PolicyTargetCombo, Path=SelectedItem.DisplayTitle}"
-                                           FontWeight="SemiBold" Margin="0,4,0,0" />
-                            </StackPanel>
-                            <StackPanel>
-                                <StackPanel.Style>
-                                    <Style TargetType="{x:Type StackPanel}">
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding TargetKind}" Value="claim">
-                                                <Setter Property="Visibility" Value="Visible" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </StackPanel.Style>
-                                <TextBlock Text="{StaticResource Ui.Product.Wireframe.Registration.ClaimTargetSummary}"
-                                           Style="{StaticResource ProductSubtitleStyle}" />
-                                <TextBlock Text="{Binding ElementName=ClaimTargetCombo, Path=SelectedItem.DisplayTitle}"
-                                           FontWeight="SemiBold" Margin="0,4,0,0" />
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
-
+            <Border Grid.Row="1"
+                    Style="{StaticResource ProductPanelStyle}"
+                    AutomationProperties.AutomationId="ProductRegistration_TargetSummaryPanel">
+                <Grid>
                     <StackPanel>
                         <StackPanel.Style>
                             <Style TargetType="{x:Type StackPanel}">
@@ -181,15 +103,56 @@
                                 </Style.Triggers>
                             </Style>
                         </StackPanel.Style>
-                        <TextBlock Text="{StaticResource Ui.Product.DocumentRegistration.PolicyTargetLabel}"
-                                   Style="{StaticResource ProductSubtitleStyle}"
-                                   Margin="0,0,0,4" />
-                        <ComboBox x:Name="PolicyTargetCombo"
-                                  ItemsSource="{Binding AvailablePolicies}"
-                                  DisplayMemberPath="DisplayTitle"
-                                  SelectedValuePath="Id"
-                                  SelectedValue="{Binding SelectedPolicyId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                  AutomationProperties.AutomationId="ProductRegistration_PolicyTarget" />
+                        <TextBlock Text="{StaticResource Ui.Product.Wireframe.Registration.PolicySummaryTitle}"
+                                   Style="{StaticResource ProductSectionTitleStyle}"
+                                   Margin="0,0,0,12" />
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Margin="0,0,14,12">
+                                <TextBlock Text="{StaticResource Ui.Product.DocumentRegistration.PolicyTargetLabel}"
+                                           Style="{StaticResource ProductSubtitleStyle}"
+                                           Margin="0,0,0,5" />
+                                <ComboBox x:Name="PolicyTargetCombo"
+                                          ItemsSource="{Binding AvailablePolicies}"
+                                          DisplayMemberPath="DisplayTitle"
+                                          SelectedValuePath="Id"
+                                          SelectedValue="{Binding SelectedPolicyId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          AutomationProperties.AutomationId="ProductRegistration_PolicyTarget" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Margin="0,0,0,12">
+                                <TextBlock Text="{StaticResource Ui.Product.InsurancePolicy.FamilyLabel}"
+                                           Style="{StaticResource ProductSubtitleStyle}"
+                                           Margin="0,0,0,5" />
+                                <TextBlock Text="{Binding SelectedPolicyFamilyDisplayName}"
+                                           FontWeight="SemiBold"
+                                           TextWrapping="Wrap"
+                                           AutomationProperties.AutomationId="ProductRegistration_PolicyFamily" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Margin="0,0,14,0">
+                                <TextBlock Text="{StaticResource Ui.Product.InsurancePolicy.InsurerLabel}"
+                                           Style="{StaticResource ProductSubtitleStyle}"
+                                           Margin="0,0,0,5" />
+                                <TextBlock Text="{Binding SelectedPolicyInsurerName}"
+                                           FontWeight="SemiBold"
+                                           TextWrapping="Wrap"
+                                           AutomationProperties.AutomationId="ProductRegistration_PolicyInsurer" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="1">
+                                <TextBlock Text="{StaticResource Ui.Product.Wireframe.Registration.ConnectionStatusLabel}"
+                                           Style="{StaticResource ProductSubtitleStyle}"
+                                           Margin="0,0,0,5" />
+                                <TextBlock Text="{StaticResource Ui.Product.Wireframe.Registration.ConnectionStatusPending}"
+                                           FontWeight="SemiBold"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Grid>
                     </StackPanel>
 
                     <StackPanel>
@@ -203,37 +166,155 @@
                                 </Style.Triggers>
                             </Style>
                         </StackPanel.Style>
+                        <TextBlock Text="{StaticResource Ui.Product.Wireframe.Registration.ClaimSummaryTitle}"
+                                   Style="{StaticResource ProductSectionTitleStyle}"
+                                   Margin="0,0,0,12" />
                         <TextBlock Text="{StaticResource Ui.Product.DocumentRegistration.ClaimTargetLabel}"
                                    Style="{StaticResource ProductSubtitleStyle}"
-                                   Margin="0,10,0,4" />
+                                   Margin="0,0,0,5" />
                         <ComboBox x:Name="ClaimTargetCombo"
                                   ItemsSource="{Binding AvailableClaims}"
                                   DisplayMemberPath="DisplayTitle"
                                   SelectedValuePath="Id"
                                   SelectedValue="{Binding SelectedClaimId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                   AutomationProperties.AutomationId="ProductRegistration_ClaimTarget" />
+                        <TextBlock Text="{Binding TargetSelectionMessage}"
+                                   Style="{StaticResource ProductSubtitleStyle}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,8,0,0" />
                     </StackPanel>
-
-                    <TextBlock Text="{Binding TargetSelectionMessage}"
-                               Style="{StaticResource ProductSubtitleStyle}"
-                               TextWrapping="Wrap"
-                               Margin="0,8,0,0" />
-                </StackPanel>
+                </Grid>
             </Border>
 
-            <Border Grid.Row="3"
-                    Style="{StaticResource ProductPanelStyle}">
-                <StackPanel>
-                    <TextBlock Text="{StaticResource Ui.Product.Wireframe.Registration.MetadataTitle}"
-                               Style="{StaticResource ProductSectionTitleStyle}"
-                               Margin="0,0,0,10" />
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Margin="0,0,12,0">
+            <Border Grid.Row="2"
+                    BorderBrush="{StaticResource ProductBorderBrush}"
+                    BorderThickness="4,1,1,1"
+                    Background="#FBFCFD"
+                    Padding="12"
+                    Margin="0,0,0,14"
+                    AutomationProperties.AutomationId="ProductRegistration_GuidancePanel">
+                <Grid>
+                    <TextBlock Text="{StaticResource Ui.Product.Wireframe.Registration.PolicyTargetSummary}"
+                               TextWrapping="Wrap">
+                        <TextBlock.Style>
+                            <Style TargetType="{x:Type TextBlock}"
+                                   BasedOn="{StaticResource ProductSubtitleStyle}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding TargetKind}" Value="policy">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="{StaticResource Ui.Product.Wireframe.Registration.ClaimTargetSummary}"
+                               TextWrapping="Wrap">
+                        <TextBlock.Style>
+                            <Style TargetType="{x:Type TextBlock}"
+                                   BasedOn="{StaticResource ProductSubtitleStyle}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding TargetKind}" Value="claim">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Grid>
+            </Border>
+
+            <Grid x:Name="RegistrationWorkspace"
+                  Grid.Row="3"
+                  AutomationProperties.AutomationId="ProductRegistration_Workspace">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition x:Name="WorkspaceFileColumn" Width="*" />
+                    <ColumnDefinition x:Name="WorkspaceReviewColumn" Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Border x:Name="FileConnectionPanel"
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        Margin="0,0,7,0"
+                        Style="{StaticResource ProductPanelStyle}"
+                        AutomationProperties.AutomationId="ProductRegistration_FileConnectionPanel">
+                    <StackPanel>
+                        <TextBlock Text="{StaticResource Ui.Product.Wireframe.Registration.SelectedFileTitle}"
+                                   Style="{StaticResource ProductSectionTitleStyle}"
+                                   Margin="0,0,0,10" />
+                        <ItemsControl Margin="0,0,0,14">
+                            <ItemsControl.Style>
+                                <Style TargetType="{x:Type ItemsControl}">
+                                    <Setter Property="ItemsSource" Value="{x:Static storage:DocumentTypeSeeds.Policy}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding TargetKind}" Value="claim">
+                                            <Setter Property="ItemsSource" Value="{x:Static storage:DocumentTypeSeeds.Claim}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ItemsControl.Style>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Label}"
+                                               Padding="8,6"
+                                               TextWrapping="Wrap" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Button Content="{StaticResource Ui.Action.SelectFile}"
+                                    Click="SelectFileButton_Click"
+                                    AutomationProperties.AutomationId="ProductRegistration_SelectFile">
+                                <Button.Style>
+                                    <Style TargetType="{x:Type Button}"
+                                           BasedOn="{StaticResource ProductPrimaryButtonStyle}">
+                                        <Setter Property="IsEnabled" Value="True" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                                <Setter Property="IsEnabled" Value="False" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                            <StackPanel Grid.Column="1"
+                                        Margin="14,0,0,0"
+                                        VerticalAlignment="Center">
+                                <TextBlock Text="{StaticResource Ui.Document.SelectedFileLabel}"
+                                           Style="{StaticResource ProductSubtitleStyle}" />
+                                <TextBlock Text="{Binding SelectedSourceFileDisplayName}"
+                                           FontWeight="SemiBold"
+                                           TextWrapping="Wrap"
+                                           AutomationProperties.AutomationId="ProductRegistration_SelectedFile" />
+                            </StackPanel>
+                        </Grid>
+                        <TextBlock Text="{StaticResource Ui.Product.Wireframe.Registration.SecurityNote}"
+                                   Style="{StaticResource ProductSubtitleStyle}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,10,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <Border x:Name="ContentReviewPanel"
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        Margin="7,0,0,0"
+                        Style="{StaticResource ProductPanelStyle}"
+                        AutomationProperties.AutomationId="ProductRegistration_ContentReviewPanel">
+                    <StackPanel>
+                        <TextBlock Text="{StaticResource Ui.Product.Wireframe.Registration.MetadataTitle}"
+                                   Style="{StaticResource ProductSectionTitleStyle}"
+                                   Margin="0,0,0,10" />
+                        <StackPanel Margin="0,0,0,12">
                             <TextBlock Text="{StaticResource Ui.Document.TypeLabel}"
                                        Style="{StaticResource ProductSubtitleStyle}"
                                        Margin="0,0,0,4" />
@@ -243,61 +324,34 @@
                                       AutomationProperties.AutomationId="ProductRegistration_DocumentType">
                                 <ComboBox.Style>
                                     <Style TargetType="{x:Type ComboBox}">
-                                        <Setter Property="ItemsSource"
-                                                Value="{x:Static storage:DocumentTypeSeeds.Policy}" />
+                                        <Setter Property="ItemsSource" Value="{x:Static storage:DocumentTypeSeeds.Policy}" />
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding TargetKind}" Value="claim">
-                                                <Setter Property="ItemsSource"
-                                                        Value="{x:Static storage:DocumentTypeSeeds.Claim}" />
+                                                <Setter Property="ItemsSource" Value="{x:Static storage:DocumentTypeSeeds.Claim}" />
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </ComboBox.Style>
                             </ComboBox>
                         </StackPanel>
-                        <StackPanel Grid.Column="1"
-                                    Margin="0,0,12,0">
+                        <StackPanel Margin="0,0,0,12">
                             <TextBlock Text="{StaticResource Ui.Document.DisplayTitleLabel}"
                                        Style="{StaticResource ProductSubtitleStyle}"
                                        Margin="0,0,0,4" />
                             <TextBox Text="{Binding DisplayTitle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                      AutomationProperties.AutomationId="ProductRegistration_DisplayTitle" />
                         </StackPanel>
-                        <StackPanel Grid.Column="2">
+                        <StackPanel Margin="0,0,0,12">
                             <TextBlock Text="{StaticResource Ui.Document.ReferenceDateLabel}"
                                        Style="{StaticResource ProductSubtitleStyle}"
                                        Margin="0,0,0,4" />
                             <DatePicker SelectedDate="{Binding ReferenceDate, Mode=TwoWay}"
                                         AutomationProperties.AutomationId="ProductRegistration_ReferenceDate" />
+                            <TextBlock Text="{StaticResource Ui.Document.ReferenceDateHelp}"
+                                       Style="{StaticResource ProductSubtitleStyle}"
+                                       TextWrapping="Wrap"
+                                       Margin="0,5,0,0" />
                         </StackPanel>
-                    </Grid>
-                </StackPanel>
-            </Border>
-
-            <Grid Grid.Row="4">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <Button Content="{StaticResource Ui.Action.RegisterDocument}"
-                        Click="RegisterButton_Click"
-                        AutomationProperties.AutomationId="ProductRegistration_Register">
-                    <Button.Style>
-                        <Style TargetType="{x:Type Button}"
-                               BasedOn="{StaticResource ProductPrimaryButtonStyle}">
-                            <Setter Property="IsEnabled" Value="True" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsBusy}" Value="True">
-                                    <Setter Property="IsEnabled" Value="False" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                </Button>
-                <Border Grid.Column="1"
-                        Style="{StaticResource ProductPanelStyle}"
-                        Margin="14,0,0,0">
-                    <StackPanel>
                         <TextBlock Text="{StaticResource Ui.Status.RegistrationSection}"
                                    Style="{StaticResource ProductSectionTitleStyle}"
                                    Margin="0,0,0,6" />
@@ -307,8 +361,24 @@
                                    AutomationProperties.AutomationId="ProductRegistration_Validation" />
                         <TextBlock Text="{Binding StatusMessage}"
                                    TextWrapping="Wrap"
-                                   Margin="0,4,0,0"
+                                   Margin="0,4,0,12"
                                    AutomationProperties.AutomationId="ProductRegistration_Status" />
+                        <Button Content="{StaticResource Ui.Action.RegisterDocument}"
+                                HorizontalAlignment="Right"
+                                Click="RegisterButton_Click"
+                                AutomationProperties.AutomationId="ProductRegistration_Register">
+                            <Button.Style>
+                                <Style TargetType="{x:Type Button}"
+                                       BasedOn="{StaticResource ProductPrimaryButtonStyle}">
+                                    <Setter Property="IsEnabled" Value="True" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                            <Setter Property="IsEnabled" Value="False" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
                     </StackPanel>
                 </Border>
             </Grid>

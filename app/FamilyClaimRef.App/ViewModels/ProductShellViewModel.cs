@@ -196,6 +196,58 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
         return true;
     }
 
+    public async Task<bool> NavigateToInsurancePolicyCreateAsync(
+        CancellationToken cancellationToken = default)
+    {
+        if (!await PolicyClaimManagement.PrepareInsurancePolicyCreateAsync(cancellationToken))
+        {
+            return false;
+        }
+
+        NavigateCore(ProductScreenRoutes.PolicyRegister);
+        return true;
+    }
+
+    public async Task<bool> NavigateToInsurancePolicyEditAsync(
+        string id,
+        CancellationToken cancellationToken = default)
+    {
+        if (!await PolicyClaimManagement.PrepareInsurancePolicyEditAsync(id, cancellationToken))
+        {
+            return false;
+        }
+
+        NavigateCore(ProductScreenRoutes.PolicyRegister);
+        return true;
+    }
+
+    public bool NavigateToPolicyDocumentRegistration(string documentType)
+    {
+        if (string.IsNullOrWhiteSpace(documentType)
+            || string.IsNullOrWhiteSpace(PolicyClaimManagement.SelectedPolicyId))
+        {
+            return false;
+        }
+
+        DocumentRegistration.TargetKind = DocumentRegistrationViewModel.PolicyTargetKind;
+        DocumentRegistration.SelectedPolicyId = PolicyClaimManagement.SelectedPolicyId;
+        DocumentRegistration.DocumentType = documentType;
+        NavigateCore(ProductScreenRoutes.PolicyDocumentRegister);
+        return true;
+    }
+
+    public async Task<bool> SaveInsurancePolicyAndReturnAsync(
+        CancellationToken cancellationToken = default)
+    {
+        if (await PolicyClaimManagement.SaveInsurancePolicyAsync(cancellationToken) is null)
+        {
+            return false;
+        }
+
+        NavigateCore(ProductScreenRoutes.PolicyManage);
+        return true;
+    }
+
     private void NavigateCore(string routeId)
     {
         if (!ScreensById.TryGetValue(routeId, out var destination))

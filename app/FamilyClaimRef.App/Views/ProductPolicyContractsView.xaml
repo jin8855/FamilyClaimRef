@@ -12,8 +12,6 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <Grid Margin="0,0,0,20">
@@ -35,10 +33,9 @@
                             Orientation="Horizontal"
                             VerticalAlignment="Bottom">
                     <Button Content="{StaticResource Ui.Product.Wireframe.12_policy_register.Title}"
-                            Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
-                            CommandParameter="{x:Static viewModels:ProductScreenRoutes.PolicyRegister}"
+                            Click="RegisterButton_Click"
                             AutomationProperties.AutomationId="ProductPolicy_Register"
-                            Style="{StaticResource ProductSecondaryButtonStyle}" />
+                            Style="{StaticResource ProductPrimaryButtonStyle}" />
                     <Button Content="{StaticResource Ui.Product.Wireframe.15_manage_home.Title}"
                             Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
                             CommandParameter="{x:Static viewModels:ProductScreenRoutes.ManageHome}"
@@ -48,41 +45,6 @@
             </Grid>
 
             <Border Grid.Row="1"
-                    BorderBrush="{StaticResource ProductBorderBrush}"
-                    BorderThickness="0,0,0,0"
-                    Background="#FBFCFD"
-                    Padding="12"
-                    Margin="0,0,0,14">
-                <TextBlock Text="{StaticResource Ui.Product.Wireframe.Policy.Note}"
-                           Style="{StaticResource ProductSubtitleStyle}" />
-            </Border>
-
-            <Border Grid.Row="2"
-                    Style="{StaticResource ProductPanelStyle}">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text="{StaticResource Ui.Product.PolicyContracts.DisplayTitleLabel}"
-                               VerticalAlignment="Center"
-                               Margin="0,0,12,0" />
-                    <TextBox Grid.Column="1"
-                             Text="{Binding NewPolicyDisplayTitle, UpdateSourceTrigger=PropertyChanged}"
-                             MinWidth="280"
-                             AutomationProperties.AutomationId="ProductPolicy_DisplayTitle"
-                             Margin="0,0,12,0" />
-                    <Button Grid.Column="2"
-                            Content="{StaticResource Ui.Product.PolicyContracts.CreateAction}"
-                            IsEnabled="{Binding CanCreatePolicy}"
-                            Click="CreateButton_Click"
-                            AutomationProperties.AutomationId="ProductPolicy_Create"
-                            Style="{StaticResource ProductPrimaryButtonStyle}" />
-                </Grid>
-            </Border>
-
-            <Border Grid.Row="3"
                     Style="{StaticResource ProductPanelStyle}">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -94,44 +56,37 @@
                                Style="{StaticResource ProductSectionTitleStyle}"
                                Margin="0,0,0,12" />
                     <DataGrid Grid.Row="1"
-                              ItemsSource="{Binding AvailablePolicies}"
+                              ItemsSource="{Binding AvailableInsurancePolicies}"
                               SelectedValuePath="Id"
                               SelectedValue="{Binding SelectedPolicyId, Mode=TwoWay}"
-                              MinHeight="230"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              MinHeight="260"
                               AutomationProperties.AutomationId="ProductPolicy_List">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="{StaticResource Ui.Product.Wireframe.Policy.ColumnPolicy}"
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.PolicyContracts.DisplayTitleLabel}"
                                                 Binding="{Binding DisplayTitle}"
-                                                Width="2*" />
-                            <DataGridTemplateColumn Header="{StaticResource Ui.Product.Wireframe.Policy.ColumnFamily}"
-                                                    Width="*">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{StaticResource Ui.Product.Wireframe.Common.EmptyValue}" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="{StaticResource Ui.Product.Wireframe.Policy.ColumnCompany}"
-                                                    Width="*">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{StaticResource Ui.Product.Wireframe.Common.EmptyValue}" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="{StaticResource Ui.Product.Wireframe.Policy.ColumnContractStatus}"
-                                                    Width="*">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{StaticResource Ui.Product.Wireframe.Common.ActiveValue}" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="{StaticResource Ui.Product.Wireframe.Policy.ColumnReferenceDate}"
-                                                Binding="{Binding ReferenceDate}"
+                                                Width="1.6*" />
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.InsurancePolicy.FamilyLabel}"
+                                                Binding="{Binding FamilyDisplayName}"
+                                                Width="*" />
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.InsurancePolicy.InsurerLabel}"
+                                                Binding="{Binding InsurerName}"
+                                                Width="*" />
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.InsurancePolicy.ProductCategoryLabel}"
+                                                Binding="{Binding ProductCategory}"
+                                                Width="*" />
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.InsurancePolicy.ContractStatusLabel}"
+                                                Binding="{Binding ContractStatus}"
+                                                Width="*" />
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.InsurancePolicy.EnrollmentDateLabel}"
+                                                Binding="{Binding EnrollmentDate}"
+                                                Width="0.9*" />
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.InsurancePolicy.TotalPlannedPremiumAmountLabel}"
+                                                Binding="{Binding TotalPlannedPremiumAmount}"
                                                 Width="*" />
                             <DataGridTemplateColumn Header="{StaticResource Ui.Product.Wireframe.Policy.ColumnActions}"
-                                                    Width="2*">
+                                                    Width="1.6*">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
@@ -159,7 +114,7 @@
                                    BasedOn="{StaticResource ProductSubtitleStyle}">
                                 <Setter Property="Visibility" Value="Collapsed" />
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding HasAvailablePolicies}" Value="False">
+                                    <DataTrigger Binding="{Binding HasAvailableInsurancePolicies}" Value="False">
                                         <Setter Property="Visibility" Value="Visible" />
                                     </DataTrigger>
                                 </Style.Triggers>
@@ -177,13 +132,13 @@
                 </Grid>
             </Border>
 
-            <Border Grid.Row="4"
+            <Border Grid.Row="2"
                     Style="{StaticResource ProductPanelStyle}">
                 <StackPanel>
                     <TextBlock Text="{StaticResource Ui.Product.Management.StatusLabel}"
                                Style="{StaticResource ProductSectionTitleStyle}"
                                Margin="0,0,0,8" />
-                    <TextBlock Text="{Binding ManagementMessage}"
+                    <TextBlock Text="{Binding InsurancePolicyMessage}"
                                TextWrapping="Wrap"
                                AutomationProperties.AutomationId="ProductPolicy_Status" />
                 </StackPanel>

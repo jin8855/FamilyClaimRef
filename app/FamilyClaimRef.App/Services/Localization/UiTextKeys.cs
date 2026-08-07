@@ -69,6 +69,132 @@ public static class UiTextKeys
         "Ui.Product.FamilyMember.OperationFailedMessage";
     public const string ProductFamilyMemberSavedRefreshFailedMessage =
         "Ui.Product.FamilyMember.SavedRefreshFailedMessage";
+    public const string ProductInsurancePolicyFamilyLabel =
+        "Ui.Product.InsurancePolicy.FamilyLabel";
+    public const string ProductInsurancePolicyInsurerLabel =
+        "Ui.Product.InsurancePolicy.InsurerLabel";
+    public const string ProductInsurancePolicyContractStatusLabel =
+        "Ui.Product.InsurancePolicy.ContractStatusLabel";
+    public const string ProductInsurancePolicyEnrollmentDateLabel =
+        "Ui.Product.InsurancePolicy.EnrollmentDateLabel";
+    public const string ProductInsurancePolicyCoveragePeriodLabel =
+        "Ui.Product.InsurancePolicy.CoveragePeriodLabel";
+    public const string ProductInsurancePolicyPremiumPaymentPeriodLabel =
+        "Ui.Product.InsurancePolicy.PremiumPaymentPeriodLabel";
+    public const string ProductInsurancePolicyTotalPlannedPremiumAmountLabel =
+        "Ui.Product.InsurancePolicy.TotalPlannedPremiumAmountLabel";
+    public const string ProductInsurancePolicyCurrencySuffix =
+        "Ui.Product.InsurancePolicy.CurrencySuffix";
+    public const string ProductInsurancePolicyRenewalTypeLabel =
+        "Ui.Product.InsurancePolicy.RenewalTypeLabel";
+    public const string ProductInsurancePolicyRefundTypeLabel =
+        "Ui.Product.InsurancePolicy.RefundTypeLabel";
+    public const string ProductInsurancePolicyBusinessTypeLabel =
+        "Ui.Product.InsurancePolicy.BusinessTypeLabel";
+    public const string ProductInsurancePolicyProductCategoryLabel =
+        "Ui.Product.InsurancePolicy.ProductCategoryLabel";
+    public const string ProductInsurancePolicyRegistrationSourceLabel =
+        "Ui.Product.InsurancePolicy.RegistrationSourceLabel";
+    public const string ProductInsurancePolicyBasicInformationSection =
+        "Ui.Product.InsurancePolicy.BasicInformationSection";
+    public const string ProductInsurancePolicyCoveragePaymentSection =
+        "Ui.Product.InsurancePolicy.CoveragePaymentSection";
+    public const string ProductInsurancePolicyClassificationSection =
+        "Ui.Product.InsurancePolicy.ClassificationSection";
+    public const string ProductInsurancePolicyRegistrationInformationSection =
+        "Ui.Product.InsurancePolicy.RegistrationInformationSection";
+    public const string ProductInsurancePolicySelectionRequired =
+        "Ui.Product.InsurancePolicy.SelectionRequired";
+    public const string ProductInsurancePolicyLegacyValueReviewRequired =
+        "Ui.Product.InsurancePolicy.LegacyValueReviewRequired";
+    public const string ProductInsurancePolicyUnregisteredValue =
+        "Ui.Product.InsurancePolicy.UnregisteredValue";
+    public const string ProductInsurancePolicyLoadFailedMessage =
+        "Ui.Product.InsurancePolicy.LoadFailedMessage";
+    public const string ProductInsurancePolicySavedMessage =
+        "Ui.Product.InsurancePolicy.SavedMessage";
+    public const string ProductInsurancePolicyRequiredFieldsMessage =
+        "Ui.Product.InsurancePolicy.RequiredFieldsMessage";
+    public const string ProductInsurancePolicyTargetUnavailableMessage =
+        "Ui.Product.InsurancePolicy.TargetUnavailableMessage";
+    public const string ProductInsurancePolicyFamilyUnavailableMessage =
+        "Ui.Product.InsurancePolicy.FamilyUnavailableMessage";
+    public const string ProductInsurancePolicyFamilyUnavailableValue =
+        "Ui.Product.InsurancePolicy.FamilyUnavailableValue";
+    public const string ProductInsurancePolicyOperationFailedMessage =
+        "Ui.Product.InsurancePolicy.OperationFailedMessage";
+    public const string ProductInsurancePolicyTemporarySaveAction =
+        "Ui.Product.InsurancePolicy.TemporarySaveAction";
+    public const string ProductInsurancePolicySummarySectionTitle =
+        "Ui.Product.InsurancePolicy.SummarySectionTitle";
+    public const string ProductInsurancePolicyLinkedDocumentsSectionTitle =
+        "Ui.Product.InsurancePolicy.LinkedDocumentsSectionTitle";
+    public const string ProductInsurancePolicyLinkedDocumentsGuidance =
+        "Ui.Product.InsurancePolicy.LinkedDocumentsGuidance";
+    public const string ProductInsurancePolicyDocumentTypeHeader =
+        "Ui.Product.InsurancePolicy.DocumentTypeHeader";
+    public const string ProductInsurancePolicyDocumentStatusHeader =
+        "Ui.Product.InsurancePolicy.DocumentStatusHeader";
+    public const string ProductInsurancePolicyDocumentNextActionHeader =
+        "Ui.Product.InsurancePolicy.DocumentNextActionHeader";
+    public const string ProductInsurancePolicyDocumentCaptureType =
+        "Ui.Product.InsurancePolicy.DocumentCaptureType";
+    public const string ProductInsurancePolicyDocumentPolicyType =
+        "Ui.Product.InsurancePolicy.DocumentPolicyType";
+    public const string ProductInsurancePolicyDocumentTermsType =
+        "Ui.Product.InsurancePolicy.DocumentTermsType";
+    public const string ProductInsurancePolicyDocumentCreateStatus =
+        "Ui.Product.InsurancePolicy.DocumentCreateStatus";
+    public const string ProductInsurancePolicyDocumentNotRegisteredStatus =
+        "Ui.Product.InsurancePolicy.DocumentNotRegisteredStatus";
+    public const string ProductInsurancePolicyDocumentStatusUnavailable =
+        "Ui.Product.InsurancePolicy.DocumentStatusUnavailable";
+    public const string ProductInsurancePolicyDocumentStatusGuidance =
+        "Ui.Product.InsurancePolicy.DocumentStatusGuidance";
+    public const string ProductInsurancePolicyDocumentRegisterAction =
+        "Ui.Product.InsurancePolicy.DocumentRegisterAction";
+    public const string ProductInsurancePolicyDocumentOpenAction =
+        "Ui.Product.InsurancePolicy.DocumentOpenAction";
+    public const string ProductInsurancePolicyDocumentReplaceAction =
+        "Ui.Product.InsurancePolicy.DocumentReplaceAction";
+    public const string ProductInsurancePolicyDocumentUnlinkAction =
+        "Ui.Product.InsurancePolicy.DocumentUnlinkAction";
+    public const string ProductInsurancePolicyDocumentUnlinkConfirmationTitle =
+        "Ui.Product.InsurancePolicy.DocumentUnlinkConfirmationTitle";
+    public const string ProductInsurancePolicyDocumentUnlinkConfirmationMessage =
+        "Ui.Product.InsurancePolicy.DocumentUnlinkConfirmationMessage";
+    public const string ProductInsurancePolicyDocumentUnlinkedMessage =
+        "Ui.Product.InsurancePolicy.DocumentUnlinkedMessage";
+    public const string ProductInsurancePolicyDocumentOpenFailedMessage =
+        "Ui.Product.InsurancePolicy.DocumentOpenFailedMessage";
+    public const string ProductInsurancePolicyDocumentUnlinkFailedMessage =
+        "Ui.Product.InsurancePolicy.DocumentUnlinkFailedMessage";
+    public const string ProductInsurancePolicyDocumentHistoryHeaderFormat =
+        "Ui.Product.InsurancePolicy.DocumentHistoryHeaderFormat";
+    public const string ProductInsurancePolicyDocumentHistoryTitleHeader =
+        "Ui.Product.InsurancePolicy.DocumentHistoryTitleHeader";
+    public const string ProductInsurancePolicyDocumentHistoryRegisteredAtHeader =
+        "Ui.Product.InsurancePolicy.DocumentHistoryRegisteredAtHeader";
+    public const string ProductInsurancePolicyDocumentHistoryCurrentStatus =
+        "Ui.Product.InsurancePolicy.DocumentHistoryCurrentStatus";
+    public const string ProductInsurancePolicyDocumentHistoryArchivedStatus =
+        "Ui.Product.InsurancePolicy.DocumentHistoryArchivedStatus";
+    public const string ProductInsurancePolicyCoverageCandidatesSectionTitle =
+        "Ui.Product.InsurancePolicy.CoverageCandidatesSectionTitle";
+    public const string ProductInsurancePolicyCoverageCandidatesGuidance =
+        "Ui.Product.InsurancePolicy.CoverageCandidatesGuidance";
+    public const string ProductInsurancePolicyCoverageCandidateHeader =
+        "Ui.Product.InsurancePolicy.CoverageCandidateHeader";
+    public const string ProductInsurancePolicyCareTypeCandidateHeader =
+        "Ui.Product.InsurancePolicy.CareTypeCandidateHeader";
+    public const string ProductInsurancePolicyCostTypeCandidateHeader =
+        "Ui.Product.InsurancePolicy.CostTypeCandidateHeader";
+    public const string ProductInsurancePolicyKeywordTagHeader =
+        "Ui.Product.InsurancePolicy.KeywordTagHeader";
+    public const string ProductInsurancePolicyReviewRequiredHeader =
+        "Ui.Product.InsurancePolicy.ReviewRequiredHeader";
+    public const string ProductInsurancePolicyCoverageCandidatesEmptyMessage =
+        "Ui.Product.InsurancePolicy.CoverageCandidatesEmptyMessage";
     public const string ProductDocumentRegistrationTitle = "Ui.Product.DocumentRegistration.Title";
     public const string ProductDocumentRegistrationTargetSelectionSection =
         "Ui.Product.DocumentRegistration.TargetSelectionSection";
@@ -101,6 +227,7 @@ public static class UiTextKeys
     public const string DocumentTypeLabel = "Ui.Document.TypeLabel";
     public const string DocumentDisplayTitleLabel = "Ui.Document.DisplayTitleLabel";
     public const string DocumentReferenceDateLabel = "Ui.Document.ReferenceDateLabel";
+    public const string DocumentReferenceDateHelp = "Ui.Document.ReferenceDateHelp";
     public const string TargetSelectionSection = "Ui.Target.SelectionSection";
     public const string TargetKindLabel = "Ui.Target.KindLabel";
     public const string PolicyTargetLabel = "Ui.Policy.TargetLabel";

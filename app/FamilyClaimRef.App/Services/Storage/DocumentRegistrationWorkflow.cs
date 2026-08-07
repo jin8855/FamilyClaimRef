@@ -68,7 +68,7 @@ public sealed class DocumentRegistrationWorkflow
                     request.SelectionSnapshot),
                 async (attachment, finalizationToken) =>
                 {
-                    var link = await linkCoordinator.LinkPolicyDocumentAsync(
+                    var link = await linkCoordinator.ReplacePolicyDocumentAsync(
                         new PolicyDocumentLinkRequest(policyId, attachment.Document.Id, request.DocumentType),
                         finalizationToken);
                     return new PolicyDocumentRegistrationResult(attachment, link);
@@ -87,7 +87,7 @@ public sealed class DocumentRegistrationWorkflow
 
         try
         {
-            var link = await linkCoordinator.LinkPolicyDocumentAsync(
+            var link = await linkCoordinator.ReplacePolicyDocumentAsync(
                 new PolicyDocumentLinkRequest(policyId, attachment.Document.Id, request.DocumentType),
                 cancellationToken);
 

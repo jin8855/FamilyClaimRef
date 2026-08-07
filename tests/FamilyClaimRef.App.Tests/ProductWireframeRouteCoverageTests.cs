@@ -1,5 +1,6 @@
 using System.Xml.Linq;
 using FamilyClaimRef.App.ViewModels;
+using FamilyClaimRef.App.Views;
 using Xunit;
 
 namespace FamilyClaimRef.App.Tests;
@@ -177,13 +178,51 @@ public sealed class ProductWireframeRouteCoverageTests
         Assert.Contains("ProductRegistration_Register", values);
         Assert.Contains("ProductRegistration_PolicyTarget", values);
         Assert.Contains("ProductRegistration_ClaimTarget", values);
-        Assert.Contains(
-            "{Binding ElementName=PolicyTargetCombo, Path=SelectedItem.DisplayTitle}",
-            values);
-        Assert.Contains(
-            "{Binding ElementName=ClaimTargetCombo, Path=SelectedItem.DisplayTitle}",
-            values);
+        Assert.Contains("{Binding SelectedPolicyFamilyDisplayName}", values);
+        Assert.Contains("{Binding SelectedPolicyInsurerName}", values);
         Assert.DoesNotContain(values, value => value.Contains("TargetId", StringComparison.Ordinal));
+
+        var commandBar = document.Descendants()
+            .Single(element => AttributeValue(element, "AutomationId") ==
+                "ProductRegistration_CommandBar");
+        var summary = document.Descendants()
+            .Single(element => AttributeValue(element, "AutomationId") ==
+                "ProductRegistration_TargetSummaryPanel");
+        var guidance = document.Descendants()
+            .Single(element => AttributeValue(element, "AutomationId") ==
+                "ProductRegistration_GuidancePanel");
+        var workspace = document.Descendants()
+            .Single(element => AttributeValue(element, "AutomationId") ==
+                "ProductRegistration_Workspace");
+        var fileConnection = document.Descendants()
+            .Single(element => AttributeValue(element, "AutomationId") ==
+                "ProductRegistration_FileConnectionPanel");
+        var contentReview = document.Descendants()
+            .Single(element => AttributeValue(element, "AutomationId") ==
+                "ProductRegistration_ContentReviewPanel");
+
+        Assert.Equal("0", AttributeValue(commandBar, "Grid.Row"));
+        Assert.Equal("1", AttributeValue(summary, "Grid.Row"));
+        Assert.Equal("2", AttributeValue(guidance, "Grid.Row"));
+        Assert.Equal("3", AttributeValue(workspace, "Grid.Row"));
+        Assert.Same(workspace, fileConnection.Parent);
+        Assert.Same(workspace, contentReview.Parent);
+        Assert.Equal("0", AttributeValue(fileConnection, "Grid.Column"));
+        Assert.Equal("1", AttributeValue(contentReview, "Grid.Column"));
+    }
+
+    [Theory]
+    [InlineData(1400, false)]
+    [InlineData(1050, false)]
+    [InlineData(1049, true)]
+    [InlineData(760, true)]
+    public void Registration_view_stacks_only_below_desktop_threshold(
+        double availableWidth,
+        bool expectedStacked)
+    {
+        Assert.Equal(
+            expectedStacked,
+            ProductDocumentRegistrationView.ShouldUseStackedLayout(availableWidth));
     }
 
     [Fact]
@@ -235,6 +274,7 @@ public sealed class ProductWireframeRouteCoverageTests
         Assert.Contains(ProductScreenRoutes.DocumentBox, triggerValues);
         Assert.Contains(ProductScreenRoutes.FamilyMembers, triggerValues);
         Assert.Contains(ProductScreenRoutes.FamilyRegister, triggerValues);
+        Assert.Contains(ProductScreenRoutes.PolicyRegister, triggerValues);
         Assert.Contains(
             document.Descendants(Presentation + "Setter"),
             setter => setter.Attribute("Value")?.Value
@@ -339,6 +379,58 @@ public sealed class ProductWireframeRouteCoverageTests
                 .Select(resource => resource.Value));
         Assert.DoesNotContain("본인 후보", familyUiText, StringComparison.Ordinal);
         Assert.DoesNotContain("가족 후보", familyUiText, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Insurance_policy_views_bind_seven_fields_and_keep_unsupported_commands_disabled()
+    {
+        var viewsRoot = Path.Combine(
+            FindProjectRoot(),
+            "app",
+            "FamilyClaimRef.App",
+            "Views");
+        var list = XDocument.Load(Path.Combine(viewsRoot, "ProductPolicyContractsView.xaml"));
+        var editor = XDocument.Load(Path.Combine(viewsRoot, "ProductInsurancePolicyEditorView.xaml"));
+        var values = list
+            .Descendants()
+            .Concat(editor.Descendants())
+            .SelectMany(element => element.Attributes())
+            .Select(attribute => attribute.Value)
+            .ToArray();
+
+        var expectedFieldIds = new[]
+        {
+            "ProductInsurance_DisplayTitle",
+            "ProductInsurance_Family",
+            "ProductInsurance_Insurer",
+            "ProductInsurance_ContractStatus",
+            "ProductInsurance_EnrollmentDate",
+            "ProductInsurance_CoveragePeriod",
+            "ProductInsurance_RegistrationSource"
+        };
+        Assert.All(expectedFieldIds, id => Assert.Contains(id, values));
+        Assert.Contains("ProductInsurance_Save", values);
+        Assert.Contains("ProductPolicy_Register", values);
+        Assert.Contains("ProductPolicy_List", values);
+        Assert.DoesNotContain(values, value => value.Contains("FamilyMemberId}", StringComparison.Ordinal));
+
+        var save = editor
+            .Descendants(Presentation + "Button")
+            .Single(button => AttributeValue(button, "AutomationId") == "ProductInsurance_Save");
+        Assert.Equal("{Binding CanSaveInsurancePolicy}", save.Attribute("IsEnabled")?.Value);
+
+        foreach (var commandId in new[]
+                 {
+                     "ProductInsurance_Hold",
+                     "ProductInsurance_Delete",
+                     "ProductInsurance_Disable"
+                 })
+        {
+            var button = editor
+                .Descendants(Presentation + "Button")
+                .Single(candidate => AttributeValue(candidate, "AutomationId") == commandId);
+            Assert.Equal("False", button.Attribute("IsEnabled")?.Value);
+        }
     }
 
     [Fact]
