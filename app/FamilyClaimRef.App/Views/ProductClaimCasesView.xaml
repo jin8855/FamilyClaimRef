@@ -123,66 +123,138 @@
                             Margin="0,0,14,0">
                     <Border Style="{StaticResource ProductPanelStyle}">
                         <StackPanel>
-                            <TextBlock Text="{StaticResource Ui.Product.Wireframe.Claim.InputTitle}"
+                            <TextBlock Text="{StaticResource Ui.Product.ClaimCases.EditorTitle}"
                                        Style="{StaticResource ProductSectionTitleStyle}"
                                        Margin="0,0,0,10" />
-                            <ItemsControl ItemsSource="{Binding DataContext.CurrentScreen.Fields, RelativeSource={RelativeSource AncestorType={x:Type Window}}}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <WrapPanel />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Width="230"
-                                                    Margin="0,0,12,10">
-                                            <TextBlock Text="{Binding Label}"
-                                                       Style="{StaticResource ProductSubtitleStyle}"
-                                                       Margin="0,0,0,4" />
-                                            <TextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                     AutomationProperties.Name="{Binding Label}" />
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                            <TextBlock Text="{StaticResource Ui.Product.Wireframe.Common.PresentationOnlyMessage}"
-                                       Style="{StaticResource ProductSubtitleStyle}" />
+                            <UniformGrid Columns="2">
+                                <StackPanel Margin="0,0,12,10">
+                                    <TextBlock Text="{StaticResource Ui.Product.ClaimCases.FamilyLabel}"
+                                               Style="{StaticResource ProductSubtitleStyle}"
+                                               Margin="0,0,0,4" />
+                                    <ComboBox ItemsSource="{Binding AvailableClaimFamilyMembers}"
+                                              DisplayMemberPath="DisplayName"
+                                              SelectedValuePath="Id"
+                                              SelectedValue="{Binding SelectedClaimFamilyMemberId, Mode=TwoWay}"
+                                              AutomationProperties.AutomationId="ProductClaim_Family" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,0,10">
+                                    <TextBlock Text="{StaticResource Ui.Product.ClaimCases.DisplayTitleLabel}"
+                                               Style="{StaticResource ProductSubtitleStyle}"
+                                               Margin="0,0,0,4" />
+                                    <TextBox Text="{Binding ClaimCaseDisplayTitle, UpdateSourceTrigger=PropertyChanged}"
+                                             AutomationProperties.AutomationId="ProductClaim_DisplayTitle" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,12,10">
+                                    <TextBlock Text="{StaticResource Ui.Product.ClaimCases.TreatmentDateLabel}"
+                                               Style="{StaticResource ProductSubtitleStyle}"
+                                               Margin="0,0,0,4" />
+                                    <DatePicker SelectedDate="{Binding ClaimTreatmentDate, Mode=TwoWay}"
+                                                AutomationProperties.AutomationId="ProductClaim_TreatmentDate" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,0,10">
+                                    <TextBlock Text="{StaticResource Ui.Product.ClaimCases.HospitalNameLabel}"
+                                               Style="{StaticResource ProductSubtitleStyle}"
+                                               Margin="0,0,0,4" />
+                                    <TextBox Text="{Binding ClaimHospitalName, UpdateSourceTrigger=PropertyChanged}"
+                                             AutomationProperties.AutomationId="ProductClaim_HospitalName" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,12,10">
+                                    <TextBlock Text="{StaticResource Ui.Product.ClaimCases.DiagnosisCodeLabel}"
+                                               Style="{StaticResource ProductSubtitleStyle}"
+                                               Margin="0,0,0,4" />
+                                    <TextBox Text="{Binding ClaimDiagnosisCode, UpdateSourceTrigger=PropertyChanged}"
+                                             AutomationProperties.AutomationId="ProductClaim_DiagnosisCode" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,0,10">
+                                    <TextBlock Text="{StaticResource Ui.Product.ClaimCases.DiagnosisNameLabel}"
+                                               Style="{StaticResource ProductSubtitleStyle}"
+                                               Margin="0,0,0,4" />
+                                    <TextBox Text="{Binding ClaimDiagnosisName, UpdateSourceTrigger=PropertyChanged}"
+                                             AutomationProperties.AutomationId="ProductClaim_DiagnosisName" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,12,10">
+                                    <TextBlock Text="{StaticResource Ui.Product.ClaimCases.VisitTypeLabel}"
+                                               Style="{StaticResource ProductSubtitleStyle}"
+                                               Margin="0,0,0,4" />
+                                    <ComboBox ItemsSource="{Binding ClaimCaseVisitTypeOptions}"
+                                              DisplayMemberPath="DisplayText"
+                                              SelectedValuePath="Value"
+                                              SelectedValue="{Binding ClaimVisitType, Mode=TwoWay}"
+                                              AutomationProperties.AutomationId="ProductClaim_VisitType" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal"
+                                            VerticalAlignment="Center"
+                                            Margin="0,18,0,10">
+                                    <CheckBox Content="{StaticResource Ui.Product.ClaimCases.HasSurgeryLabel}"
+                                              IsChecked="{Binding ClaimHasSurgery}"
+                                              AutomationProperties.AutomationId="ProductClaim_HasSurgery"
+                                              Margin="0,0,16,0" />
+                                    <CheckBox Content="{StaticResource Ui.Product.ClaimCases.HasPrescriptionLabel}"
+                                              IsChecked="{Binding ClaimHasPrescription}"
+                                              AutomationProperties.AutomationId="ProductClaim_HasPrescription" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,12,10">
+                                    <TextBlock Text="{StaticResource Ui.Product.ClaimCases.CoveredAmountLabel}"
+                                               Style="{StaticResource ProductSubtitleStyle}"
+                                               Margin="0,0,0,4" />
+                                    <TextBox Text="{Binding ClaimCoveredAmountText, UpdateSourceTrigger=PropertyChanged}"
+                                             TextAlignment="Right"
+                                             AutomationProperties.AutomationId="ProductClaim_CoveredAmount" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,0,10">
+                                    <TextBlock Text="{StaticResource Ui.Product.ClaimCases.NonCoveredAmountLabel}"
+                                               Style="{StaticResource ProductSubtitleStyle}"
+                                               Margin="0,0,0,4" />
+                                    <TextBox Text="{Binding ClaimNonCoveredAmountText, UpdateSourceTrigger=PropertyChanged}"
+                                             TextAlignment="Right"
+                                             AutomationProperties.AutomationId="ProductClaim_NonCoveredAmount" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,12,10">
+                                    <TextBlock Text="{StaticResource Ui.Product.ClaimCases.PrescriptionAmountLabel}"
+                                               Style="{StaticResource ProductSubtitleStyle}"
+                                               Margin="0,0,0,4" />
+                                    <TextBox Text="{Binding ClaimPrescriptionAmountText, UpdateSourceTrigger=PropertyChanged}"
+                                             TextAlignment="Right"
+                                             AutomationProperties.AutomationId="ProductClaim_PrescriptionAmount" />
+                                </StackPanel>
+                            </UniformGrid>
+                            <TextBlock Text="{StaticResource Ui.Product.ClaimCases.MemoLabel}"
+                                       Style="{StaticResource ProductSubtitleStyle}"
+                                       Margin="0,0,0,4" />
+                            <TextBox Text="{Binding ClaimMemo, UpdateSourceTrigger=PropertyChanged}"
+                                     AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     VerticalContentAlignment="Top"
+                                     MinHeight="64"
+                                     AutomationProperties.AutomationId="ProductClaim_Memo" />
                         </StackPanel>
                     </Border>
 
                     <Border Style="{StaticResource ProductPanelStyle}">
-                        <StackPanel>
-                            <TextBlock Text="{StaticResource Ui.Product.Wireframe.Claim.ManagementTitle}"
-                                       Style="{StaticResource ProductSectionTitleStyle}"
-                                       Margin="0,0,0,10" />
-                            <TextBlock Text="{StaticResource Ui.Product.ClaimCases.PolicyLabel}"
-                                       Style="{StaticResource ProductSubtitleStyle}"
-                                       Margin="0,0,0,4" />
-                            <ComboBox ItemsSource="{Binding AvailablePolicies}"
-                                      DisplayMemberPath="DisplayTitle"
-                                      SelectedValuePath="Id"
-                                      SelectedValue="{Binding SelectedPolicyForClaimId, Mode=TwoWay}"
-                                      AutomationProperties.AutomationId="ProductClaim_Policy"
-                                      Margin="0,0,0,10" />
-                            <TextBlock Text="{StaticResource Ui.Product.ClaimCases.DisplayTitleLabel}"
-                                       Style="{StaticResource ProductSubtitleStyle}"
-                                       Margin="0,0,0,4" />
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBox Text="{Binding NewClaimDisplayTitle, UpdateSourceTrigger=PropertyChanged}"
-                                         AutomationProperties.AutomationId="ProductClaim_DisplayTitle"
-                                         Margin="0,0,10,0" />
-                                <Button Grid.Column="1"
-                                        Content="{StaticResource Ui.Product.ClaimCases.CreateAction}"
-                                        IsEnabled="{Binding CanCreateClaim}"
-                                        Click="CreateButton_Click"
-                                        AutomationProperties.AutomationId="ProductClaim_Create"
-                                        Style="{StaticResource ProductPrimaryButtonStyle}" />
-                            </Grid>
-                        </StackPanel>
+                        <WrapPanel HorizontalAlignment="Right">
+                            <Button Content="{StaticResource Ui.Product.ClaimCases.NewAction}"
+                                    Click="NewButton_Click"
+                                    AutomationProperties.AutomationId="ProductClaim_New"
+                                    Style="{StaticResource ProductSecondaryButtonStyle}"
+                                    Margin="0,0,8,0" />
+                            <Button Content="{StaticResource Ui.Product.ClaimCases.CreateDraftAction}"
+                                    IsEnabled="{Binding CanCreateClaimCase}"
+                                    Click="CreateButton_Click"
+                                    AutomationProperties.AutomationId="ProductClaim_Create"
+                                    Style="{StaticResource ProductPrimaryButtonStyle}"
+                                    Margin="0,0,8,0" />
+                            <Button Content="{StaticResource Ui.Product.ClaimCases.SaveAction}"
+                                    IsEnabled="{Binding CanSaveClaimCase}"
+                                    Click="SaveButton_Click"
+                                    AutomationProperties.AutomationId="ProductClaim_Save"
+                                    Style="{StaticResource ProductPrimaryButtonStyle}"
+                                    Margin="0,0,8,0" />
+                            <Button Content="{StaticResource Ui.Product.ClaimCases.DisableAction}"
+                                    IsEnabled="{Binding CanDisableClaimCase}"
+                                    Click="DisableButton_Click"
+                                    AutomationProperties.AutomationId="ProductClaim_Disable"
+                                    Style="{StaticResource ProductSecondaryButtonStyle}" />
+                        </WrapPanel>
                     </Border>
 
                     <Border Style="{StaticResource ProductPanelStyle}">
@@ -194,6 +266,7 @@
                                      DisplayMemberPath="DisplayTitle"
                                      SelectedValuePath="Id"
                                      SelectedValue="{Binding SelectedClaimId, Mode=TwoWay}"
+                                     SelectionChanged="ClaimList_SelectionChanged"
                                      MinHeight="90"
                                      AutomationProperties.AutomationId="ProductClaim_List" />
                             <TextBlock Text="{StaticResource Ui.Product.ClaimCases.EmptyMessage}"
@@ -210,11 +283,12 @@
                                     </Style>
                                 </TextBlock.Style>
                             </TextBlock>
-                            <Button Content="{StaticResource Ui.Product.ClaimCases.DisableAction}"
-                                    IsEnabled="{Binding CanDisableClaim}"
-                                    Click="DisableButton_Click"
+                            <Button Content="{StaticResource Ui.Product.ClaimCases.OpenDocumentsAction}"
+                                    IsEnabled="{Binding CanDisableClaimCase}"
+                                    Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                                    CommandParameter="{x:Static viewModels:ProductScreenRoutes.ClaimDocumentRegister}"
                                     HorizontalAlignment="Right"
-                                    AutomationProperties.AutomationId="ProductClaim_Disable"
+                                    AutomationProperties.AutomationId="ProductClaim_OpenDocuments"
                                     Style="{StaticResource ProductSecondaryButtonStyle}"
                                     Margin="0,10,0,0" />
                         </StackPanel>
@@ -246,7 +320,16 @@
                     <TextBlock Text="{StaticResource Ui.Product.Management.StatusLabel}"
                                Style="{StaticResource ProductSectionTitleStyle}"
                                Margin="0,0,0,8" />
-                    <TextBlock Text="{Binding ManagementMessage}"
+                    <TextBlock Text="{Binding ClaimCaseValidationMessage}"
+                               TextWrapping="Wrap"
+                               AutomationProperties.AutomationId="ProductClaim_ValidationStatus" />
+                    <TextBlock Text="{Binding ClaimCaseConflictMessage}"
+                               TextWrapping="Wrap"
+                               AutomationProperties.AutomationId="ProductClaim_ConflictStatus" />
+                    <TextBlock Text="{Binding ClaimCaseLegacyReviewMessage}"
+                               TextWrapping="Wrap"
+                               AutomationProperties.AutomationId="ProductClaim_LegacyStatus" />
+                    <TextBlock Text="{Binding ClaimCaseOperationMessage}"
                                TextWrapping="Wrap"
                                AutomationProperties.AutomationId="ProductClaim_Status" />
                 </StackPanel>

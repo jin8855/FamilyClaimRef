@@ -191,7 +191,7 @@ public sealed class DocumentRegistrationViewModelTests
                 "Claim Disabled",
                 new DateOnly(2026, 7, 1)));
             await service.DisablePolicyAsync(disabledPolicy.Id);
-            await service.DisableClaimAsync(disabledClaim.Id);
+            await service.DisableClaimAsync(disabledClaim.Id, disabledClaim.Revision);
             var viewModel = CreateTargetSelectionViewModel(service);
 
             await viewModel.LoadTargetOptionsAsync();
@@ -1100,6 +1100,7 @@ public sealed class DocumentRegistrationViewModelTests
 
         public Task<ClaimRecord> DisableClaimAsync(
             string id,
+            int expectedRevision,
             CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();

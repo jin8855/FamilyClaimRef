@@ -2,7 +2,9 @@
 
 FamilyClaimRef는 가족 보험, 약관, 병원 서류, 청구 이력, 지급 결과를 로컬에서 정리하고 보험금 청구 전에 참고할 수 있는 정보를 빠르게 조회하기 위한 개인용 프로젝트다.
 
-이 저장소는 현재 기획 및 문서화 단계다. app 개발은 아직 시작하지 않는다.
+이 저장소는 로컬 Product app 구현과 기능별 검증을 진행하는 단계다. FamilyMember,
+InsurancePolicy, Category aggregate와 FamilyMember 소유 ClaimCase MVP의 JSON 영속화는
+구현·검증됐으며, OCR·ClaimSubmission·Payment·배포 준비도는 승인 또는 평가되지 않았다.
 
 ## 프로젝트 목적
 

@@ -165,7 +165,7 @@ public sealed class DocumentRegistrationNegativeValidationTests
         {
             var policy = await context.PolicyClaimStorage.AddPolicyAsync(CreatePolicyDraft());
             var claim = await context.PolicyClaimStorage.AddClaimAsync(CreateClaimDraft(policy.Id));
-            await context.PolicyClaimStorage.DisableClaimAsync(claim.Id);
+            await context.PolicyClaimStorage.DisableClaimAsync(claim.Id, claim.Revision);
             var sourcePath = await CreateSyntheticInputFileAsync(
                 context.InputRootPath,
                 "disabled_claim_target.png");

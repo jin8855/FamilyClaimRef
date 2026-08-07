@@ -17,8 +17,13 @@ public sealed class JsonFileStore<T>
 
     private readonly string filePath;
     private readonly int expectedSchemaVersion;
+    private readonly bool preserveBackupOnReplace;
 
-    public JsonFileStore(string rootPath, string fileName, int expectedSchemaVersion = DefaultSchemaVersion)
+    public JsonFileStore(
+        string rootPath,
+        string fileName,
+        int expectedSchemaVersion = DefaultSchemaVersion,
+        bool preserveBackupOnReplace = false)
     {
         if (string.IsNullOrWhiteSpace(rootPath))
         {
@@ -32,6 +37,7 @@ public sealed class JsonFileStore<T>
 
         this.filePath = Path.Combine(rootPath, fileName);
         this.expectedSchemaVersion = expectedSchemaVersion;
+        this.preserveBackupOnReplace = preserveBackupOnReplace;
     }
 
     public async Task<JsonFileEnvelope<T>> LoadAsync(CancellationToken cancellationToken = default)
@@ -98,9 +104,30 @@ public sealed class JsonFileStore<T>
                 useAsync: true))
             {
                 await JsonSerializer.SerializeAsync(stream, envelope, JsonOptions, cancellationToken);
+                if (preserveBackupOnReplace)
+                {
+                    await stream.FlushAsync(cancellationToken);
+                    stream.Flush(flushToDisk: true);
+                }
             }
 
-            File.Move(tempFilePath, filePath, overwrite: true);
+            if (preserveBackupOnReplace)
+            {
+                await LoadAndValidatePathAsync(tempFilePath, cancellationToken);
+            }
+
+            if (File.Exists(filePath) && preserveBackupOnReplace)
+            {
+                File.Replace(
+                    tempFilePath,
+                    filePath,
+                    $"{filePath}.bak",
+                    ignoreMetadataErrors: true);
+            }
+            else
+            {
+                File.Move(tempFilePath, filePath, overwrite: true);
+            }
         }
         finally
         {
@@ -109,6 +136,23 @@ public sealed class JsonFileStore<T>
                 File.Delete(tempFilePath);
             }
         }
+    }
+
+    private async Task LoadAndValidatePathAsync(
+        string path,
+        CancellationToken cancellationToken)
+    {
+        await using var stream = File.OpenRead(path);
+        var envelope = await JsonSerializer.DeserializeAsync<JsonFileEnvelope<T>>(
+            stream,
+            JsonOptions,
+            cancellationToken);
+        if (envelope is null)
+        {
+            throw new InvalidOperationException("JSON storage verification failed.");
+        }
+
+        ValidateEnvelope(envelope);
     }
 
     private void ValidateEnvelope(JsonFileEnvelope<T> envelope)

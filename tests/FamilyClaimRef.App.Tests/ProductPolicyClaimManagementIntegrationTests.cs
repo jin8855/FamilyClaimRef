@@ -1,5 +1,8 @@
 using FamilyClaimRef.App.Composition;
+using FamilyClaimRef.App.Models.Storage;
 using FamilyClaimRef.App.Services.Runtime;
+using FamilyClaimRef.App.Services.Storage;
+using FamilyClaimRef.App.ViewModels;
 using Xunit;
 
 namespace FamilyClaimRef.App.Tests;
@@ -72,6 +75,55 @@ public sealed class ProductPolicyClaimManagementIntegrationTests
             Assert.Empty(registration.AvailableClaims);
             Assert.Null(registration.SelectedPolicyId);
             Assert.Null(registration.SelectedClaimId);
+        }
+        finally
+        {
+            if (Directory.Exists(runtimeRoot))
+            {
+                Directory.Delete(runtimeRoot, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task ClaimCase_creation_preserves_claim_id_when_entering_claim_document_registration()
+    {
+        var runtimeRoot = Path.Combine(
+            Path.GetTempPath(),
+            "FamilyClaimRef.App.Tests",
+            nameof(ProductPolicyClaimManagementIntegrationTests),
+            Guid.NewGuid().ToString("N"));
+
+        try
+        {
+            var services = AppServices.Create(
+                new StubRuntimeRootProvider(RuntimeRootPaths.FromRuntimeRoot(runtimeRoot)));
+            var familyStore = new JsonFamilyMemberStorageService(services.MetadataRootPath);
+            var family = await familyStore.CreateFamilyMemberAsync(new FamilyMemberDraft(
+                "synthetic family",
+                FamilyMemberRelationValues.Self,
+                null));
+            var shell = services.ProductShellViewModel;
+            var management = shell.PolicyClaimManagement;
+            Assert.True(await management.LoadAsync());
+            management.StartNewClaimCase();
+            management.SelectedClaimFamilyMemberId = family.Id;
+            management.ClaimCaseDisplayTitle = "synthetic claim case";
+            management.ClaimTreatmentDate = new DateTime(2026, 8, 7);
+            management.ClaimHospitalName = "synthetic hospital";
+            management.ClaimVisitType = ClaimCaseValues.VisitTypeOutpatient;
+
+            Assert.True(await management.CreateClaimCaseRecordAsync());
+            var claimId = Assert.IsType<string>(management.SelectedClaimId);
+            shell.NavigateTo(ProductScreenRoutes.ClaimDocumentRegister);
+
+            Assert.Equal(DocumentRegistrationViewModel.ClaimTargetKind, shell.DocumentRegistration.TargetKind);
+            Assert.Equal(claimId, shell.DocumentRegistration.SelectedClaimId);
+            var stored = await new JsonPolicyClaimStorageService(
+                services.MetadataRootPath,
+                familyStore).GetClaimCaseAsync(claimId);
+            Assert.NotNull(stored);
+            Assert.Null(stored.PolicyId);
         }
         finally
         {

@@ -21,9 +21,9 @@ public sealed class ResourceUiTextProviderTests
     {
         var resources = LoadUiStrings();
 
-        Assert.Equal(214, resources.Count);
-        Assert.Equal(157, resources.Keys.Count(IsProductKey));
-        Assert.Equal(157, ExpectedProductResources.Count);
+        Assert.Equal(239, resources.Count);
+        Assert.Equal(182, resources.Keys.Count(IsProductKey));
+        Assert.Equal(182, ExpectedProductResources.Count);
         Assert.All(
             ExpectedProductResources,
             expected => Assert.Equal(expected.Value, resources[expected.Key]));
@@ -36,11 +36,11 @@ public sealed class ResourceUiTextProviderTests
         var resourceKeys = resourceEntries.Select(entry => entry.Key).ToArray();
         var constantValues = LoadUiTextKeyConstants();
 
-        Assert.Equal(214, resourceEntries.Count);
+        Assert.Equal(239, resourceEntries.Count);
         Assert.Equal(resourceKeys.Length, resourceKeys.Distinct(StringComparer.Ordinal).Count());
-        Assert.Equal(214, constantValues.Count);
+        Assert.Equal(239, constantValues.Count);
         Assert.Equal(constantValues.Count, constantValues.Distinct(StringComparer.Ordinal).Count());
-        Assert.Equal(157, constantValues.Count(IsProductKey));
+        Assert.Equal(182, constantValues.Count(IsProductKey));
         Assert.Equal(
             resourceKeys.OrderBy(key => key, StringComparer.Ordinal),
             constantValues.OrderBy(key => key, StringComparer.Ordinal));
@@ -467,6 +467,34 @@ public sealed class ResourceUiTextProviderTests
                 "같은 이름의 활성 보험 계약이 이미 있습니다.",
             [UiTextKeys.ProductClaimCasesDuplicateTitleMessage] =
                 "같은 이름의 활성 청구 건이 이미 있습니다.",
+            [UiTextKeys.ProductClaimCaseEditorTitle] = "청구 건 상세",
+            [UiTextKeys.ProductClaimCaseFamilyLabel] = "가족",
+            [UiTextKeys.ProductClaimCaseTreatmentDateLabel] = "진료일",
+            [UiTextKeys.ProductClaimCaseHospitalNameLabel] = "병원명",
+            [UiTextKeys.ProductClaimCaseDiagnosisCodeLabel] = "진단코드",
+            [UiTextKeys.ProductClaimCaseDiagnosisNameLabel] = "진단명",
+            [UiTextKeys.ProductClaimCaseVisitTypeLabel] = "진료 구분",
+            [UiTextKeys.ProductClaimCaseHasSurgeryLabel] = "수술 있음",
+            [UiTextKeys.ProductClaimCaseHasPrescriptionLabel] = "처방 있음",
+            [UiTextKeys.ProductClaimCaseCoveredAmountLabel] = "급여 금액",
+            [UiTextKeys.ProductClaimCaseNonCoveredAmountLabel] = "비급여 금액",
+            [UiTextKeys.ProductClaimCasePrescriptionAmountLabel] = "처방 금액",
+            [UiTextKeys.ProductClaimCaseMemoLabel] = "메모",
+            [UiTextKeys.ProductClaimCaseNewAction] = "새 청구 건",
+            [UiTextKeys.ProductClaimCaseCreateDraftAction] = "초안 생성",
+            [UiTextKeys.ProductClaimCaseSaveAction] = "상세 저장",
+            [UiTextKeys.ProductClaimCaseOpenDocumentsAction] = "연결 문서",
+            [UiTextKeys.ProductClaimCaseVisitTypeOutpatient] = "통원",
+            [UiTextKeys.ProductClaimCaseVisitTypeInpatient] = "입원",
+            [UiTextKeys.ProductClaimCaseValidationRequiredMessage] =
+                "가족, 청구 건 이름, 진료일, 병원명, 진료 구분과 금액 입력을 확인해 주세요.",
+            [UiTextKeys.ProductClaimCaseConflictMessage] =
+                "다른 변경이 먼저 저장되었습니다. 목록을 다시 불러온 뒤 다시 시도해 주세요.",
+            [UiTextKeys.ProductClaimCaseLegacyReviewRequiredMessage] =
+                "기존 청구 건의 가족 연결을 확인할 수 없어 편집할 수 없습니다.",
+            [UiTextKeys.ProductClaimCaseDraftCreatedMessage] = "청구 건 초안을 생성했습니다.",
+            [UiTextKeys.ProductClaimCaseSavedMessage] = "청구 건 상세를 저장했습니다.",
+            [UiTextKeys.ProductClaimCaseDisabledMessage] = "청구 건을 사용 중지했습니다.",
             [UiTextKeys.ProductDocumentRegistrationTitle] = "문서 등록",
             [UiTextKeys.ProductDocumentRegistrationTargetSelectionSection] = "연결 대상 선택",
             [UiTextKeys.ProductDocumentRegistrationPolicyTargetLabel] = "보험 계약",
