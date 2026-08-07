@@ -11,15 +11,7 @@ public sealed class ProductRouteCommand(
     private readonly Func<string, bool> canNavigate =
         canNavigate ?? throw new ArgumentNullException(nameof(canNavigate));
 
-    public event EventHandler? CanExecuteChanged
-    {
-        add
-        {
-        }
-        remove
-        {
-        }
-    }
+    public event EventHandler? CanExecuteChanged;
 
     public bool CanExecute(object? parameter)
     {
@@ -34,5 +26,10 @@ public sealed class ProductRouteCommand(
         }
 
         navigate(routeId);
+    }
+
+    public void RaiseCanExecuteChanged()
+    {
+        CanExecuteChanged?.Invoke(this, EventArgs.Empty);
     }
 }

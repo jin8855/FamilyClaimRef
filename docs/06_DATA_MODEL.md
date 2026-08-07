@@ -287,28 +287,44 @@ ClaimCase
 
 ```json
 {
-  "submissionId": "SUB001",
+  "id": "submission_001",
   "claimCaseId": "CLM001",
   "policyId": "POL001",
-  "policyCoverageId": "COV001",
+  "policyCoverageId": null,
+  "coverageDisplayName": "입원의료비",
   "submittedDate": "2026-06-25",
   "submittedAmount": 55800,
-  "status": "submitted",
-  "submittedDocuments": ["DOC_DIAGNOSIS_001", "DOC_RECEIPT_001"],
-  "memo": ""
+  "submittedClaimDocumentIds": ["cdoc_001", "cdoc_002"],
+  "status": "reviewing",
+  "memo": "보험사 심사 중",
+  "revision": 3,
+  "createdAt": "2026-06-25T09:00:00+09:00",
+  "updatedAt": "2026-06-26T10:30:00+09:00"
 }
 ```
 
-상태:
+저장 및 참조 계약:
 
-- preparing
-- submitted
-- additional_documents_requested
-- reviewing
-- paid
-- denied
-- cancelled
-- submission_completed
+- 저장 파일은 runtime metadata root의 `claim-submissions.json` schema v1이다.
+- Id는 immutable string이며 생성 Revision은 1, 성공한 mutation마다 정확히 1 증가한다.
+- ClaimCaseId와 PolicyId는 생성 후 변경하지 않는다.
+- PolicyCoverageId는 nullable이며 현재 MVP에서는 사용하지 않는다.
+- ClaimCase는 saved 상태이고 FamilyMember owner가 명확해야 한다.
+- Policy는 `DisabledAt`이 null이고 계약 상태가 `유지`, `보험료 납입면제`, legacy `사용 중` 중 하나여야 하며 `만기`는 제외한다. 또한 ClaimCase와 같은 FamilyMember를 소유해야 한다.
+- SubmittedClaimDocumentIds는 같은 ClaimCase의 active ClaimDocument link Id만 저장한다.
+- canonical 저장 경로별 process-scoped gate와 expectedRevision으로 lost update를 방지한다.
+- 저장은 temp write, flush-to-disk, 재검증, atomic replace/rename을 사용하고 직전 정상본 `.bak`을 보존한다.
+- malformed/unsupported JSON은 fail closed이며 자동 migration, recovery, cross-process lock은 제공하지 않는다.
+
+상태와 전이:
+
+- `preparing` -> `submitted` | `cancelled`
+- `submitted` -> `additional_documents_requested` | `reviewing` | `submission_completed` | `cancelled`
+- `additional_documents_requested` -> `submitted` | `reviewing` | `cancelled`
+- `reviewing` -> `additional_documents_requested` | `submission_completed` | `cancelled`
+- `cancelled`, `submission_completed` -> terminal
+
+지급·삭감·부지급 결과는 ClaimSubmission 상태가 아니라 후속 ClaimPayment가 소유한다.
 
 ---
 
@@ -390,7 +406,7 @@ ClaimCase
 | PolicyDocument, ClaimDocument | registered, ocr_needed, ocr_completed, user_confirmed, ignored |
 | OcrCandidate | needs_user_review, edited, confirmed, ignored |
 | ClaimCase | draft, saved, needs_ocr, reference_checked, case_completed, cancelled |
-| ClaimSubmission | preparing, submitted, additional_documents_requested, reviewing, paid, denied, cancelled, submission_completed |
+| ClaimSubmission | preparing, submitted, additional_documents_requested, reviewing, cancelled, submission_completed |
 | ClaimPayment | pending, paid, partially_paid, denied, cancelled |
 | Category, CategoryItem, Tag | active, disabled, delete_requested |
 

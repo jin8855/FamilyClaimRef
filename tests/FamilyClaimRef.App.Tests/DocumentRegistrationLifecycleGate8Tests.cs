@@ -327,7 +327,7 @@ public sealed class DocumentRegistrationLifecycleGate8Tests
     }
 
     [Fact]
-    public void C05_resource_constants_have_239_239_and_product_182_182_parity()
+    public void C05_resource_constants_have_275_275_and_product_218_218_parity()
     {
         var resources = LoadResources();
         var constants = typeof(UiTextKeys)
@@ -336,13 +336,13 @@ public sealed class DocumentRegistrationLifecycleGate8Tests
             .Select(field => (string)field.GetRawConstantValue()!)
             .ToArray();
 
-        Assert.Equal(239, resources.Count);
-        Assert.Equal(239, constants.Length);
+        Assert.Equal(275, resources.Count);
+        Assert.Equal(275, constants.Length);
         Assert.Equal(
             resources.Keys.Order(StringComparer.Ordinal),
             constants.Order(StringComparer.Ordinal));
-        Assert.Equal(182, resources.Keys.Count(key => key.StartsWith("Ui.Product.", StringComparison.Ordinal)));
-        Assert.Equal(182, constants.Count(key => key.StartsWith("Ui.Product.", StringComparison.Ordinal)));
+        Assert.Equal(218, resources.Keys.Count(key => key.StartsWith("Ui.Product.", StringComparison.Ordinal)));
+        Assert.Equal(218, constants.Count(key => key.StartsWith("Ui.Product.", StringComparison.Ordinal)));
     }
 
     [Fact]
