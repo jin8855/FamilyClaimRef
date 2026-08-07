@@ -370,3 +370,105 @@ Runtime 확인은 구현 후 guarded Product preview에서 synthetic/non-persona
 | `GATE8_STATE` | `PASS` |
 
 다음 최소 작업은 사용자가 `DEC-PER-001`부터 `DEC-PER-010`까지 선택하는 것이다. 사용자 결정 전에는 persistence 구현, schema 변경, migration 생성, DB 실행, runtime 검증으로 진행하지 않는다.
+
+## 14. T3-PER-C 사용자 결정 및 구현 상태 (2026-08-07)
+
+이 절은 1~13절의 조사 시점 `PENDING_USER_DECISION` 기록을 삭제하지 않고, 이후 사용자가 확정한 T3-PER-C 계약과 구현 결과를 기록한다. 아래 결정은 Category/Item 범위에만 적용하며 T3-PER-D, hard delete, restore, DB, cross-process locking 승인이 아니다.
+
+### 14.1 Superseding user decisions
+
+| Decision | Selected contract | State |
+|---|---|---|
+| `DEC-PER-005` | Option A: Category aggregate root가 Item child를 소유한다. Category code는 aggregate 전역, Item code는 parent 범위에서 `OrdinalIgnoreCase` unique다. | `USER_APPROVED_T3_PER_C` |
+| `DEC-PER-006` | Option A: Item deactivate/reactivate와 Category reactivate를 지원한다. active Item이 있으면 Category deactivate를 차단한다. hard delete, restore, cascade는 구현하지 않는다. | `USER_APPROVED_T3_PER_C` |
+| `DEC-PER-007` | 화면 16/19/20은 selected Category/Item `RowId`와 읽은 `aggregateVersion`을 전달한다. list index, sort order, code, first row를 write target으로 사용하지 않는다. | `USER_APPROVED_T3_PER_C` |
+| `DEC-PER-008` | Option A: 기존 runtime-root JSON architecture에 신규 versioned store를 추가한다. DB/SQLite/repository migration은 없다. | `USER_APPROVED_T3_PER_C` |
+| `DEC-PER-009` | Option A를 구체화하여 canonical JSON path별 process-scoped gate와 exact `expectedAggregateVersion`을 사용한다. 같은 version 동시 write는 하나만 성공한다. cross-process 보장은 제공하지 않는다. | `USER_APPROVED_T3_PER_C` |
+| `DEC-PER-010` | Option A: `CreatedAt`, `UpdatedAt`, `DisabledAt`만 저장한다. business event log를 추가하지 않는다. | `USER_APPROVED_T3_PER_C` |
+
+### 14.2 Implemented persistence contract
+
+- Store file: runtime metadata root의 `categories.json`
+- Envelope: `schemaVersion`, `aggregateVersion`, `savedAt`, `categories[]`, `categories[].items[]`
+- Schema version: `1`
+- Missing store: file을 만들지 않고 empty aggregate version `0` 반환
+- Successful mutation: aggregate version exactly `+1`
+- Identity: Category/Item immutable generated `Guid RowId`; Item은 explicit `ParentCategoryId` 소유
+- Normalization: name/code/description trim, blank required value 거부, negative sort order 거부
+- Uniqueness: Category code global, Item code per parent, 모두 `OrdinalIgnoreCase`
+- Wrong target: missing RowId, parent mismatch, item reparent 요청은 structured no-success 및 no-write
+- Lifecycle: create active, item create/reactivate는 active parent에서만 허용, active item은 parent deactivate 차단
+- Concurrency: canonical store path별 process-scoped gate + optimistic aggregate version; 자동 retry 없음
+- Atomic persistence: same-directory unique temp write, flush-to-disk, deserialize/schema validation, replace/rename, 직전 정상본 `.bak`, temp best-effort cleanup
+- Failure policy: malformed/unsupported schema fail closed; 자동 migration/recovery 없음
+- Privacy/UI: 제품 메시지에 raw ID, 절대 경로, SHA, 예외 전문을 노출하지 않는다. DataGrid 접근성 이름도 display name만 사용한다.
+
+### 14.3 Exact implementation file list
+
+CREATE 12:
+
+- `app/FamilyClaimRef.App/Models/Storage/CategoryAggregateModels.cs`
+- `app/FamilyClaimRef.App/Services/Storage/ICategoryAggregateStorageService.cs`
+- `app/FamilyClaimRef.App/Services/Storage/JsonCategoryAggregateStorageService.cs`
+- `app/FamilyClaimRef.App/ViewModels/CategoryManagementViewModel.cs`
+- `app/FamilyClaimRef.App/Views/ProductCategoryManagementView.xaml`
+- `app/FamilyClaimRef.App/Views/ProductCategoryManagementView.xaml.cs`
+- `app/FamilyClaimRef.App/Views/ProductCategoryEditorView.xaml`
+- `app/FamilyClaimRef.App/Views/ProductCategoryEditorView.xaml.cs`
+- `app/FamilyClaimRef.App/Views/ProductCategoryItemEditorView.xaml`
+- `app/FamilyClaimRef.App/Views/ProductCategoryItemEditorView.xaml.cs`
+- `tests/FamilyClaimRef.App.Tests/CategoryManagementViewModelTests.cs`
+- `tests/FamilyClaimRef.App.Tests/JsonCategoryAggregateStorageServiceTests.cs`
+
+MODIFY 10:
+
+- `app/FamilyClaimRef.App/Composition/AppServices.cs`
+- `app/FamilyClaimRef.App/ProductShell/ProductShellWindow.xaml`
+- `app/FamilyClaimRef.App/Resources/UiStrings.xaml`
+- `app/FamilyClaimRef.App/Services/Localization/UiTextKeys.cs`
+- `app/FamilyClaimRef.App/ViewModels/ProductShellViewModel.cs`
+- `tests/FamilyClaimRef.App.Tests/Composition/AppServicesTests.cs`
+- `tests/FamilyClaimRef.App.Tests/DocumentRegistrationLifecycleGate8Tests.cs`
+- `tests/FamilyClaimRef.App.Tests/ProductShellViewModelTests.cs`
+- `tests/FamilyClaimRef.App.Tests/Services/Localization/ResourceUiTextProviderTests.cs`
+- `docs/440_POLICY_CLAIM_PERSISTENCE_EXTENSION_SCOPE_DISCOVERY_AND_USER_DECISION.md`
+
+Exact changed file count: `22` (`CREATE 12`, `MODIFY 10`).
+
+### 14.4 Validation and independent review evidence
+
+- Release build: PASS, warnings/errors `0/0`
+- Category focused tests: `26/26`, failed/skipped `0/0`
+- Full Release regression: `767/767`, failed/skipped `0/0` (`740` baseline + `27` contract tests)
+- Resource/constants parity: `214/214`
+- `Ui.Product.*` parity: `157/157`
+- Runtime screen 16/19/20: Category create, Item create, reload persistence PASS
+- Runtime duplicate: trim/case-insensitive duplicate message PASS; aggregate version/count unchanged
+- Runtime parent deactivate block: active Item 존재 시 safe message PASS; aggregate version unchanged
+- Runtime stale-version conflict: synthetic external version advance 후 conflict message PASS; attempted code write `0`
+- Runtime accessibility: DataGrid UI Automation raw RowId/ParentCategoryId/GUID exposure `0`
+- Runtime evidence: project 밖의 신규 TEMP roots만 사용; 실제 사용자 data root와 `data/claimdoc` 미접근
+- Independent review repaired findings: inactive parent + active item malformed JSON acceptance, production test fallback constructor, record default `ToString()` accessibility identifier exposure
+- Independent review final Blocking/Major/Minor: `0/0/0`
+- `git diff --check`: PASS
+
+stale-version runtime fixture 준비 중 Windows PowerShell 기본 인코딩으로 첫 synthetic JSON이 유효하지 않게 된 실행자 오류가 있었으며, 직전 synthetic 값과 고정 RowId로 UTF-8 복원한 뒤 격리 root에서만 검증을 완료했다. source, 실제 사용자 data, production runtime root에는 영향이 없다.
+
+### 14.5 Current state and non-authorization
+
+`FAMILYCLAIMREF_T3_PER_C_CATEGORY_AGGREGATE_PERSISTENCE_IMPLEMENTED_VERIFIED_PENDING_PR`
+
+| State | Value |
+|---|---|
+| `T3_PER_C_DECISION_STATE` | `USER_APPROVED` |
+| `T3_PER_C_IMPLEMENTATION_STATE` | `IMPLEMENTED` |
+| `PERSISTENCE_STATE` | `VERIFIED` |
+| `CONCURRENCY_STATE` | `VERIFIED_PROCESS_SCOPE_ONLY` |
+| `RUNTIME_UI_STATE` | `VERIFIED` |
+| `INDEPENDENT_REVIEW_STATE` | `PASS` |
+| `PR_STATE_AT_DOCUMENT_COMMIT` | `PENDING` |
+| `PR_CI_STATE_AT_DOCUMENT_COMMIT` | `PENDING` |
+| `PRODUCTION_READINESS_STATE` | `NOT_EVALUATED` |
+| `DEPLOYMENT_STATE` | `NOT_AUTHORIZED` |
+
+Hard delete, restore, cascade, cross-process locking, automatic migration/recovery, DB/SQLite, production readiness, deployment는 이번 결정과 구현에 포함되지 않는다.

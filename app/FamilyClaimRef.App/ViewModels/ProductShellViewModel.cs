@@ -20,13 +20,15 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
         DocumentRegistrationViewModel documentRegistration,
         ProductDocumentListViewModel documentList,
         PolicyClaimManagementViewModel policyClaimManagement,
-        FamilyMemberManagementViewModel familyMemberManagement)
+        FamilyMemberManagementViewModel familyMemberManagement,
+        CategoryManagementViewModel categoryManagement)
     {
         ArgumentNullException.ThrowIfNull(uiTextProvider);
         ArgumentNullException.ThrowIfNull(documentRegistration);
         ArgumentNullException.ThrowIfNull(documentList);
         ArgumentNullException.ThrowIfNull(policyClaimManagement);
         ArgumentNullException.ThrowIfNull(familyMemberManagement);
+        ArgumentNullException.ThrowIfNull(categoryManagement);
 
         ShellTitle = uiTextProvider.Get(UiTextKeys.ProductShellTitle);
         emptyDisplayValue = uiTextProvider.Get(ProductScreenTextKeys.EmptyValue);
@@ -37,6 +39,7 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
         DocumentList = documentList;
         PolicyClaimManagement = policyClaimManagement;
         FamilyMemberManagement = familyMemberManagement;
+        CategoryManagement = categoryManagement;
         NavigationItems = Array.AsReadOnly(
         [
             new ProductNavigationItemViewModel(
@@ -75,6 +78,8 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
     public PolicyClaimManagementViewModel PolicyClaimManagement { get; }
 
     public FamilyMemberManagementViewModel FamilyMemberManagement { get; }
+
+    public CategoryManagementViewModel CategoryManagement { get; }
 
     public ReadOnlyCollection<ProductNavigationItemViewModel> NavigationItems { get; }
 
@@ -161,6 +166,16 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
             FamilyMemberManagement.BeginCreate();
         }
 
+        if (string.Equals(routeId, ProductScreenRoutes.CategoryRegister, StringComparison.Ordinal))
+        {
+            CategoryManagement.BeginCategoryCreate();
+        }
+
+        if (string.Equals(routeId, ProductScreenRoutes.CategoryItemRegister, StringComparison.Ordinal))
+        {
+            CategoryManagement.BeginItemCreate(CategoryManagement.SelectedCategory?.RowId);
+        }
+
         NavigateCore(routeId);
     }
 
@@ -245,6 +260,70 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
         }
 
         NavigateCore(ProductScreenRoutes.PolicyManage);
+        return true;
+    }
+
+    public void NavigateToCategoryCreate()
+    {
+        CategoryManagement.BeginCategoryCreate();
+        NavigateCore(ProductScreenRoutes.CategoryRegister);
+    }
+
+    public bool NavigateToCategoryEdit(Guid rowId, long expectedAggregateVersion)
+    {
+        if (!CategoryManagement.PrepareCategoryEdit(rowId, expectedAggregateVersion))
+        {
+            return false;
+        }
+
+        NavigateCore(ProductScreenRoutes.CategoryRegister);
+        return true;
+    }
+
+    public void NavigateToCategoryItemCreate(Guid? parentRowId = null)
+    {
+        CategoryManagement.BeginItemCreate(parentRowId);
+        NavigateCore(ProductScreenRoutes.CategoryItemRegister);
+    }
+
+    public bool NavigateToCategoryItemEdit(
+        Guid parentRowId,
+        Guid itemRowId,
+        long expectedAggregateVersion)
+    {
+        if (!CategoryManagement.PrepareItemEdit(
+                parentRowId,
+                itemRowId,
+                expectedAggregateVersion))
+        {
+            return false;
+        }
+
+        NavigateCore(ProductScreenRoutes.CategoryItemRegister);
+        return true;
+    }
+
+    public async Task<bool> SaveCategoryAndReturnAsync(
+        CancellationToken cancellationToken = default)
+    {
+        if (!await CategoryManagement.SaveCategoryAsync(cancellationToken))
+        {
+            return false;
+        }
+
+        NavigateCore(ProductScreenRoutes.CategoryManage);
+        return true;
+    }
+
+    public async Task<bool> SaveCategoryItemAndReturnAsync(
+        CancellationToken cancellationToken = default)
+    {
+        if (!await CategoryManagement.SaveItemAsync(cancellationToken))
+        {
+            return false;
+        }
+
+        NavigateCore(ProductScreenRoutes.CategoryManage);
         return true;
     }
 

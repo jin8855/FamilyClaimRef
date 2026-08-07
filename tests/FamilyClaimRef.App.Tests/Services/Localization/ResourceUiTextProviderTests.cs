@@ -21,9 +21,9 @@ public sealed class ResourceUiTextProviderTests
     {
         var resources = LoadUiStrings();
 
-        Assert.Equal(180, resources.Count);
-        Assert.Equal(123, resources.Keys.Count(IsProductKey));
-        Assert.Equal(123, ExpectedProductResources.Count);
+        Assert.Equal(214, resources.Count);
+        Assert.Equal(157, resources.Keys.Count(IsProductKey));
+        Assert.Equal(157, ExpectedProductResources.Count);
         Assert.All(
             ExpectedProductResources,
             expected => Assert.Equal(expected.Value, resources[expected.Key]));
@@ -36,11 +36,11 @@ public sealed class ResourceUiTextProviderTests
         var resourceKeys = resourceEntries.Select(entry => entry.Key).ToArray();
         var constantValues = LoadUiTextKeyConstants();
 
-        Assert.Equal(180, resourceEntries.Count);
+        Assert.Equal(214, resourceEntries.Count);
         Assert.Equal(resourceKeys.Length, resourceKeys.Distinct(StringComparer.Ordinal).Count());
-        Assert.Equal(180, constantValues.Count);
+        Assert.Equal(214, constantValues.Count);
         Assert.Equal(constantValues.Count, constantValues.Distinct(StringComparer.Ordinal).Count());
-        Assert.Equal(123, constantValues.Count(IsProductKey));
+        Assert.Equal(157, constantValues.Count(IsProductKey));
         Assert.Equal(
             resourceKeys.OrderBy(key => key, StringComparer.Ordinal),
             constantValues.OrderBy(key => key, StringComparer.Ordinal));
@@ -589,7 +589,49 @@ public sealed class ResourceUiTextProviderTests
             [UiTextKeys.ProductInsurancePolicyKeywordTagHeader] = "키워드/태그",
             [UiTextKeys.ProductInsurancePolicyReviewRequiredHeader] = "확인 필요",
             [UiTextKeys.ProductInsurancePolicyCoverageCandidatesEmptyMessage] =
-                "연결 문서를 확인한 뒤 담보 후보를 표시합니다. 현재 자동 분석은 실행하지 않습니다."
+                "연결 문서를 확인한 뒤 담보 후보를 표시합니다. 현재 자동 분석은 실행하지 않습니다.",
+            [UiTextKeys.ProductCategoryGuidance] =
+                "분류는 전체에서 고유한 코드를 사용하며, 항목 코드는 같은 분류 안에서만 고유합니다. 선택한 행의 식별자와 현재 버전으로만 변경합니다.",
+            [UiTextKeys.ProductCategoryCategoryListTitle] = "분류 목록",
+            [UiTextKeys.ProductCategoryItemListTitle] = "선택한 분류의 항목 목록",
+            [UiTextKeys.ProductCategoryNameLabel] = "분류명",
+            [UiTextKeys.ProductCategoryItemNameLabel] = "항목명",
+            [UiTextKeys.ProductCategoryCodeLabel] = "코드",
+            [UiTextKeys.ProductCategoryStateLabel] = "상태",
+            [UiTextKeys.ProductCategoryItemCountLabel] = "항목 수",
+            [UiTextKeys.ProductCategoryActionsLabel] = "작업",
+            [UiTextKeys.ProductCategorySortOrderLabel] = "정렬 순서",
+            [UiTextKeys.ProductCategoryDescriptionLabel] = "설명",
+            [UiTextKeys.ProductCategorySystemDefaultLabel] = "시스템 기본값",
+            [UiTextKeys.ProductCategoryParentLabel] = "상위 분류",
+            [UiTextKeys.ProductCategoryPolicySearchLabel] = "보험 검색에 사용",
+            [UiTextKeys.ProductCategoryHistorySearchLabel] = "이력 검색에 사용",
+            [UiTextKeys.ProductCategoryActiveValue] = "사용 중",
+            [UiTextKeys.ProductCategoryInactiveValue] = "사용 중지",
+            [UiTextKeys.ProductCategoryRegisterCategoryAction] = "분류 등록",
+            [UiTextKeys.ProductCategoryRegisterItemAction] = "항목 등록",
+            [UiTextKeys.ProductCategoryReactivateAction] = "다시 사용",
+            [UiTextKeys.ProductCategoryLoadFailedMessage] =
+                "분류와 항목 목록을 불러오지 못했습니다. 다시 시도해 주세요.",
+            [UiTextKeys.ProductCategorySavedMessage] = "분류를 저장했습니다.",
+            [UiTextKeys.ProductCategoryItemSavedMessage] = "분류 항목을 저장했습니다.",
+            [UiTextKeys.ProductCategoryDeactivatedMessage] = "분류를 사용 중지했습니다.",
+            [UiTextKeys.ProductCategoryReactivatedMessage] = "분류를 다시 사용하도록 변경했습니다.",
+            [UiTextKeys.ProductCategoryItemDeactivatedMessage] = "분류 항목을 사용 중지했습니다.",
+            [UiTextKeys.ProductCategoryItemReactivatedMessage] = "분류 항목을 다시 사용하도록 변경했습니다.",
+            [UiTextKeys.ProductCategoryValidationMessage] =
+                "이름, 코드와 0 이상의 정렬 순서를 확인해 주세요.",
+            [UiTextKeys.ProductCategoryDuplicateCodeMessage] =
+                "같은 범위에 이미 등록된 코드입니다. 다른 코드를 입력해 주세요.",
+            [UiTextKeys.ProductCategoryConflictMessage] =
+                "다른 변경이 먼저 저장되었습니다. 목록을 다시 불러온 뒤 시도해 주세요.",
+            [UiTextKeys.ProductCategoryTargetUnavailableMessage] =
+                "처리할 분류 또는 항목을 찾을 수 없습니다. 목록을 다시 확인해 주세요.",
+            [UiTextKeys.ProductCategoryParentInactiveMessage] = "사용 중인 상위 분류를 선택해 주세요.",
+            [UiTextKeys.ProductCategoryActiveItemsBlockMessage] =
+                "사용 중인 항목이 있어 분류를 사용 중지할 수 없습니다. 항목을 먼저 사용 중지해 주세요.",
+            [UiTextKeys.ProductCategoryOperationFailedMessage] =
+                "분류 정보를 처리하지 못했습니다. 다시 시도해 주세요."
         };
 
     private const string ExistingResourceFingerprint =
