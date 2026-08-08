@@ -101,6 +101,107 @@ public sealed class ClaimSubmissionStorageServiceTests
     }
 
     [Fact]
+    public async Task Disabled_saved_claim_rejects_policy_lookup_and_create_without_write()
+    {
+        await UsingFixtureAsync(async fixture =>
+        {
+            var family = await fixture.CreateFamilyAsync();
+            var policy = await fixture.CreatePolicyAsync(family.Id);
+            var claim = await fixture.CreateSavedClaimAsync(family.Id);
+            _ = await fixture.PolicyClaims.DisableClaimCaseAsync(claim.Id, claim.Revision);
+
+            Assert.IsType<ClaimSubmissionReferenceException>(await Record.ExceptionAsync(() =>
+                fixture.Submissions.GetClaimablePoliciesAsync(claim.Id)));
+            Assert.IsType<ClaimSubmissionReferenceException>(await Record.ExceptionAsync(() =>
+                fixture.Submissions.CreateAsync(CreateDraft(claim.Id, policy.Id))));
+            Assert.False(File.Exists(fixture.SubmissionPath));
+            Assert.False(File.Exists(fixture.SubmissionPath + ".bak"));
+            Assert.Empty(Directory.GetFiles(fixture.RootPath, "claim-submissions.json.*.tmp"));
+        });
+    }
+
+    [Fact]
+    public async Task Disabled_claim_after_existing_submission_blocks_update_without_mutating_storage()
+    {
+        await UsingFixtureAsync(async fixture =>
+        {
+            var family = await fixture.CreateFamilyAsync();
+            var policy = await fixture.CreatePolicyAsync(family.Id);
+            var claim = await fixture.CreateSavedClaimAsync(family.Id);
+            var created = await fixture.Submissions.CreateAsync(CreateDraft(claim.Id, policy.Id));
+            var submitted = await fixture.Submissions.UpdateAsync(
+                created.Id,
+                created.Revision,
+                SubmittedDraft(claim.Id, policy.Id) with { SubmittedAmount = null });
+            _ = await fixture.PolicyClaims.DisableClaimCaseAsync(claim.Id, claim.Revision);
+
+            var backupPath = fixture.SubmissionPath + ".bak";
+            var originalBefore = await File.ReadAllBytesAsync(fixture.SubmissionPath);
+            var backupBefore = await File.ReadAllBytesAsync(backupPath);
+
+            var exception = await Record.ExceptionAsync(() => fixture.Submissions.UpdateAsync(
+                submitted.Id,
+                submitted.Revision,
+                SubmittedDraft(claim.Id, policy.Id) with
+                {
+                    SubmittedAmount = null,
+                    Status = ClaimSubmissionValues.StatusReviewing
+                }));
+
+            Assert.IsType<ClaimSubmissionReferenceException>(exception);
+            Assert.Equal(originalBefore, await File.ReadAllBytesAsync(fixture.SubmissionPath));
+            Assert.Equal(backupBefore, await File.ReadAllBytesAsync(backupPath));
+            Assert.Equal(submitted.Revision, (await fixture.Submissions.GetAsync(submitted.Id))!.Revision);
+            Assert.Empty(Directory.GetFiles(fixture.RootPath, "claim-submissions.json.*.tmp"));
+        });
+    }
+
+    [Fact]
+    public async Task Nullable_submitted_amount_roundtrips_and_preserves_normal_transitions()
+    {
+        await UsingFixtureAsync(async fixture =>
+        {
+            var family = await fixture.CreateFamilyAsync();
+            var policy = await fixture.CreatePolicyAsync(family.Id);
+            var claim = await fixture.CreateSavedClaimAsync(family.Id);
+            var created = await fixture.Submissions.CreateAsync(CreateDraft(claim.Id, policy.Id));
+            var submitted = await fixture.Submissions.UpdateAsync(
+                created.Id,
+                created.Revision,
+                SubmittedDraft(claim.Id, policy.Id) with { SubmittedAmount = null });
+            var reloadedStorage = new JsonClaimSubmissionStorageService(
+                fixture.RootPath,
+                fixture.PolicyClaims,
+                fixture.PolicyClaims,
+                fixture.Documents);
+            var reloaded = Assert.IsType<ClaimSubmissionRecord>(
+                await reloadedStorage.GetAsync(submitted.Id));
+
+            Assert.Null(reloaded.SubmittedAmount);
+            var reviewing = await reloadedStorage.UpdateAsync(
+                reloaded.Id,
+                reloaded.Revision,
+                SubmittedDraft(claim.Id, policy.Id) with
+                {
+                    SubmittedAmount = null,
+                    Status = ClaimSubmissionValues.StatusReviewing
+                });
+            var completed = await reloadedStorage.UpdateAsync(
+                reviewing.Id,
+                reviewing.Revision,
+                SubmittedDraft(claim.Id, policy.Id) with
+                {
+                    SubmittedAmount = null,
+                    Status = ClaimSubmissionValues.StatusCompleted
+                });
+
+            Assert.Null(completed.SubmittedAmount);
+            Assert.Equal(ClaimSubmissionValues.StatusCompleted, completed.Status);
+            Assert.Equal(4, completed.Revision);
+        });
+    }
+
+    [Fact]
     public async Task Create_rejects_cross_family_and_expired_policy_without_write()
     {
         await UsingFixtureAsync(async fixture =>
@@ -142,14 +243,6 @@ public sealed class ClaimSubmissionStorageServiceTests
                     CreateDraft(claim.Id, policy.Id) with
                     {
                         Status = ClaimSubmissionValues.StatusSubmitted
-                    })));
-            Assert.IsType<ArgumentException>(await Record.ExceptionAsync(() =>
-                fixture.Submissions.UpdateAsync(
-                    created.Id,
-                    created.Revision,
-                    SubmittedDraft(claim.Id, policy.Id) with
-                    {
-                        SubmittedAmount = null
                     })));
             Assert.IsType<ClaimSubmissionReferenceException>(await Record.ExceptionAsync(() =>
                 fixture.Submissions.UpdateAsync(

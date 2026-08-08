@@ -309,8 +309,9 @@ ClaimCase
 - Id는 immutable string이며 생성 Revision은 1, 성공한 mutation마다 정확히 1 증가한다.
 - ClaimCaseId와 PolicyId는 생성 후 변경하지 않는다.
 - PolicyCoverageId는 nullable이며 현재 MVP에서는 사용하지 않는다.
-- ClaimCase는 saved 상태이고 FamilyMember owner가 명확해야 한다.
+- ClaimCase는 saved 상태이고 `DisabledAt`이 null이며 FamilyMember owner가 명확해야 한다.
 - Policy는 `DisabledAt`이 null이고 계약 상태가 `유지`, `보험료 납입면제`, legacy `사용 중` 중 하나여야 하며 `만기`는 제외한다. 또한 ClaimCase와 같은 FamilyMember를 소유해야 한다.
+- SubmittedAmount는 nullable이며, 값이 있으면 0 이상의 정수여야 한다. `submitted` 이후에도 null을 정상 저장·복원한다.
 - SubmittedClaimDocumentIds는 같은 ClaimCase의 active ClaimDocument link Id만 저장한다.
 - canonical 저장 경로별 process-scoped gate와 expectedRevision으로 lost update를 방지한다.
 - 저장은 temp write, flush-to-disk, 재검증, atomic replace/rename을 사용하고 직전 정상본 `.bak`을 보존한다.

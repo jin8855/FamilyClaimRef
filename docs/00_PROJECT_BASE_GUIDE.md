@@ -126,14 +126,16 @@ HTML 프로토타입은 실제 구현 예정 화면과 최대한 유사하게 �
   - mutation concurrency: process-scoped gate + `expectedRevision`
   - 저장: temp write, flush-to-disk, 재검증, atomic replace와 `.bak` 보존
   - 최종 로컬 검증: focused `23/23`, full regression `790/790`, build warning/error `0/0`
-- ClaimSubmission MVP 영속화(T3-CLAIM-B): `IMPLEMENTED_AND_LOCALLY_VALIDATED`
-  - owner: `ClaimCase` + 대상 `Policy`
+- ClaimSubmission MVP 영속화(T3-CLAIM-B/R1): `IMPLEMENTED_AND_LOCALLY_VALIDATED`
+  - owner: active saved `ClaimCase` + 대상 `Policy`
+  - disabled ClaimCase는 조회·생성·수정에서 거부하며 submission 원본, `.bak`, temp, Revision을 변경하지 않음
   - 동일 `ClaimCase` + `Policy` 조합의 복수 제출 기록 허용
   - 상태: `preparing`, `submitted`, `additional_documents_requested`, `reviewing`, `cancelled`, `submission_completed`
   - 제출 문서: 동일 ClaimCase의 active `ClaimDocumentRecord.Id`만 허용
+  - `SubmittedAmount`: nullable, 입력한 경우 0 이상의 정수
   - mutation concurrency: canonical `claim-submissions.json`별 process-scoped gate + `expectedRevision`
   - 저장: schema v1, temp write, flush-to-disk, 재검증, atomic replace와 `.bak` 보존
-  - 최종 로컬 검증: ClaimSubmission focused `22/22`, full regression `816/816`, build warning/error `0/0`
+  - 최종 로컬 검증: ClaimSubmission focused `26/26`, related contract focused `11/11`, full regression `822/822`, build warning/error `0/0`
 - 프로덕션 준비도: `평가하지 않음`
 - 배포: `승인되지 않음`
 - 검토 대상 문서 후보:

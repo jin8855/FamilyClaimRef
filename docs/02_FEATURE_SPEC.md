@@ -195,7 +195,7 @@ OCR 원문은 확정 데이터가 아니다.
 
 ### 정의
 
-ClaimSubmission은 하나의 저장된 ClaimCase를 같은 가족의 특정 보험 계약에 청구한 진행 기록이다.
+ClaimSubmission은 하나의 active saved ClaimCase를 같은 가족의 특정 보험 계약에 청구한 진행 기록이다.
 하나의 ClaimCase는 여러 Policy에 제출할 수 있으며, 같은 ClaimCase와 Policy 조합에도 복수 제출 기록을 둘 수 있다.
 
 ### 저장값
@@ -206,7 +206,7 @@ ClaimSubmission은 하나의 저장된 ClaimCase를 같은 가족의 특정 보�
 - nullable PolicyCoverageId
 - CoverageDisplayName
 - SubmittedDate
-- SubmittedAmount
+- nullable SubmittedAmount: 입력한 경우 0 이상의 정수
 - SubmittedClaimDocumentIds
 - Status
 - Memo
@@ -231,7 +231,7 @@ ClaimSubmission은 하나의 저장된 ClaimCase를 같은 가족의 특정 보�
 - `submitted`에서 추가 서류 요청, 심사, 처리 완료, 취소로 전이할 수 있다.
 - `additional_documents_requested`와 `reviewing`은 승인된 경로로만 전이한다.
 - `cancelled`와 `submission_completed`는 terminal 상태다.
-- `submitted` 이후에는 청구일, 청구 금액, 담보 표시명이 필수다.
+- `submitted` 이후에는 청구일과 담보 표시명이 필수다. 청구 금액은 선택 사항이며, 입력한 경우 0 이상의 정수여야 한다.
 - 제출 문서는 같은 ClaimCase의 active ClaimDocument link만 허용한다.
 - `preparing`을 벗어난 뒤 이미 제출한 문서는 제거할 수 없고 추가만 허용한다.
 - 저장과 상태 변경은 exact Id와 expected Revision을 요구한다.

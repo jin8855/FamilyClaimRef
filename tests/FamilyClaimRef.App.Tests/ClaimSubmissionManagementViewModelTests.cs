@@ -85,6 +85,62 @@ public sealed class ClaimSubmissionManagementViewModelTests
     }
 
     [Fact]
+    public async Task Load_excludes_disabled_saved_claim_case()
+    {
+        await UsingFixtureAsync(async fixture =>
+        {
+            var family = await fixture.CreateFamilyAsync();
+            _ = await fixture.CreatePolicyAsync(family.Id);
+            var active = await fixture.CreateSavedClaimAsync(family.Id, "active claim");
+            var disabled = await fixture.CreateSavedClaimAsync(family.Id, "disabled claim");
+            disabled = await fixture.PolicyClaims.DisableClaimCaseAsync(
+                disabled.Id,
+                disabled.Revision);
+            var viewModel = fixture.CreateViewModel(
+                claimCases: new StaticClaimCaseStorage([disabled, active]));
+            viewModel.SelectedClaimCaseId = active.Id;
+
+            Assert.True(await viewModel.LoadAsync());
+            Assert.Equal(active.Id, Assert.Single(viewModel.AvailableClaimCases).Id);
+            Assert.DoesNotContain(
+                viewModel.AvailableClaimCases,
+                option => string.Equals(option.Id, disabled.Id, StringComparison.Ordinal));
+        });
+    }
+
+    [Fact]
+    public async Task Blank_submitted_amount_saves_and_reloads_as_null()
+    {
+        await UsingFixtureAsync(async fixture =>
+        {
+            var family = await fixture.CreateFamilyAsync();
+            var policy = await fixture.CreatePolicyAsync(family.Id);
+            var claim = await fixture.CreateSavedClaimAsync(family.Id);
+            var viewModel = fixture.CreateViewModel();
+            viewModel.SelectedClaimCaseId = claim.Id;
+            Assert.True(await viewModel.LoadAsync());
+            Assert.True(await viewModel.CreatePreparingAsync());
+
+            viewModel.CoverageDisplayName = "coverage";
+            viewModel.SubmittedDate = new DateTime(2026, 8, 8);
+            viewModel.SubmittedAmountText = " ";
+            viewModel.SelectedStatus = ClaimSubmissionValues.StatusSubmitted;
+
+            Assert.True(await viewModel.SaveAsync());
+            var id = viewModel.SelectedSubmissionId!;
+            Assert.Null((await fixture.Submissions.GetAsync(id))!.SubmittedAmount);
+
+            var reloaded = fixture.CreateViewModel();
+            reloaded.SelectedClaimCaseId = claim.Id;
+            Assert.True(await reloaded.LoadAsync());
+            reloaded.SelectedSubmissionId = id;
+            Assert.True(reloaded.LoadSelectedSubmission());
+            Assert.Null(reloaded.SubmittedAmountText);
+            Assert.Equal(policy.Id, reloaded.SelectedPolicyId);
+        });
+    }
+
+    [Fact]
     public async Task Invalid_input_stays_on_editor_and_uses_safe_validation_message()
     {
         await UsingFixtureAsync(async fixture =>
@@ -361,11 +417,12 @@ public sealed class ClaimSubmissionManagementViewModelTests
         public IUiTextProvider UiText { get; }
 
         public ClaimSubmissionManagementViewModel CreateViewModel(
-            IClaimSubmissionStorageService? submissions = null)
+            IClaimSubmissionStorageService? submissions = null,
+            IClaimCaseStorageService? claimCases = null)
         {
             return new ClaimSubmissionManagementViewModel(
                 submissions ?? Submissions,
-                PolicyClaims,
+                claimCases ?? PolicyClaims,
                 Documents,
                 UiText);
         }
@@ -427,6 +484,36 @@ public sealed class ClaimSubmissionManagementViewModelTests
                 Directory.Delete(RootPath, recursive: true);
             }
         }
+    }
+
+    private sealed class StaticClaimCaseStorage(
+        IReadOnlyList<ClaimRecord> claims) : IClaimCaseStorageService
+    {
+        public Task<IReadOnlyList<ClaimRecord>> GetClaimCasesAsync(
+            CancellationToken cancellationToken = default) => Task.FromResult(claims);
+
+        public Task<ClaimRecord?> GetClaimCaseAsync(
+            string id,
+            CancellationToken cancellationToken = default) => Task.FromResult(
+                claims.SingleOrDefault(claim => string.Equals(
+                    claim.Id,
+                    id,
+                    StringComparison.Ordinal)));
+
+        public Task<ClaimRecord> CreateClaimCaseAsync(
+            ClaimCaseDraft draft,
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
+        public Task<ClaimRecord> UpdateClaimCaseAsync(
+            string id,
+            int expectedRevision,
+            ClaimCaseDraft draft,
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
+        public Task<ClaimRecord> DisableClaimCaseAsync(
+            string id,
+            int expectedRevision,
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 
     private sealed class RefreshFailingClaimSubmissionStorage(

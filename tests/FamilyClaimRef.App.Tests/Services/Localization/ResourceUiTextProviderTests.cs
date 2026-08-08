@@ -272,6 +272,7 @@ public sealed class ResourceUiTextProviderTests
     [InlineData(UiTextKeys.PolicyManagementValidationTitleRequired, "보험 계약 이름을 입력해 주세요.")]
     [InlineData(UiTextKeys.ClaimManagementValidationSelectClaimTarget, "사용 중지할 청구 건을 선택해 주세요.")]
     [InlineData(UiTextKeys.PolicyManagementValidationSelectPolicyTarget, "사용 중지할 보험 계약을 선택해 주세요.")]
+    [InlineData(UiTextKeys.ProductClaimSubmissionValidationMessage, "보험 계약, 담보명, 청구일, 진행 상태와 입력한 청구 금액의 형식을 확인해 주세요.")]
     public void Approved_korean_copy_values_resolve_from_UiStrings(string key, string expected)
     {
         var resources = LoadUiStrings();
@@ -692,7 +693,7 @@ public sealed class ResourceUiTextProviderTests
             [UiTextKeys.ProductClaimSubmissionPaymentFutureMessage] =
                 "지급·삭감·부지급 결과는 후속 ClaimPayment 기능에서 관리합니다.",
             [UiTextKeys.ProductClaimSubmissionValidationMessage] =
-                "보험 계약, 담보명, 청구일, 청구 금액과 진행 상태를 확인해 주세요.",
+                "보험 계약, 담보명, 청구일, 진행 상태와 입력한 청구 금액의 형식을 확인해 주세요.",
             [UiTextKeys.ProductClaimSubmissionConflictMessage] =
                 "다른 변경이 먼저 저장되었습니다. 기록을 다시 불러온 뒤 시도해 주세요.",
             [UiTextKeys.ProductClaimSubmissionLegacyReviewMessage] =

@@ -288,10 +288,11 @@ public sealed class ClaimSubmissionManagementViewModel : INotifyPropertyChanged
             ClearMessages();
             var claims = await claimCaseStorageService.GetClaimCasesAsync(cancellationToken);
             AvailableClaimCases = claims
-                .Where(claim => string.Equals(
-                    claim.CaseStatus,
-                    ClaimCaseValues.StatusSaved,
-                    StringComparison.Ordinal))
+                .Where(claim => claim.DisabledAt is null
+                    && string.Equals(
+                        claim.CaseStatus,
+                        ClaimCaseValues.StatusSaved,
+                        StringComparison.Ordinal))
                 .OrderBy(claim => claim.DisplayTitle, StringComparer.Ordinal)
                 .Select(claim => new ClaimSubmissionClaimCaseOptionViewModel(
                     claim.Id,
