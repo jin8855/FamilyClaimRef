@@ -258,11 +258,10 @@ public sealed class JsonClaimSubmissionStorageService : IClaimSubmissionStorageS
                 && currentStatus is not null);
         if (requiresDetails
             && (draft.SubmittedDate is null
-                || draft.SubmittedAmount is null
                 || string.IsNullOrWhiteSpace(draft.CoverageDisplayName)))
         {
             throw new ArgumentException(
-                "Submitted date, amount, and coverage are required after preparing.");
+                "Submitted date and coverage are required after preparing.");
         }
     }
 
@@ -275,6 +274,11 @@ public sealed class JsonClaimSubmissionStorageService : IClaimSubmissionStorageS
                 normalizedClaimCaseId,
                 cancellationToken)
             ?? throw new ClaimSubmissionReferenceException();
+
+        if (claim.DisabledAt is not null)
+        {
+            throw new ClaimSubmissionReferenceException();
+        }
 
         if (string.IsNullOrWhiteSpace(claim.FamilyMemberId))
         {
