@@ -1,0 +1,192 @@
+<UserControl x:Class="FamilyClaimRef.App.Views.ProductClaimHistoryListView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Loaded="UserControl_Loaded">
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled"
+                  AutomationProperties.AutomationId="ProductScreen_10">
+        <Grid MaxWidth="1520"
+              Margin="24,20,24,36"
+              HorizontalAlignment="Center">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <StackPanel>
+                <TextBlock Text="{Binding DataContext.CurrentScreen.Breadcrumb, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                           Style="{StaticResource ProductSubtitleStyle}"
+                           Margin="0,0,0,8" />
+                <TextBlock Text="{Binding DataContext.CurrentScreen.Title, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                           Style="{StaticResource ProductPageTitleStyle}" />
+                <TextBlock Text="{StaticResource Ui.Product.History.Guidance}"
+                           Style="{StaticResource ProductSubtitleStyle}"
+                           Margin="0,6,0,0" />
+            </StackPanel>
+
+            <Border Grid.Row="1"
+                    Style="{StaticResource ProductPanelStyle}"
+                    Margin="0,18,0,14">
+                <StackPanel>
+                    <TextBlock Text="{StaticResource Ui.Product.History.FilterSectionTitle}"
+                               Style="{StaticResource ProductSectionTitleStyle}"
+                               Margin="0,0,0,12" />
+                    <WrapPanel>
+                        <StackPanel Width="180" Margin="0,0,12,10">
+                            <TextBlock Text="{StaticResource Ui.Product.History.FamilyFilterLabel}"
+                                       Style="{StaticResource ProductSubtitleStyle}" />
+                            <ComboBox ItemsSource="{Binding FamilyFilterOptions}"
+                                      DisplayMemberPath="DisplayName"
+                                      SelectedItem="{Binding SelectedFamilyFilter, Mode=TwoWay}"
+                                      AutomationProperties.AutomationId="ProductHistory_FamilyFilter" />
+                        </StackPanel>
+                        <StackPanel Width="180" Margin="0,0,12,10">
+                            <TextBlock Text="{StaticResource Ui.Product.History.InsurerFilterLabel}"
+                                       Style="{StaticResource ProductSubtitleStyle}" />
+                            <ComboBox ItemsSource="{Binding InsurerFilterOptions}"
+                                      DisplayMemberPath="DisplayName"
+                                      SelectedItem="{Binding SelectedInsurerFilter, Mode=TwoWay}"
+                                      AutomationProperties.AutomationId="ProductHistory_InsurerFilter" />
+                        </StackPanel>
+                        <StackPanel Width="150" Margin="0,0,12,10">
+                            <TextBlock Text="{StaticResource Ui.Product.History.DateFromLabel}"
+                                       Style="{StaticResource ProductSubtitleStyle}" />
+                            <DatePicker SelectedDate="{Binding TreatmentDateFrom, Mode=TwoWay}"
+                                        AutomationProperties.AutomationId="ProductHistory_DateFrom" />
+                        </StackPanel>
+                        <StackPanel Width="150" Margin="0,0,12,10">
+                            <TextBlock Text="{StaticResource Ui.Product.History.DateToLabel}"
+                                       Style="{StaticResource ProductSubtitleStyle}" />
+                            <DatePicker SelectedDate="{Binding TreatmentDateTo, Mode=TwoWay}"
+                                        AutomationProperties.AutomationId="ProductHistory_DateTo" />
+                        </StackPanel>
+                        <StackPanel Width="145" Margin="0,0,12,10">
+                            <TextBlock Text="{StaticResource Ui.Product.History.VisitTypeFilterLabel}"
+                                       Style="{StaticResource ProductSubtitleStyle}" />
+                            <ComboBox ItemsSource="{Binding VisitTypeFilterOptions}"
+                                      DisplayMemberPath="DisplayName"
+                                      SelectedItem="{Binding SelectedVisitTypeFilter, Mode=TwoWay}"
+                                      AutomationProperties.AutomationId="ProductHistory_VisitTypeFilter" />
+                        </StackPanel>
+                        <StackPanel Width="250" Margin="0,0,12,10">
+                            <TextBlock Text="{StaticResource Ui.Product.History.SearchLabel}"
+                                       Style="{StaticResource ProductSubtitleStyle}" />
+                            <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                     AutomationProperties.AutomationId="ProductHistory_Search" />
+                        </StackPanel>
+                        <WrapPanel VerticalAlignment="Bottom" Margin="0,17,0,10">
+                            <Button Content="{StaticResource Ui.Product.History.ApplyFilterAction}"
+                                    Click="ApplyFilters_Click"
+                                    AutomationProperties.AutomationId="ProductHistory_ApplyFilters"
+                                    Style="{StaticResource ProductPrimaryButtonStyle}" />
+                            <Button Content="{StaticResource Ui.Product.History.ResetFilterAction}"
+                                    Click="ResetFilters_Click"
+                                    AutomationProperties.AutomationId="ProductHistory_ResetFilters"
+                                    Style="{StaticResource ProductSecondaryButtonStyle}" />
+                        </WrapPanel>
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Row="2"
+                    AutomationProperties.AutomationId="ProductHistory_StateMessage">
+                <Border.Style>
+                    <Style TargetType="Border" BasedOn="{StaticResource ProductPanelStyle}">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding HasStateMessage}" Value="True">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <TextBlock Text="{Binding StateMessage}"
+                           TextWrapping="Wrap"
+                           Foreground="{StaticResource ProductWarningBrush}" />
+            </Border>
+
+            <Border Grid.Row="3" Style="{StaticResource ProductPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{StaticResource Ui.Product.History.ListSectionTitle}"
+                                   Style="{StaticResource ProductSectionTitleStyle}" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <TextBlock Text="{Binding Items.Count}" FontWeight="SemiBold" />
+                            <TextBlock Text="{StaticResource Ui.Product.Wireframe.Common.CountSuffix}" Margin="4,0,0,0" />
+                        </StackPanel>
+                    </Grid>
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding Items}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              CanUserResizeRows="False"
+                              MaxHeight="520"
+                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                              AutomationProperties.AutomationId="ProductHistory_List">
+                        <DataGrid.Style>
+                            <Style TargetType="DataGrid" BasedOn="{StaticResource {x:Type DataGrid}}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasItems}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.Style>
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow">
+                                <Setter Property="AutomationProperties.Name" Value="{Binding ClaimDisplayTitle}" />
+                            </Style>
+                        </DataGrid.RowStyle>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.ClaimComplete.TreatmentDateLabel}" Binding="{Binding TreatmentDateDisplay}" Width="92" />
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.ClaimComplete.FamilyLabel}" Binding="{Binding FamilyDisplayName}" Width="105" />
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.History.InsurerLabel}" Binding="{Binding InsurerDisplayName}" Width="115" />
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.ClaimComplete.PolicyLabel}" Binding="{Binding PolicyDisplayTitle}" Width="*" />
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.History.ClaimCaseLabel}" Binding="{Binding ClaimDisplayTitle}" Width="*" />
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.ClaimComplete.VisitTypeLabel}" Binding="{Binding VisitTypeDisplay}" Width="72" />
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.ClaimComplete.SubmissionStatusLabel}" Binding="{Binding SubmissionStatusDisplay}" Width="105" />
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.ClaimComplete.PaymentSummaryLabel}" Binding="{Binding PaymentSummaryDisplay}" Width="2*">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                                        <Setter Property="ToolTip" Value="{Binding PaymentSummaryDisplay}" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.History.ParentStateLabel}" Binding="{Binding ParentStateDisplay}" Width="80" />
+                            <DataGridTemplateColumn Header="{StaticResource Ui.Product.History.DetailAction}" Width="78">
+                                <DataGridTemplateColumn.CellStyle>
+                                    <Style TargetType="DataGridCell">
+                                        <Setter Property="AutomationProperties.Name" Value="{Binding ClaimDisplayTitle}" />
+                                    </Style>
+                                </DataGridTemplateColumn.CellStyle>
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="{StaticResource Ui.Product.History.DetailAction}"
+                                                Click="OpenDetail_Click"
+                                                AutomationProperties.AutomationId="ProductHistory_OpenDetail"
+                                                Style="{StaticResource ProductSecondaryButtonStyle}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Border>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

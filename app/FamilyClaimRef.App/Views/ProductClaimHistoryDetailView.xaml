@@ -1,0 +1,216 @@
+<UserControl x:Class="FamilyClaimRef.App.Views.ProductClaimHistoryDetailView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:viewModels="clr-namespace:FamilyClaimRef.App.ViewModels">
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled"
+                  AutomationProperties.AutomationId="ProductScreen_21">
+        <Grid MaxWidth="1520"
+              Margin="24,20,24,36"
+              HorizontalAlignment="Center">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="{Binding DataContext.CurrentScreen.Breadcrumb, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                               Style="{StaticResource ProductSubtitleStyle}"
+                               Margin="0,0,0,8" />
+                    <TextBlock Text="{Binding DataContext.CurrentScreen.Title, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                               Style="{StaticResource ProductPageTitleStyle}" />
+                    <TextBlock Text="{StaticResource Ui.Product.History.DetailGuidance}"
+                               Style="{StaticResource ProductSubtitleStyle}"
+                               Margin="0,6,0,0" />
+                </StackPanel>
+                <Button Grid.Column="1"
+                        Content="{StaticResource Ui.Product.History.BackToListAction}"
+                        Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                        CommandParameter="{x:Static viewModels:ProductScreenRoutes.HistoryView}"
+                        AutomationProperties.AutomationId="ProductHistoryDetail_BackToList"
+                        Style="{StaticResource ProductSecondaryButtonStyle}"
+                        VerticalAlignment="Top" />
+            </Grid>
+
+            <Border Grid.Row="1"
+                    Margin="0,18,0,0">
+                <Border.Style>
+                    <Style TargetType="Border" BasedOn="{StaticResource ProductPanelStyle}">
+                        <Setter Property="Visibility" Value="Visible" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding HasDetail}" Value="True">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <TextBlock Text="{StaticResource Ui.Product.History.DetailSelectionRequiredMessage}"
+                           TextWrapping="Wrap"
+                           Foreground="{StaticResource ProductWarningBrush}" />
+            </Border>
+
+            <StackPanel Grid.Row="2" Margin="0,18,0,0">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding HasDetail}" Value="True">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+
+                <Border Style="{StaticResource ProductPanelStyle}">
+                    <StackPanel>
+                        <TextBlock Text="{StaticResource Ui.Product.History.ClaimSectionTitle}"
+                                   Style="{StaticResource ProductSectionTitleStyle}"
+                                   Margin="0,0,0,12" />
+                        <UniformGrid Columns="4">
+                            <StackPanel Margin="0,0,14,10">
+                                <TextBlock Text="{StaticResource Ui.Product.History.ClaimCaseLabel}" Style="{StaticResource ProductSubtitleStyle}" />
+                                <TextBlock Text="{Binding SelectedDetail.ClaimDisplayTitle}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,14,10">
+                                <TextBlock Text="{StaticResource Ui.Product.ClaimComplete.FamilyLabel}" Style="{StaticResource ProductSubtitleStyle}" />
+                                <TextBlock Text="{Binding SelectedDetail.FamilyDisplayName}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,14,10">
+                                <TextBlock Text="{StaticResource Ui.Product.ClaimComplete.TreatmentDateLabel}" Style="{StaticResource ProductSubtitleStyle}" />
+                                <TextBlock Text="{Binding SelectedDetail.TreatmentDateDisplay}" FontWeight="SemiBold" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,14,10">
+                                <TextBlock Text="{StaticResource Ui.Product.ClaimComplete.HospitalLabel}" Style="{StaticResource ProductSubtitleStyle}" />
+                                <TextBlock Text="{Binding SelectedDetail.HospitalName}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,14,0">
+                                <TextBlock Text="{StaticResource Ui.Product.ClaimComplete.DiagnosisLabel}" Style="{StaticResource ProductSubtitleStyle}" />
+                                <TextBlock Text="{Binding SelectedDetail.DiagnosisDisplay}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,14,0">
+                                <TextBlock Text="{StaticResource Ui.Product.ClaimComplete.VisitTypeLabel}" Style="{StaticResource ProductSubtitleStyle}" />
+                                <TextBlock Text="{Binding SelectedDetail.VisitTypeDisplay}" FontWeight="SemiBold" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,14,0">
+                                <TextBlock Text="{StaticResource Ui.Product.ClaimComplete.CaseStatusLabel}" Style="{StaticResource ProductSubtitleStyle}" />
+                                <TextBlock Text="{Binding SelectedDetail.ClaimStatusDisplay}" FontWeight="SemiBold" />
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="{StaticResource Ui.Product.History.ParentStateLabel}" Style="{StaticResource ProductSubtitleStyle}" />
+                                <TextBlock Text="{Binding SelectedDetail.ParentStateDisplay}" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </UniformGrid>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource ProductPanelStyle}">
+                    <StackPanel>
+                        <TextBlock Text="{StaticResource Ui.Product.History.SubmissionSectionTitle}"
+                                   Style="{StaticResource ProductSectionTitleStyle}"
+                                   Margin="0,0,0,12" />
+                        <UniformGrid Columns="4">
+                            <StackPanel Margin="0,0,14,10">
+                                <TextBlock Text="{StaticResource Ui.Product.ClaimComplete.PolicyLabel}" Style="{StaticResource ProductSubtitleStyle}" />
+                                <TextBlock Text="{Binding SelectedDetail.PolicyDisplayTitle}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,14,10">
+                                <TextBlock Text="{StaticResource Ui.Product.History.InsurerLabel}" Style="{StaticResource ProductSubtitleStyle}" />
+                                <TextBlock Text="{Binding SelectedDetail.InsurerDisplayName}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,14,10">
+                                <TextBlock Text="{StaticResource Ui.Product.ClaimSubmission.StatusLabel}" Style="{StaticResource ProductSubtitleStyle}" />
+                                <TextBlock Text="{Binding SelectedDetail.SubmissionStatusDisplay}" FontWeight="SemiBold" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,14,10">
+                                <TextBlock Text="{StaticResource Ui.Product.ClaimSubmission.SubmittedDateLabel}" Style="{StaticResource ProductSubtitleStyle}" />
+                                <TextBlock Text="{Binding SelectedDetail.SubmittedDateDisplay}" FontWeight="SemiBold" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,14,0">
+                                <TextBlock Text="{StaticResource Ui.Product.ClaimSubmission.SubmittedAmountLabel}" Style="{StaticResource ProductSubtitleStyle}" />
+                                <TextBlock Text="{Binding SelectedDetail.SubmittedAmountDisplay}" FontWeight="SemiBold" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,14,0">
+                                <TextBlock Text="{StaticResource Ui.Product.ClaimSubmission.CoverageLabel}" Style="{StaticResource ProductSubtitleStyle}" />
+                                <TextBlock Text="{Binding SelectedDetail.CoverageDisplayName}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,14,0">
+                                <TextBlock Text="{StaticResource Ui.Product.ClaimSubmission.UpdatedAtLabel}" Style="{StaticResource ProductSubtitleStyle}" />
+                                <TextBlock Text="{Binding SelectedDetail.SubmissionUpdatedAtDisplay}" FontWeight="SemiBold" />
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="{StaticResource Ui.Product.ClaimSubmission.MemoLabel}" Style="{StaticResource ProductSubtitleStyle}" />
+                                <TextBlock Text="{Binding SelectedDetail.SubmissionMemo}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </UniformGrid>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource ProductPanelStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="{StaticResource Ui.Product.History.PaymentSectionTitle}"
+                                   Style="{StaticResource ProductSectionTitleStyle}"
+                                   Margin="0,0,0,12" />
+                        <DataGrid Grid.Row="1"
+                                  ItemsSource="{Binding SelectedDetail.Payments}"
+                                  AutoGenerateColumns="False"
+                                  IsReadOnly="True"
+                                  CanUserAddRows="False"
+                                  CanUserDeleteRows="False"
+                                  CanUserResizeRows="False"
+                                  MaxHeight="360"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                  ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                  AutomationProperties.AutomationId="ProductHistoryDetail_Payments">
+                            <DataGrid.Style>
+                                <Style TargetType="DataGrid" BasedOn="{StaticResource {x:Type DataGrid}}">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedDetail.HasPayments}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGrid.Style>
+                            <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow">
+                                    <Setter Property="AutomationProperties.Name" Value="{Binding StatusDisplay}" />
+                                </Style>
+                            </DataGrid.RowStyle>
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="{StaticResource Ui.Product.ClaimPayment.StatusLabel}" Binding="{Binding StatusDisplay}" Width="90" />
+                                <DataGridTextColumn Header="{StaticResource Ui.Product.ClaimPayment.PaidDateLabel}" Binding="{Binding PaidDateDisplay}" Width="105" />
+                                <DataGridTextColumn Header="{StaticResource Ui.Product.ClaimPayment.PaidAmountLabel}" Binding="{Binding PaidAmountDisplay}" Width="105" />
+                                <DataGridTextColumn Header="{StaticResource Ui.Product.ClaimPayment.CoverageLabel}" Binding="{Binding CoverageDisplayName}" Width="*" />
+                                <DataGridTextColumn Header="{StaticResource Ui.Product.ClaimPayment.DenyReasonLabel}" Binding="{Binding DenyReason}" Width="*" />
+                                <DataGridTextColumn Header="{StaticResource Ui.Product.ClaimPayment.ReductionReasonLabel}" Binding="{Binding ReductionReason}" Width="*" />
+                                <DataGridTextColumn Header="{StaticResource Ui.Product.ClaimPayment.UpdatedAtLabel}" Binding="{Binding UpdatedAtDisplay}" Width="135" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <TextBlock Grid.Row="1" Text="{StaticResource Ui.Product.History.NoPaymentsMessage}" Margin="8,8,0,0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedDetail.HasPayments}" Value="False">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+                </Border>
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</UserControl>
