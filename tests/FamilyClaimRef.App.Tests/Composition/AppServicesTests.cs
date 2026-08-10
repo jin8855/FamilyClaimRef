@@ -1,5 +1,6 @@
 using FamilyClaimRef.App.Composition;
 using FamilyClaimRef.App.Services.Runtime;
+using FamilyClaimRef.App.Services.Storage;
 using FamilyClaimRef.App.ViewModels;
 using Xunit;
 
@@ -57,6 +58,30 @@ public sealed class AppServicesTests
         Assert.Same(
             workflowField.GetValue(services.MainWindowViewModel.DocumentRegistration),
             workflowField.GetValue(services.ProductShellViewModel.DocumentRegistration));
+    }
+
+    [Fact]
+    public void Create_reuses_mutation_storages_as_unfiltered_history_readers()
+    {
+        var services = CreateServices();
+        var history = services.ProductShellViewModel.ClaimHistory;
+        var submissionReader = GetPrivateField(
+            history,
+            "submissionHistoryStorageReader");
+        var paymentReader = GetPrivateField(
+            history,
+            "paymentHistoryStorageReader");
+        var submissionStorage = GetPrivateField(
+            services.ProductShellViewModel.ClaimSubmissionManagement,
+            "submissionStorageService");
+        var paymentStorage = GetPrivateField(
+            services.ProductShellViewModel.ClaimSubmissionManagement.PaymentManagement,
+            "storageService");
+
+        Assert.IsAssignableFrom<IClaimSubmissionHistoryStorageReader>(submissionReader);
+        Assert.IsAssignableFrom<IClaimPaymentHistoryStorageReader>(paymentReader);
+        Assert.Same(submissionStorage, submissionReader);
+        Assert.Same(paymentStorage, paymentReader);
     }
 
     [Fact]
@@ -156,6 +181,15 @@ public sealed class AppServicesTests
         }
 
         throw new InvalidOperationException("Project root was not found.");
+    }
+
+    private static object GetPrivateField(object target, string fieldName)
+    {
+        return target.GetType().GetField(
+                fieldName,
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+            ?.GetValue(target)
+            ?? throw new InvalidOperationException($"Field {fieldName} was not found.");
     }
 
     private static AppServices CreateServices()

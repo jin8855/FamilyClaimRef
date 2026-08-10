@@ -221,6 +221,92 @@ public sealed class ClaimHistoryViewModelTests
     }
 
     [Fact]
+    public async Task Orphan_submission_fails_closed_before_projection()
+    {
+        var fixture = new StubFixture();
+        fixture.AddSubmission("submission_orphan", "claim_missing", "policy_1", Timestamp.AddHours(1));
+
+        await AssertFailureAsync(fixture, "reference");
+    }
+
+    [Fact]
+    public async Task Orphan_payment_fails_closed_before_projection()
+    {
+        var fixture = new StubFixture();
+        fixture.AddPayment("payment_orphan", "submission_missing", ClaimPaymentValues.StatusPending);
+
+        await AssertFailureAsync(fixture, "reference");
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Orphan_reload_clears_previous_projection_selection_and_data_filters(
+        bool orphanPayment)
+    {
+        var fixture = new StubFixture();
+        var viewModel = fixture.CreateViewModel();
+        Assert.True(await viewModel.LoadAsync());
+        Assert.True(viewModel.SelectItem(Assert.Single(viewModel.Items)));
+        viewModel.SelectedFamilyFilter = Assert.Single(
+            viewModel.FamilyFilterOptions,
+            option => option.Value is not null);
+        viewModel.SelectedInsurerFilter = Assert.Single(
+            viewModel.InsurerFilterOptions,
+            option => option.Value is not null);
+
+        if (orphanPayment)
+        {
+            fixture.AddPayment("payment_orphan", "submission_missing", ClaimPaymentValues.StatusPending);
+        }
+        else
+        {
+            fixture.AddSubmission("submission_orphan", "claim_missing", "policy_1", Timestamp.AddHours(1));
+        }
+
+        Assert.False(await viewModel.LoadAsync());
+        Assert.Empty(viewModel.Items);
+        Assert.False(viewModel.HasDetail);
+        Assert.Empty(viewModel.FamilyFilterOptions);
+        Assert.Empty(viewModel.InsurerFilterOptions);
+        Assert.Null(viewModel.SelectedFamilyFilter);
+        Assert.Null(viewModel.SelectedInsurerFilter);
+        Assert.Equal("reference", viewModel.StateMessage);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Claim_scope_still_validates_orphans_outside_scope(bool orphanPayment)
+    {
+        var fixture = new StubFixture();
+        fixture.AddFamily("family_2", "Family Two");
+        fixture.AddPolicy("policy_2", "family_2", "Policy Two", "Insurer Two");
+        fixture.AddClaim(
+            "claim_2",
+            "family_2",
+            "Claim Two",
+            new DateOnly(2026, 8, 11),
+            ClaimCaseValues.VisitTypeInpatient,
+            "Diagnosis Two");
+        if (orphanPayment)
+        {
+            fixture.AddPayment("payment_orphan", "submission_missing", ClaimPaymentValues.StatusPending);
+        }
+        else
+        {
+            fixture.AddSubmission("submission_orphan", "claim_missing", "policy_2", Timestamp.AddHours(1));
+        }
+
+        var viewModel = fixture.CreateViewModel();
+        viewModel.SetClaimCaseScope("claim_1", resetFilters: true);
+
+        Assert.False(await viewModel.LoadAsync());
+        Assert.Empty(viewModel.Items);
+        Assert.Equal("reference", viewModel.StateMessage);
+    }
+
+    [Fact]
     public async Task Real_json_history_projection_is_byte_for_byte_read_only()
     {
         var root = Path.Combine(
@@ -544,6 +630,11 @@ public sealed class ClaimHistoryViewModelTests
                 updatedAt));
         }
 
+        public void AddPayment(string id, string submissionId, string status)
+        {
+            Payments.Records.Add(Payment(id, submissionId, status, Timestamp.AddMinutes(3)));
+        }
+
         private static ClaimPaymentRecord Payment(
             string id,
             string submissionId,
@@ -638,9 +729,13 @@ public sealed class ClaimHistoryViewModelTests
         }
     }
 
-    private sealed class StubSubmissionStorage : IClaimSubmissionStorageService
+    private sealed class StubSubmissionStorage : IClaimSubmissionHistoryStorageReader
     {
         public List<ClaimSubmissionRecord> Records { get; } = [];
+
+        public Task<IReadOnlyList<ClaimSubmissionRecord>> GetAllSubmissionsForHistoryAsync(
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<ClaimSubmissionRecord>>(Records.ToArray());
 
         public Task<IReadOnlyList<ClaimSubmissionRecord>> GetByClaimCaseAsync(
             string claimCaseId,
@@ -670,9 +765,13 @@ public sealed class ClaimHistoryViewModelTests
             CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 
-    private sealed class StubPaymentStorage : IClaimPaymentStorageService
+    private sealed class StubPaymentStorage : IClaimPaymentHistoryStorageReader
     {
         public List<ClaimPaymentRecord> Records { get; } = [];
+
+        public Task<IReadOnlyList<ClaimPaymentRecord>> GetAllPaymentsForHistoryAsync(
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<ClaimPaymentRecord>>(Records.ToArray());
 
         public Task<IReadOnlyList<ClaimPaymentRecord>> GetBySubmissionAsync(
             string claimSubmissionId,
