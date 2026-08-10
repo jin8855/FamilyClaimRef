@@ -4,7 +4,9 @@ using FamilyClaimRef.App.Models.Storage;
 
 namespace FamilyClaimRef.App.Services.Storage;
 
-public sealed class JsonClaimSubmissionStorageService : IClaimSubmissionStorageService
+public sealed class JsonClaimSubmissionStorageService :
+    IClaimSubmissionStorageService,
+    IClaimSubmissionHistoryStorageReader
 {
     private const string FileName = "claim-submissions.json";
 
@@ -58,6 +60,12 @@ public sealed class JsonClaimSubmissionStorageService : IClaimSubmissionStorageS
             .OrderByDescending(item => item.UpdatedAt)
             .ThenBy(item => item.Id, StringComparer.Ordinal)
             .ToList();
+    }
+
+    public async Task<IReadOnlyList<ClaimSubmissionRecord>> GetAllSubmissionsForHistoryAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return (await store.LoadAsync(cancellationToken)).Items.ToList();
     }
 
     public async Task<ClaimSubmissionRecord?> GetAsync(

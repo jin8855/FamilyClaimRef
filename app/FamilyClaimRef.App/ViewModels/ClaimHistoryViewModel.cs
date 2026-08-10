@@ -10,8 +10,8 @@ namespace FamilyClaimRef.App.ViewModels;
 public sealed class ClaimHistoryViewModel : INotifyPropertyChanged
 {
     private readonly IClaimHistoryStorageReader historyStorageReader;
-    private readonly IClaimSubmissionStorageService submissionStorageService;
-    private readonly IClaimPaymentStorageService paymentStorageService;
+    private readonly IClaimSubmissionHistoryStorageReader submissionHistoryStorageReader;
+    private readonly IClaimPaymentHistoryStorageReader paymentHistoryStorageReader;
     private readonly IFamilyMemberStorageService familyMemberStorageService;
     private readonly IUiTextProvider uiTextProvider;
     private readonly SemaphoreSlim operationGate = new(1, 1);
@@ -35,17 +35,17 @@ public sealed class ClaimHistoryViewModel : INotifyPropertyChanged
 
     public ClaimHistoryViewModel(
         IClaimHistoryStorageReader historyStorageReader,
-        IClaimSubmissionStorageService submissionStorageService,
-        IClaimPaymentStorageService paymentStorageService,
+        IClaimSubmissionHistoryStorageReader submissionHistoryStorageReader,
+        IClaimPaymentHistoryStorageReader paymentHistoryStorageReader,
         IFamilyMemberStorageService familyMemberStorageService,
         IUiTextProvider uiTextProvider)
     {
         this.historyStorageReader = historyStorageReader
             ?? throw new ArgumentNullException(nameof(historyStorageReader));
-        this.submissionStorageService = submissionStorageService
-            ?? throw new ArgumentNullException(nameof(submissionStorageService));
-        this.paymentStorageService = paymentStorageService
-            ?? throw new ArgumentNullException(nameof(paymentStorageService));
+        this.submissionHistoryStorageReader = submissionHistoryStorageReader
+            ?? throw new ArgumentNullException(nameof(submissionHistoryStorageReader));
+        this.paymentHistoryStorageReader = paymentHistoryStorageReader
+            ?? throw new ArgumentNullException(nameof(paymentHistoryStorageReader));
         this.familyMemberStorageService = familyMemberStorageService
             ?? throw new ArgumentNullException(nameof(familyMemberStorageService));
         this.uiTextProvider = uiTextProvider
@@ -184,6 +184,8 @@ public sealed class ClaimHistoryViewModel : INotifyPropertyChanged
         }
 
         var preservedSelection = selectedSubmissionKey;
+        var preservedFamilyFilterValue = SelectedFamilyFilter?.Value;
+        var preservedInsurerFilterValue = SelectedInsurerFilter?.Value;
         try
         {
             IsBusy = true;
@@ -192,89 +194,56 @@ public sealed class ClaimHistoryViewModel : INotifyPropertyChanged
             var claims = await historyStorageReader.GetAllClaimCasesForHistoryAsync(cancellationToken);
             var policies = await historyStorageReader.GetAllPoliciesForHistoryAsync(cancellationToken);
             var families = await familyMemberStorageService.GetFamilyMembersAsync(cancellationToken);
+            var submissions = await submissionHistoryStorageReader
+                .GetAllSubmissionsForHistoryAsync(cancellationToken);
+            var payments = await paymentHistoryStorageReader
+                .GetAllPaymentsForHistoryAsync(cancellationToken);
+            var claimById = claims.ToDictionary(claim => claim.Id, StringComparer.Ordinal);
             var policyById = policies.ToDictionary(policy => policy.Id, StringComparer.Ordinal);
             var familyById = families.ToDictionary(family => family.Id, StringComparer.Ordinal);
+            var submissionById = submissions.ToDictionary(
+                submission => submission.Id,
+                StringComparer.Ordinal);
+
+            if (!TryValidateGraph(
+                    claims,
+                    policies,
+                    submissions,
+                    payments,
+                    claimById,
+                    policyById,
+                    familyById,
+                    submissionById,
+                    out var validationMessageKey))
+            {
+                return SetFailure(validationMessageKey);
+            }
 
             if (ClaimCaseScopeId is not null
-                && !claims.Any(claim => string.Equals(claim.Id, ClaimCaseScopeId, StringComparison.Ordinal)))
+                && !claimById.ContainsKey(ClaimCaseScopeId))
             {
                 return SetFailure(UiTextKeys.ProductHistoryReferenceMessage);
             }
 
+            var submissionsByClaim = submissions.ToLookup(
+                submission => submission.ClaimCaseId,
+                StringComparer.Ordinal);
+            var paymentsBySubmission = payments.ToLookup(
+                payment => payment.ClaimSubmissionId,
+                StringComparer.Ordinal);
             var projections = new List<ClaimHistoryProjection>();
             foreach (var claim in claims.Where(IsInScope))
             {
-                if (!IsKnownClaimStatus(claim.CaseStatus))
+                var family = familyById[claim.FamilyMemberId!];
+                foreach (var submission in submissionsByClaim[claim.Id])
                 {
-                    return SetFailure(UiTextKeys.ProductHistoryUnknownStatusMessage);
-                }
-
-                if (string.IsNullOrWhiteSpace(claim.FamilyMemberId))
-                {
-                    return SetFailure(UiTextKeys.ProductHistoryLegacyReviewMessage);
-                }
-
-                if (!familyById.TryGetValue(claim.FamilyMemberId, out var family))
-                {
-                    return SetFailure(UiTextKeys.ProductHistoryReferenceMessage);
-                }
-
-                var submissions = await submissionStorageService.GetByClaimCaseAsync(
-                    claim.Id,
-                    cancellationToken);
-                if (submissions.Count > 0
-                    && !string.Equals(claim.CaseStatus, ClaimCaseValues.StatusSaved, StringComparison.Ordinal))
-                {
-                    return SetFailure(UiTextKeys.ProductHistoryReferenceMessage);
-                }
-
-                foreach (var submission in submissions)
-                {
-                    if (!string.Equals(submission.ClaimCaseId, claim.Id, StringComparison.Ordinal)
-                        || string.IsNullOrWhiteSpace(submission.PolicyId))
-                    {
-                        return SetFailure(UiTextKeys.ProductHistoryReferenceMessage);
-                    }
-
-                    if (!ClaimSubmissionValues.Statuses.Contains(submission.Status, StringComparer.Ordinal))
-                    {
-                        return SetFailure(UiTextKeys.ProductHistoryUnknownStatusMessage);
-                    }
-
-                    if (!policyById.TryGetValue(submission.PolicyId, out var policy))
-                    {
-                        return SetFailure(UiTextKeys.ProductHistoryReferenceMessage);
-                    }
-
-                    if (string.IsNullOrWhiteSpace(policy.FamilyMemberId))
-                    {
-                        return SetFailure(UiTextKeys.ProductHistoryLegacyReviewMessage);
-                    }
-
-                    if (!string.Equals(policy.FamilyMemberId, claim.FamilyMemberId, StringComparison.Ordinal))
-                    {
-                        return SetFailure(UiTextKeys.ProductHistoryOwnershipMessage);
-                    }
-
-                    var payments = await paymentStorageService.GetBySubmissionAsync(
-                        submission.Id,
-                        cancellationToken);
-                    if (payments.Any(payment => !string.Equals(
-                        payment.ClaimSubmissionId,
-                        submission.Id,
-                        StringComparison.Ordinal)))
-                    {
-                        return SetFailure(UiTextKeys.ProductHistoryReferenceMessage);
-                    }
-
-                    if (payments.Any(payment => !ClaimPaymentValues.Statuses.Contains(
-                        payment.Status,
-                        StringComparer.Ordinal)))
-                    {
-                        return SetFailure(UiTextKeys.ProductHistoryUnknownStatusMessage);
-                    }
-
-                    projections.Add(CreateProjection(claim, family, policy, submission, payments));
+                    var policy = policyById[submission.PolicyId];
+                    projections.Add(CreateProjection(
+                        claim,
+                        family,
+                        policy,
+                        submission,
+                        paymentsBySubmission[submission.Id].ToArray()));
                 }
             }
 
@@ -283,7 +252,7 @@ public sealed class ClaimHistoryViewModel : INotifyPropertyChanged
                 .ThenByDescending(projection => projection.SubmissionUpdatedAt)
                 .ThenBy(projection => projection.SubmissionKey, StringComparer.Ordinal)
                 .ToArray();
-            CreateFilterOptions();
+            CreateFilterOptions(preservedFamilyFilterValue, preservedInsurerFilterValue);
             hasLoadedProjection = true;
             ApplyFiltersCore(preservedSelection);
             return true;
@@ -304,6 +273,7 @@ public sealed class ClaimHistoryViewModel : INotifyPropertyChanged
             operationGate.Release();
         }
     }
+
     public bool ApplyFilters()
     {
         if (!hasLoadedProjection)
@@ -485,11 +455,11 @@ public sealed class ClaimHistoryViewModel : INotifyPropertyChanged
             detail);
     }
 
-    private void CreateFilterOptions()
+    private void CreateFilterOptions(
+        string? selectedFamilyValue,
+        string? selectedInsurerValue)
     {
         var allLabel = uiTextProvider.Get(UiTextKeys.ProductHistoryAllOption);
-        var selectedFamilyValue = SelectedFamilyFilter?.Value;
-        var selectedInsurerValue = SelectedInsurerFilter?.Value;
         FamilyFilterOptions = new[] { new ClaimHistoryFilterOptionViewModel(null, allLabel) }
             .Concat(allProjections
                 .GroupBy(projection => projection.FamilyId, StringComparer.Ordinal)
@@ -522,6 +492,103 @@ public sealed class ClaimHistoryViewModel : INotifyPropertyChanged
     {
         return ClaimCaseScopeId is null
             || string.Equals(claim.Id, ClaimCaseScopeId, StringComparison.Ordinal);
+    }
+
+    private static bool TryValidateGraph(
+        IReadOnlyList<ClaimRecord> claims,
+        IReadOnlyList<PolicyRecord> policies,
+        IReadOnlyList<ClaimSubmissionRecord> submissions,
+        IReadOnlyList<ClaimPaymentRecord> payments,
+        IReadOnlyDictionary<string, ClaimRecord> claimById,
+        IReadOnlyDictionary<string, PolicyRecord> policyById,
+        IReadOnlyDictionary<string, FamilyMemberRecord> familyById,
+        IReadOnlyDictionary<string, ClaimSubmissionRecord> submissionById,
+        out string messageKey)
+    {
+        foreach (var claim in claims)
+        {
+            if (!IsKnownClaimStatus(claim.CaseStatus))
+            {
+                messageKey = UiTextKeys.ProductHistoryUnknownStatusMessage;
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(claim.FamilyMemberId))
+            {
+                messageKey = UiTextKeys.ProductHistoryLegacyReviewMessage;
+                return false;
+            }
+
+            if (!familyById.ContainsKey(claim.FamilyMemberId))
+            {
+                messageKey = UiTextKeys.ProductHistoryReferenceMessage;
+                return false;
+            }
+        }
+
+        foreach (var policy in policies)
+        {
+            if (string.IsNullOrWhiteSpace(policy.FamilyMemberId))
+            {
+                messageKey = UiTextKeys.ProductHistoryLegacyReviewMessage;
+                return false;
+            }
+        }
+
+        foreach (var submission in submissions)
+        {
+            if (!claimById.TryGetValue(submission.ClaimCaseId, out var claim)
+                || !policyById.TryGetValue(submission.PolicyId, out var policy))
+            {
+                messageKey = UiTextKeys.ProductHistoryReferenceMessage;
+                return false;
+            }
+
+            if (!ClaimSubmissionValues.Statuses.Contains(submission.Status, StringComparer.Ordinal))
+            {
+                messageKey = UiTextKeys.ProductHistoryUnknownStatusMessage;
+                return false;
+            }
+
+            if (!string.Equals(claim.CaseStatus, ClaimCaseValues.StatusSaved, StringComparison.Ordinal))
+            {
+                messageKey = UiTextKeys.ProductHistoryReferenceMessage;
+                return false;
+            }
+
+            if (!string.Equals(claim.FamilyMemberId, policy.FamilyMemberId, StringComparison.Ordinal))
+            {
+                messageKey = UiTextKeys.ProductHistoryOwnershipMessage;
+                return false;
+            }
+        }
+
+        foreach (var policy in policies)
+        {
+            if (!familyById.ContainsKey(policy.FamilyMemberId!))
+            {
+                messageKey = UiTextKeys.ProductHistoryReferenceMessage;
+                return false;
+            }
+        }
+
+        foreach (var payment in payments)
+        {
+            if (!submissionById.ContainsKey(payment.ClaimSubmissionId))
+            {
+                messageKey = UiTextKeys.ProductHistoryReferenceMessage;
+                return false;
+            }
+
+            if (!ClaimPaymentValues.Statuses.Contains(payment.Status, StringComparer.Ordinal))
+            {
+                messageKey = UiTextKeys.ProductHistoryUnknownStatusMessage;
+                return false;
+            }
+        }
+
+        messageKey = string.Empty;
+        return true;
     }
 
     private static bool IsKnownClaimStatus(string? status)
@@ -629,6 +696,8 @@ public sealed class ClaimHistoryViewModel : INotifyPropertyChanged
         Items = [];
         FamilyFilterOptions = [];
         InsurerFilterOptions = [];
+        SelectedFamilyFilter = null;
+        SelectedInsurerFilter = null;
         selectedSubmissionKey = null;
         SelectedDetail = null;
         StateMessage = null;

@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Nodes;
 using FamilyClaimRef.App.Models.Storage;
 using FamilyClaimRef.App.Services.Storage;
 using Xunit;
@@ -392,6 +393,40 @@ public sealed class ClaimSubmissionStorageServiceTests
             Assert.Single(results, result => result.Exception is ClaimSubmissionConcurrencyException);
             Assert.Equal(2, (await fixture.Submissions.GetAsync(created.Id))!.Revision);
             Assert.Empty(Directory.GetFiles(fixture.RootPath, "claim-submissions.json.*.tmp"));
+        });
+    }
+
+    [Fact]
+    public async Task History_reader_returns_all_raw_submissions_without_modifying_file()
+    {
+        await UsingFixtureAsync(async fixture =>
+        {
+            var family = await fixture.CreateFamilyAsync();
+            var policy = await fixture.CreatePolicyAsync(family.Id);
+            var claim = await fixture.CreateSavedClaimAsync(family.Id);
+            _ = await fixture.Submissions.CreateAsync(CreateDraft(claim.Id, policy.Id));
+            var envelope = JsonNode.Parse(await File.ReadAllTextAsync(fixture.SubmissionPath))!
+                .AsObject();
+            var items = envelope["items"]!.AsArray();
+            var orphan = items[0]!.DeepClone().AsObject();
+            orphan["id"] = "submission_orphan";
+            orphan["claimCaseId"] = "claim_missing";
+            orphan["status"] = "unexpected_submission_status";
+            items.Add(orphan);
+            await File.WriteAllTextAsync(
+                fixture.SubmissionPath,
+                envelope.ToJsonString(),
+                new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+            var before = await File.ReadAllBytesAsync(fixture.SubmissionPath);
+
+            var records = await ((IClaimSubmissionHistoryStorageReader)fixture.Submissions)
+                .GetAllSubmissionsForHistoryAsync();
+
+            Assert.Equal(2, records.Count);
+            Assert.Contains(records, record => record.Id == "submission_orphan"
+                && record.ClaimCaseId == "claim_missing"
+                && record.Status == "unexpected_submission_status");
+            Assert.Equal(before, await File.ReadAllBytesAsync(fixture.SubmissionPath));
         });
     }
 

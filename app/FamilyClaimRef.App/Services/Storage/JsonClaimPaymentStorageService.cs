@@ -4,7 +4,9 @@ using FamilyClaimRef.App.Models.Storage;
 
 namespace FamilyClaimRef.App.Services.Storage;
 
-public sealed class JsonClaimPaymentStorageService : IClaimPaymentStorageService
+public sealed class JsonClaimPaymentStorageService :
+    IClaimPaymentStorageService,
+    IClaimPaymentHistoryStorageReader
 {
     private const string FileName = "claim-payments.json";
 
@@ -60,6 +62,12 @@ public sealed class JsonClaimPaymentStorageService : IClaimPaymentStorageService
             .OrderByDescending(item => item.UpdatedAt)
             .ThenBy(item => item.Id, StringComparer.Ordinal)
             .ToList();
+    }
+
+    public async Task<IReadOnlyList<ClaimPaymentRecord>> GetAllPaymentsForHistoryAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return (await store.LoadAsync(cancellationToken)).Items.ToList();
     }
 
     public async Task<ClaimPaymentRecord?> GetAsync(

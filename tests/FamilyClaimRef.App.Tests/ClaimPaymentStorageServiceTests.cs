@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Nodes;
 using FamilyClaimRef.App.Models.Storage;
 using FamilyClaimRef.App.Services.Storage;
 using Xunit;
@@ -394,6 +395,38 @@ public sealed class ClaimPaymentStorageServiceTests
             Assert.IsType<ClaimPaymentLegacyReviewRequiredException>(exception);
             Assert.False(File.Exists(fixture.PaymentPath));
             Assert.Empty(fixture.PaymentTempFiles());
+        });
+    }
+
+    [Fact]
+    public async Task History_reader_returns_all_raw_payments_without_modifying_file()
+    {
+        await UsingFixtureAsync(async fixture =>
+        {
+            var submission = await fixture.CreateSubmissionAsync(ClaimSubmissionValues.StatusSubmitted);
+            _ = await fixture.Payments.CreateAsync(PendingDraft(submission.Id));
+            var envelope = JsonNode.Parse(await File.ReadAllTextAsync(fixture.PaymentPath))!
+                .AsObject();
+            var items = envelope["items"]!.AsArray();
+            var orphan = items[0]!.DeepClone().AsObject();
+            orphan["id"] = "payment_orphan";
+            orphan["claimSubmissionId"] = "submission_missing";
+            orphan["status"] = "unexpected_payment_status";
+            items.Add(orphan);
+            await File.WriteAllTextAsync(
+                fixture.PaymentPath,
+                envelope.ToJsonString(),
+                new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+            var before = await File.ReadAllBytesAsync(fixture.PaymentPath);
+
+            var records = await ((IClaimPaymentHistoryStorageReader)fixture.Payments)
+                .GetAllPaymentsForHistoryAsync();
+
+            Assert.Equal(2, records.Count);
+            Assert.Contains(records, record => record.Id == "payment_orphan"
+                && record.ClaimSubmissionId == "submission_missing"
+                && record.Status == "unexpected_payment_status");
+            Assert.Equal(before, await File.ReadAllBytesAsync(fixture.PaymentPath));
         });
     }
 

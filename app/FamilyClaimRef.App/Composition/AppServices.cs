@@ -66,12 +66,16 @@ public sealed class AppServices
                 claimCaseStorageService,
                 policyClaimStorageService,
                 documentStorageService);
+        var claimSubmissionHistoryStorageReader =
+            (IClaimSubmissionHistoryStorageReader)claimSubmissionStorageService;
         IClaimPaymentStorageService claimPaymentStorageService =
             new JsonClaimPaymentStorageService(
                 metadataRootPath,
                 claimSubmissionStorageService,
                 claimCaseStorageService,
                 policyClaimStorageService);
+        var claimPaymentHistoryStorageReader =
+            (IClaimPaymentHistoryStorageReader)claimPaymentStorageService;
         IFileAttachmentService fileAttachmentService = new LocalFileAttachmentService(attachmentRootPath);
         var fileValidationService = new DocumentFileValidationService();
         var attachmentCoordinator = new DocumentAttachmentCoordinator(
@@ -143,8 +147,8 @@ public sealed class AppServices
             uiTextProvider);
         var claimHistoryViewModel = new ClaimHistoryViewModel(
             claimHistoryStorageReader,
-            claimSubmissionStorageService,
-            claimPaymentStorageService,
+            claimSubmissionHistoryStorageReader,
+            claimPaymentHistoryStorageReader,
             familyMemberStorageService,
             uiTextProvider);
         var productShellViewModel = new ProductShellViewModel(
