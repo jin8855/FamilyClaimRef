@@ -25,7 +25,8 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
         CategoryManagementViewModel categoryManagement,
         ClaimSubmissionManagementViewModel claimSubmissionManagement,
         ClaimCompleteSummaryViewModel claimCompleteSummary,
-        ClaimHistoryViewModel claimHistory)
+        ClaimHistoryViewModel claimHistory,
+        HomeDashboardViewModel homeDashboard)
     {
         ArgumentNullException.ThrowIfNull(uiTextProvider);
         ArgumentNullException.ThrowIfNull(documentRegistration);
@@ -36,6 +37,7 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
         ArgumentNullException.ThrowIfNull(claimSubmissionManagement);
         ArgumentNullException.ThrowIfNull(claimCompleteSummary);
         ArgumentNullException.ThrowIfNull(claimHistory);
+        ArgumentNullException.ThrowIfNull(homeDashboard);
 
         ShellTitle = uiTextProvider.Get(UiTextKeys.ProductShellTitle);
         emptyDisplayValue = uiTextProvider.Get(ProductScreenTextKeys.EmptyValue);
@@ -50,6 +52,7 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
         ClaimSubmissionManagement = claimSubmissionManagement;
         ClaimCompleteSummary = claimCompleteSummary;
         ClaimHistory = claimHistory;
+        HomeDashboard = homeDashboard;
         NavigationItems = Array.AsReadOnly(
         [
             new ProductNavigationItemViewModel(
@@ -100,6 +103,8 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
     public ClaimCompleteSummaryViewModel ClaimCompleteSummary { get; }
 
     public ClaimHistoryViewModel ClaimHistory { get; }
+
+    public HomeDashboardViewModel HomeDashboard { get; }
 
     public ReadOnlyCollection<ProductNavigationItemViewModel> NavigationItems { get; }
 

@@ -4,6 +4,7 @@
              xmlns:viewModels="clr-namespace:FamilyClaimRef.App.ViewModels"
              Loaded="UserControl_Loaded">
     <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled"
                   AutomationProperties.AutomationId="ProductScreen_01">
         <Grid MaxWidth="1420"
               Margin="28,24,28,36"
@@ -12,18 +13,40 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <StackPanel Margin="0,0,0,20">
-                <TextBlock Text="{Binding CurrentScreen.Breadcrumb}"
-                           Style="{StaticResource ProductSubtitleStyle}"
-                           Margin="0,0,0,8" />
-                <TextBlock Text="{Binding CurrentScreen.Title}"
-                           Style="{StaticResource ProductPageTitleStyle}" />
-                <TextBlock Text="{Binding CurrentScreen.Subtitle}"
-                           Style="{StaticResource ProductSubtitleStyle}"
-                           Margin="0,6,0,0" />
-            </StackPanel>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Margin="0,0,18,20">
+                    <TextBlock Text="{Binding CurrentScreen.Breadcrumb}"
+                               Style="{StaticResource ProductSubtitleStyle}"
+                               Margin="0,0,0,8" />
+                    <TextBlock Text="{Binding CurrentScreen.Title}"
+                               Style="{StaticResource ProductPageTitleStyle}" />
+                    <TextBlock Text="{Binding CurrentScreen.Subtitle}"
+                               Style="{StaticResource ProductSubtitleStyle}"
+                               Margin="0,6,0,0" />
+                </StackPanel>
+                <Button Grid.Column="1"
+                        Content="{StaticResource Ui.Product.History.ApplyFilterAction}"
+                        Click="Refresh_Click"
+                        VerticalAlignment="Top"
+                        AutomationProperties.AutomationId="ProductHomeDashboard_Refresh">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource ProductSecondaryButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HomeDashboard.IsBusy}" Value="True">
+                                    <Setter Property="IsEnabled" Value="False" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </Grid>
 
             <UniformGrid Grid.Row="1"
                          Columns="4"
@@ -58,73 +81,170 @@
                 </Button>
             </UniformGrid>
 
-            <Border Grid.Row="2"
+            <UniformGrid Grid.Row="2"
+                         Columns="3"
+                         Margin="0,0,0,14">
+                <Border Style="{StaticResource ProductPanelStyle}"
+                        MinHeight="104"
+                        Margin="0,0,10,0">
+                    <StackPanel>
+                        <TextBlock Text="{StaticResource Ui.Product.Wireframe.Home.ActiveClaims}"
+                                   Style="{StaticResource ProductSubtitleStyle}"
+                                   TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding HomeDashboard.InProgressClaimCount}"
+                                   Margin="0,8,0,0"
+                                   FontSize="28"
+                                   FontWeight="SemiBold"
+                                   AutomationProperties.AutomationId="ProductHomeDashboard_InProgressCount" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource ProductPanelStyle}"
+                        MinHeight="104"
+                        Margin="0,0,10,0">
+                    <StackPanel>
+                        <TextBlock Text="{StaticResource Ui.Product.ClaimSubmission.EmptyMessage}"
+                                   Style="{StaticResource ProductSubtitleStyle}"
+                                   TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding HomeDashboard.NoSubmissionClaimCount}"
+                                   Margin="0,8,0,0"
+                                   FontSize="28"
+                                   FontWeight="SemiBold"
+                                   AutomationProperties.AutomationId="ProductHomeDashboard_NoSubmissionCount" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource ProductPanelStyle}"
+                        MinHeight="104">
+                    <StackPanel>
+                        <WrapPanel>
+                            <TextBlock Text="{StaticResource Ui.Product.ClaimPayment.SectionTitle}"
+                                       Style="{StaticResource ProductSubtitleStyle}" />
+                            <TextBlock Text="{StaticResource Ui.Product.InsurancePolicy.ReviewRequiredHeader}"
+                                       Style="{StaticResource ProductSubtitleStyle}"
+                                       Margin="4,0,0,0" />
+                        </WrapPanel>
+                        <TextBlock Text="{Binding HomeDashboard.PaymentResultPendingCount}"
+                                   Margin="0,8,0,0"
+                                   FontSize="28"
+                                   FontWeight="SemiBold"
+                                   AutomationProperties.AutomationId="ProductHomeDashboard_PaymentPendingCount" />
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <Border Grid.Row="3"
                     Style="{StaticResource ProductPanelStyle}">
                 <StackPanel>
-                    <TextBlock Text="{StaticResource Ui.Product.Wireframe.Home.ProgressTitle}"
-                               Style="{StaticResource ProductSectionTitleStyle}"
-                               Margin="0,0,0,14" />
-                    <StackPanel>
-                        <Border BorderBrush="{StaticResource ProductBorderBrush}"
-                                BorderThickness="1"
-                                CornerRadius="4"
-                                Padding="14,10"
-                                Margin="0,0,0,8">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="{StaticResource Ui.Product.Wireframe.Home.ActiveClaims}"
-                                           VerticalAlignment="Center" />
-                                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                    <TextBlock Text="{Binding PolicyClaimManagement.AvailableClaims.Count}"
-                                               FontWeight="SemiBold" />
-                                    <TextBlock Text="{StaticResource Ui.Product.Wireframe.Common.CountSuffix}"
-                                               Margin="4,0,0,0" />
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-                        <Border BorderBrush="{StaticResource ProductBorderBrush}"
-                                BorderThickness="1"
-                                CornerRadius="4"
-                                Padding="14,10"
-                                Margin="0,0,0,8">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="{StaticResource Ui.Product.Wireframe.Home.RegisteredDocuments}"
-                                           VerticalAlignment="Center" />
-                                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                    <TextBlock Text="{Binding DocumentList.Items.Count}"
-                                               FontWeight="SemiBold" />
-                                    <TextBlock Text="{StaticResource Ui.Product.Wireframe.Common.CountSuffix}"
-                                               Margin="4,0,0,0" />
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-                        <Border BorderBrush="{StaticResource ProductBorderBrush}"
-                                BorderThickness="1"
-                                CornerRadius="4"
-                                Padding="14,10">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="{StaticResource Ui.Product.Wireframe.Home.OcrPending}"
-                                           VerticalAlignment="Center" />
-                                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                    <TextBlock Text="0"
-                                               FontWeight="SemiBold" />
-                                    <TextBlock Text="{StaticResource Ui.Product.Wireframe.Common.CountSuffix}"
-                                               Margin="4,0,0,0" />
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-                    </StackPanel>
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{StaticResource Ui.Product.History.ListSectionTitle}"
+                                   Style="{StaticResource ProductSectionTitleStyle}" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <TextBlock Text="{Binding HomeDashboard.RecentActivities.Count}"
+                                       FontWeight="SemiBold" />
+                            <TextBlock Text="{StaticResource Ui.Product.Wireframe.Common.CountSuffix}"
+                                       Margin="4,0,0,0" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Border>
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HomeDashboard.HasStateMessage}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <TextBlock Text="{Binding HomeDashboard.StateMessage}"
+                                   AutomationProperties.AutomationId="ProductHomeDashboard_StateMessage"
+                                   TextWrapping="Wrap"
+                                   Margin="0,2,0,10" />
+                    </Border>
+
+                    <ItemsControl ItemsSource="{Binding HomeDashboard.RecentActivities}"
+                                  AutomationProperties.AutomationId="ProductHomeDashboard_RecentActivities">
+                        <ItemsControl.Style>
+                            <Style TargetType="ItemsControl">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HomeDashboard.HasRecentActivities}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ItemsControl.Style>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="{StaticResource ProductBorderBrush}"
+                                        BorderThickness="0,1,0,0"
+                                        Padding="0,10">
+                                    <WrapPanel>
+                                        <StackPanel Width="120" Margin="0,0,12,6">
+                                            <TextBlock Text="{StaticResource Ui.Product.ClaimComplete.FamilyLabel}"
+                                                       Style="{StaticResource ProductSubtitleStyle}" />
+                                            <TextBlock Text="{Binding FamilyDisplayName}"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       ToolTip="{Binding FamilyDisplayName}" />
+                                        </StackPanel>
+                                        <StackPanel Width="95" Margin="0,0,12,6">
+                                            <TextBlock Text="{StaticResource Ui.Product.ClaimComplete.TreatmentDateLabel}"
+                                                       Style="{StaticResource ProductSubtitleStyle}" />
+                                            <TextBlock Text="{Binding TreatmentDateDisplay}" />
+                                        </StackPanel>
+                                        <StackPanel Width="150" Margin="0,0,12,6">
+                                            <TextBlock Text="{StaticResource Ui.Product.ClaimComplete.HospitalLabel}"
+                                                       Style="{StaticResource ProductSubtitleStyle}" />
+                                            <TextBlock Text="{Binding HospitalName}"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       ToolTip="{Binding HospitalName}" />
+                                        </StackPanel>
+                                        <StackPanel Width="140" Margin="0,0,12,6">
+                                            <TextBlock Text="{StaticResource Ui.Product.History.InsurerLabel}"
+                                                       Style="{StaticResource ProductSubtitleStyle}" />
+                                            <TextBlock Text="{Binding InsurerDisplayName}"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       ToolTip="{Binding InsurerDisplayName}" />
+                                        </StackPanel>
+                                        <StackPanel Width="170" Margin="0,0,12,6">
+                                            <TextBlock Text="{StaticResource Ui.Product.ClaimComplete.PolicyLabel}"
+                                                       Style="{StaticResource ProductSubtitleStyle}" />
+                                            <TextBlock Text="{Binding PolicyDisplayTitle}"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       ToolTip="{Binding PolicyDisplayTitle}" />
+                                        </StackPanel>
+                                        <StackPanel Width="125" Margin="0,0,12,6">
+                                            <TextBlock Text="{StaticResource Ui.Product.ClaimComplete.SubmissionStatusLabel}"
+                                                       Style="{StaticResource ProductSubtitleStyle}" />
+                                            <TextBlock Text="{Binding SubmissionStatusDisplay}"
+                                                       TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                        <StackPanel Width="300" Margin="0,0,12,6">
+                                            <TextBlock Text="{StaticResource Ui.Product.ClaimComplete.PaymentSummaryLabel}"
+                                                       Style="{StaticResource ProductSubtitleStyle}" />
+                                            <TextBlock Text="{Binding PaymentSummaryDisplay}"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       ToolTip="{Binding PaymentSummaryDisplay}" />
+                                        </StackPanel>
+                                        <StackPanel Width="145" Margin="0,0,12,6">
+                                            <TextBlock Text="{StaticResource Ui.Product.ClaimComplete.UpdatedAtLabel}"
+                                                       Style="{StaticResource ProductSubtitleStyle}" />
+                                            <TextBlock Text="{Binding UpdatedAtDisplay}" />
+                                        </StackPanel>
+                                        <StackPanel Width="80" Margin="0,0,0,6">
+                                            <TextBlock Text="{StaticResource Ui.Product.History.ParentStateLabel}"
+                                                       Style="{StaticResource ProductSubtitleStyle}" />
+                                            <TextBlock Text="{Binding ParentStateDisplay}" />
+                                        </StackPanel>
+                                    </WrapPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </StackPanel>
             </Border>
         </Grid>

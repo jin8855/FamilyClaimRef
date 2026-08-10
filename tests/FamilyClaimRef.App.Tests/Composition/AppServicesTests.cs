@@ -47,6 +47,7 @@ public sealed class AppServicesTests
         Assert.NotNull(services.ProductShellViewModel.ClaimSubmissionManagement.PaymentManagement);
         Assert.NotNull(services.ProductShellViewModel.ClaimCompleteSummary);
         Assert.NotNull(services.ProductShellViewModel.ClaimHistory);
+        Assert.NotNull(services.ProductShellViewModel.HomeDashboard);
         Assert.NotSame(
             services.MainWindowViewModel.PolicyClaimManagement,
             services.ProductShellViewModel.PolicyClaimManagement);
@@ -85,6 +86,27 @@ public sealed class AppServicesTests
     }
 
     [Fact]
+    public void Create_reuses_the_same_unfiltered_readers_for_home_dashboard()
+    {
+        var services = CreateServices();
+        var history = services.ProductShellViewModel.ClaimHistory;
+        var dashboard = services.ProductShellViewModel.HomeDashboard;
+
+        Assert.Same(
+            GetPrivateField(history, "historyStorageReader"),
+            GetPrivateField(dashboard, "historyStorageReader"));
+        Assert.Same(
+            GetPrivateField(history, "submissionHistoryStorageReader"),
+            GetPrivateField(dashboard, "submissionHistoryStorageReader"));
+        Assert.Same(
+            GetPrivateField(history, "paymentHistoryStorageReader"),
+            GetPrivateField(dashboard, "paymentHistoryStorageReader"));
+        Assert.Same(
+            GetPrivateField(history, "familyMemberStorageService"),
+            GetPrivateField(dashboard, "familyMemberStorageService"));
+    }
+
+    [Fact]
     public void Create_uses_separate_view_model_graphs_for_separate_calls()
     {
         var first = CreateServices();
@@ -117,6 +139,9 @@ public sealed class AppServicesTests
         Assert.NotSame(
             first.ProductShellViewModel.ClaimHistory,
             second.ProductShellViewModel.ClaimHistory);
+        Assert.NotSame(
+            first.ProductShellViewModel.HomeDashboard,
+            second.ProductShellViewModel.HomeDashboard);
     }
 
     [Fact]
