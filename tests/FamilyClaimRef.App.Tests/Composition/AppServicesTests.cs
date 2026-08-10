@@ -44,6 +44,7 @@ public sealed class AppServicesTests
         Assert.NotNull(services.ProductShellViewModel.CategoryManagement);
         Assert.NotNull(services.ProductShellViewModel.ClaimSubmissionManagement);
         Assert.NotNull(services.ProductShellViewModel.ClaimSubmissionManagement.PaymentManagement);
+        Assert.NotNull(services.ProductShellViewModel.ClaimCompleteSummary);
         Assert.NotSame(
             services.MainWindowViewModel.PolicyClaimManagement,
             services.ProductShellViewModel.PolicyClaimManagement);
@@ -84,6 +85,9 @@ public sealed class AppServicesTests
         Assert.NotSame(
             first.ProductShellViewModel.ClaimSubmissionManagement.PaymentManagement,
             second.ProductShellViewModel.ClaimSubmissionManagement.PaymentManagement);
+        Assert.NotSame(
+            first.ProductShellViewModel.ClaimCompleteSummary,
+            second.ProductShellViewModel.ClaimCompleteSummary);
     }
 
     [Fact]

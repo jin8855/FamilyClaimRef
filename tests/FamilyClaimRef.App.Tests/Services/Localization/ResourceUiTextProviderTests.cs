@@ -21,9 +21,9 @@ public sealed class ResourceUiTextProviderTests
     {
         var resources = LoadUiStrings();
 
-        Assert.Equal(306, resources.Count);
-        Assert.Equal(249, resources.Keys.Count(IsProductKey));
-        Assert.Equal(249, ExpectedProductResources.Count);
+        Assert.Equal(340, resources.Count);
+        Assert.Equal(283, resources.Keys.Count(IsProductKey));
+        Assert.Equal(283, ExpectedProductResources.Count);
         Assert.All(
             ExpectedProductResources,
             expected => Assert.Equal(expected.Value, resources[expected.Key]));
@@ -36,11 +36,11 @@ public sealed class ResourceUiTextProviderTests
         var resourceKeys = resourceEntries.Select(entry => entry.Key).ToArray();
         var constantValues = LoadUiTextKeyConstants();
 
-        Assert.Equal(306, resourceEntries.Count);
+        Assert.Equal(340, resourceEntries.Count);
         Assert.Equal(resourceKeys.Length, resourceKeys.Distinct(StringComparer.Ordinal).Count());
-        Assert.Equal(306, constantValues.Count);
+        Assert.Equal(340, constantValues.Count);
         Assert.Equal(constantValues.Count, constantValues.Distinct(StringComparer.Ordinal).Count());
-        Assert.Equal(249, constantValues.Count(IsProductKey));
+        Assert.Equal(283, constantValues.Count(IsProductKey));
         Assert.Equal(
             resourceKeys.OrderBy(key => key, StringComparer.Ordinal),
             constantValues.OrderBy(key => key, StringComparer.Ordinal));
@@ -745,7 +745,47 @@ public sealed class ResourceUiTextProviderTests
             [UiTextKeys.ProductClaimPaymentStatusPaid] = "지급",
             [UiTextKeys.ProductClaimPaymentStatusPartiallyPaid] = "부분 지급",
             [UiTextKeys.ProductClaimPaymentStatusDenied] = "부지급",
-            [UiTextKeys.ProductClaimPaymentStatusCancelled] = "취소"
+            [UiTextKeys.ProductClaimPaymentStatusCancelled] = "취소",
+            [UiTextKeys.ProductClaimCompleteGuidance] =
+                "선택한 청구 건의 보험사별 청구 진행과 지급 결과를 읽기 전용으로 확인합니다.",
+            [UiTextKeys.ProductClaimCompleteBackToSubmissionAction] = "청구 진행으로 돌아가기",
+            [UiTextKeys.ProductClaimCompleteClaimInfoSectionTitle] = "청구 건 기본 정보",
+            [UiTextKeys.ProductClaimCompleteFamilyLabel] = "가족",
+            [UiTextKeys.ProductClaimCompleteTreatmentDateLabel] = "진료일",
+            [UiTextKeys.ProductClaimCompleteHospitalLabel] = "병원명",
+            [UiTextKeys.ProductClaimCompleteDiagnosisLabel] = "진단",
+            [UiTextKeys.ProductClaimCompleteVisitTypeLabel] = "진료 구분",
+            [UiTextKeys.ProductClaimCompleteCaseStatusLabel] = "청구 건 상태",
+            [UiTextKeys.ProductClaimCompleteCaseStatusSaved] = "저장됨",
+            [UiTextKeys.ProductClaimCompleteSubmissionCountsSectionTitle] = "보험사 청구 현황",
+            [UiTextKeys.ProductClaimCompleteSubmissionTotalLabel] = "전체",
+            [UiTextKeys.ProductClaimCompleteSubmissionInProgressLabel] = "진행 중",
+            [UiTextKeys.ProductClaimCompleteSubmissionCompletedLabel] = "처리 완료",
+            [UiTextKeys.ProductClaimCompleteSubmissionCancelledLabel] = "취소",
+            [UiTextKeys.ProductClaimCompletePaymentCountsSectionTitle] = "지급 결과 현황",
+            [UiTextKeys.ProductClaimCompletePaymentPendingLabel] = "대기",
+            [UiTextKeys.ProductClaimCompletePaymentPaidLabel] = "지급",
+            [UiTextKeys.ProductClaimCompletePaymentPartiallyPaidLabel] = "부분 지급",
+            [UiTextKeys.ProductClaimCompletePaymentDeniedLabel] = "부지급",
+            [UiTextKeys.ProductClaimCompletePaymentCancelledLabel] = "취소",
+            [UiTextKeys.ProductClaimCompleteSubmissionListTitle] = "보험사별 처리 요약",
+            [UiTextKeys.ProductClaimCompletePolicyLabel] = "보험 계약",
+            [UiTextKeys.ProductClaimCompleteSubmissionStatusLabel] = "청구 상태",
+            [UiTextKeys.ProductClaimCompletePaymentSummaryLabel] = "지급 결과 요약",
+            [UiTextKeys.ProductClaimCompleteUpdatedAtLabel] = "최근 변경",
+            [UiTextKeys.ProductClaimCompleteSubmissionEmptyMessage] =
+                "이 청구 건에 등록된 보험사 청구 기록이 없습니다.",
+            [UiTextKeys.ProductClaimCompleteEmptyMessage] = "요약할 청구 건을 선택해 주세요.",
+            [UiTextKeys.ProductClaimCompleteReferenceMessage] =
+                "청구 건, 보험 계약 또는 지급 결과의 연결 상태를 확인해 주세요.",
+            [UiTextKeys.ProductClaimCompleteLegacyReviewMessage] =
+                "기존 청구 건 또는 보험 계약의 가족 연결을 확인할 수 없어 요약을 표시할 수 없습니다.",
+            [UiTextKeys.ProductClaimCompleteLoadFailedMessage] =
+                "청구 처리 요약을 불러오지 못했습니다. 다시 시도해 주세요.",
+            [UiTextKeys.ProductClaimCompleteNoPaymentsValue] = "지급 결과 없음",
+            [UiTextKeys.ProductClaimCompleteNotEnteredValue] = "미입력",
+            [UiTextKeys.ProductClaimCompletePaymentSummaryFormat] =
+                "대기 {0} · 지급 {1} · 부분 지급 {2} · 부지급 {3} · 취소 {4}"
         };
 
     private const string ExistingResourceFingerprint =

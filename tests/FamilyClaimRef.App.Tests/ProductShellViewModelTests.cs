@@ -26,7 +26,8 @@ public sealed class ProductShellViewModelTests
                 policyClaimManagement,
                 familyMemberManagement,
                 CreateCategoryManagementViewModel(uiTextProvider),
-                CreateClaimSubmissionManagementViewModel(uiTextProvider)));
+                CreateClaimSubmissionManagementViewModel(uiTextProvider),
+                CreateClaimCompleteSummaryViewModel(uiTextProvider)));
 
         Assert.IsType<ArgumentNullException>(exception);
     }
@@ -43,7 +44,8 @@ public sealed class ProductShellViewModelTests
                 CreatePolicyClaimManagementViewModel(uiTextProvider),
                 CreateFamilyMemberManagementViewModel(uiTextProvider),
                 CreateCategoryManagementViewModel(uiTextProvider),
-                CreateClaimSubmissionManagementViewModel(uiTextProvider)));
+                CreateClaimSubmissionManagementViewModel(uiTextProvider),
+                CreateClaimCompleteSummaryViewModel(uiTextProvider)));
 
         Assert.IsType<ArgumentNullException>(exception);
     }
@@ -60,7 +62,8 @@ public sealed class ProductShellViewModelTests
                 CreatePolicyClaimManagementViewModel(uiTextProvider),
                 CreateFamilyMemberManagementViewModel(uiTextProvider),
                 CreateCategoryManagementViewModel(uiTextProvider),
-                CreateClaimSubmissionManagementViewModel(uiTextProvider)));
+                CreateClaimSubmissionManagementViewModel(uiTextProvider),
+                CreateClaimCompleteSummaryViewModel(uiTextProvider)));
 
         Assert.IsType<ArgumentNullException>(exception);
     }
@@ -77,7 +80,8 @@ public sealed class ProductShellViewModelTests
                 null!,
                 CreateFamilyMemberManagementViewModel(uiTextProvider),
                 CreateCategoryManagementViewModel(uiTextProvider),
-                CreateClaimSubmissionManagementViewModel(uiTextProvider)));
+                CreateClaimSubmissionManagementViewModel(uiTextProvider),
+                CreateClaimCompleteSummaryViewModel(uiTextProvider)));
 
         Assert.IsType<ArgumentNullException>(exception);
     }
@@ -94,7 +98,8 @@ public sealed class ProductShellViewModelTests
                 CreatePolicyClaimManagementViewModel(uiTextProvider),
                 null!,
                 CreateCategoryManagementViewModel(uiTextProvider),
-                CreateClaimSubmissionManagementViewModel(uiTextProvider)));
+                CreateClaimSubmissionManagementViewModel(uiTextProvider),
+                CreateClaimCompleteSummaryViewModel(uiTextProvider)));
 
         Assert.IsType<ArgumentNullException>(exception);
     }
@@ -111,7 +116,8 @@ public sealed class ProductShellViewModelTests
                 CreatePolicyClaimManagementViewModel(uiTextProvider),
                 CreateFamilyMemberManagementViewModel(uiTextProvider),
                 null!,
-                CreateClaimSubmissionManagementViewModel(uiTextProvider)));
+                CreateClaimSubmissionManagementViewModel(uiTextProvider),
+                CreateClaimCompleteSummaryViewModel(uiTextProvider)));
 
         Assert.IsType<ArgumentNullException>(exception);
     }
@@ -128,6 +134,25 @@ public sealed class ProductShellViewModelTests
                 CreatePolicyClaimManagementViewModel(uiTextProvider),
                 CreateFamilyMemberManagementViewModel(uiTextProvider),
                 CreateCategoryManagementViewModel(uiTextProvider),
+                null!,
+                CreateClaimCompleteSummaryViewModel(uiTextProvider)));
+
+        Assert.IsType<ArgumentNullException>(exception);
+    }
+
+    [Fact]
+    public void Constructor_rejects_null_claim_complete_summary_view_model()
+    {
+        var uiTextProvider = CreateUiTextProvider();
+        var exception = Record.Exception(
+            () => new ProductShellViewModel(
+                uiTextProvider,
+                CreateDocumentRegistrationViewModel(uiTextProvider),
+                CreateDocumentListViewModel(uiTextProvider),
+                CreatePolicyClaimManagementViewModel(uiTextProvider),
+                CreateFamilyMemberManagementViewModel(uiTextProvider),
+                CreateCategoryManagementViewModel(uiTextProvider),
+                CreateClaimSubmissionManagementViewModel(uiTextProvider),
                 null!));
 
         Assert.IsType<ArgumentNullException>(exception);
@@ -251,7 +276,8 @@ public sealed class ProductShellViewModelTests
             parameter => Assert.Equal(typeof(PolicyClaimManagementViewModel), parameter.ParameterType),
             parameter => Assert.Equal(typeof(FamilyMemberManagementViewModel), parameter.ParameterType),
             parameter => Assert.Equal(typeof(CategoryManagementViewModel), parameter.ParameterType),
-            parameter => Assert.Equal(typeof(ClaimSubmissionManagementViewModel), parameter.ParameterType));
+            parameter => Assert.Equal(typeof(ClaimSubmissionManagementViewModel), parameter.ParameterType),
+            parameter => Assert.Equal(typeof(ClaimCompleteSummaryViewModel), parameter.ParameterType));
     }
 
     [Fact]
@@ -307,8 +333,27 @@ public sealed class ProductShellViewModelTests
     }
 
     [Fact]
+    public void Claim_complete_receives_screen8_context_and_return_preserves_it()
+    {
+        var viewModel = CreateViewModel();
+        const string selectedClaimId = "claim_selected_on_screen8";
+        viewModel.ClaimSubmissionManagement.SelectedClaimCaseId = selectedClaimId;
+        viewModel.NavigateTo(ProductScreenRoutes.ClaimSubmission);
+
+        viewModel.NavigateTo(ProductScreenRoutes.ClaimComplete);
+
+        Assert.Equal(ProductScreenRoutes.ClaimComplete, viewModel.CurrentRouteId);
+        Assert.Equal(selectedClaimId, viewModel.ClaimCompleteSummary.SelectedClaimCaseId);
+
+        viewModel.NavigateTo(ProductScreenRoutes.ClaimSubmission);
+
+        Assert.Equal(ProductScreenRoutes.ClaimSubmission, viewModel.CurrentRouteId);
+        Assert.Equal(selectedClaimId, viewModel.ClaimSubmissionManagement.SelectedClaimCaseId);
+    }
+    [Fact]
     public void ClaimSubmission_dirty_state_blocks_global_and_direct_navigation()
     {
+
         var viewModel = CreateViewModel();
         var canExecuteChangedCount = 0;
         viewModel.NavigateCommand.CanExecuteChanged += (_, _) => canExecuteChangedCount++;
@@ -318,6 +363,9 @@ public sealed class ProductShellViewModelTests
 
         Assert.False(viewModel.ClaimSubmissionManagement.CanNavigateAway);
         Assert.False(viewModel.NavigateCommand.CanExecute(ProductScreenRoutes.HomeDashboard));
+        Assert.False(viewModel.NavigateCommand.CanExecute(ProductScreenRoutes.ClaimComplete));
+        viewModel.NavigateTo(ProductScreenRoutes.ClaimComplete);
+        Assert.Equal(ProductScreenRoutes.ClaimSubmission, viewModel.CurrentRouteId);
         Assert.True(canExecuteChangedCount > 0);
         viewModel.NavigateCommand.Execute(ProductScreenRoutes.HomeDashboard);
         Assert.Equal(ProductScreenRoutes.ClaimSubmission, viewModel.CurrentRouteId);
@@ -469,7 +517,8 @@ public sealed class ProductShellViewModelTests
                 CreatePolicyClaimManagementViewModel(uiTextProvider),
                 family,
                 CreateCategoryManagementViewModel(uiTextProvider),
-                CreateClaimSubmissionManagementViewModel(uiTextProvider));
+                CreateClaimSubmissionManagementViewModel(uiTextProvider),
+                CreateClaimCompleteSummaryViewModel(uiTextProvider));
 
             Assert.True(await viewModel.NavigateToFamilyEditAsync(record.Id, record.Version));
             Assert.Equal(ProductScreenRoutes.FamilyRegister, viewModel.CurrentRouteId);
@@ -673,7 +722,8 @@ public sealed class ProductShellViewModelTests
             policyClaimManagement,
             familyMemberManagement,
             CreateCategoryManagementViewModel(uiTextProvider),
-            CreateClaimSubmissionManagementViewModel(uiTextProvider));
+            CreateClaimSubmissionManagementViewModel(uiTextProvider),
+            CreateClaimCompleteSummaryViewModel(uiTextProvider));
 
         Assert.Same(documentRegistration, viewModel.DocumentRegistration);
     }
@@ -694,7 +744,8 @@ public sealed class ProductShellViewModelTests
             policyClaimManagement,
             familyMemberManagement,
             CreateCategoryManagementViewModel(uiTextProvider),
-            CreateClaimSubmissionManagementViewModel(uiTextProvider));
+            CreateClaimSubmissionManagementViewModel(uiTextProvider),
+            CreateClaimCompleteSummaryViewModel(uiTextProvider));
 
         Assert.Same(documentList, viewModel.DocumentList);
     }
@@ -715,7 +766,8 @@ public sealed class ProductShellViewModelTests
             policyClaimManagement,
             familyMemberManagement,
             CreateCategoryManagementViewModel(uiTextProvider),
-            CreateClaimSubmissionManagementViewModel(uiTextProvider));
+            CreateClaimSubmissionManagementViewModel(uiTextProvider),
+            CreateClaimCompleteSummaryViewModel(uiTextProvider));
 
         Assert.Same(policyClaimManagement, viewModel.PolicyClaimManagement);
     }
@@ -732,7 +784,8 @@ public sealed class ProductShellViewModelTests
             CreatePolicyClaimManagementViewModel(uiTextProvider),
             familyMemberManagement,
             CreateCategoryManagementViewModel(uiTextProvider),
-            CreateClaimSubmissionManagementViewModel(uiTextProvider));
+            CreateClaimSubmissionManagementViewModel(uiTextProvider),
+            CreateClaimCompleteSummaryViewModel(uiTextProvider));
 
         Assert.Same(familyMemberManagement, viewModel.FamilyMemberManagement);
     }
@@ -747,7 +800,8 @@ public sealed class ProductShellViewModelTests
             CreatePolicyClaimManagementViewModel(uiTextProvider),
             CreateFamilyMemberManagementViewModel(uiTextProvider),
             CreateCategoryManagementViewModel(uiTextProvider),
-            CreateClaimSubmissionManagementViewModel(uiTextProvider));
+            CreateClaimSubmissionManagementViewModel(uiTextProvider),
+            CreateClaimCompleteSummaryViewModel(uiTextProvider));
     }
 
     private static ProductShellViewModel CreateViewModel(
@@ -761,7 +815,8 @@ public sealed class ProductShellViewModelTests
             CreatePolicyClaimManagementViewModel(uiTextProvider),
             familyMemberManagement,
             CreateCategoryManagementViewModel(uiTextProvider),
-            CreateClaimSubmissionManagementViewModel(uiTextProvider));
+            CreateClaimSubmissionManagementViewModel(uiTextProvider),
+            CreateClaimCompleteSummaryViewModel(uiTextProvider));
     }
 
     private static ProductShellViewModel CreateViewModel(
@@ -776,7 +831,8 @@ public sealed class ProductShellViewModelTests
             policyClaimManagement,
             familyMemberManagement,
             CreateCategoryManagementViewModel(uiTextProvider),
-            CreateClaimSubmissionManagementViewModel(uiTextProvider));
+            CreateClaimSubmissionManagementViewModel(uiTextProvider),
+            CreateClaimCompleteSummaryViewModel(uiTextProvider));
     }
 
     private static void FillInsuranceEditor(
@@ -828,6 +884,40 @@ public sealed class ProductShellViewModelTests
             new ClaimPaymentManagementViewModel(
                 paymentStorage,
                 uiTextProvider),
+            uiTextProvider);
+    }
+
+    private static ClaimCompleteSummaryViewModel CreateClaimCompleteSummaryViewModel(
+        IUiTextProvider uiTextProvider)
+    {
+        var metadataRoot = Path.Combine(
+            Path.GetTempPath(),
+            "FamilyClaimRef.App.Tests",
+            "ProductShellViewModelTests",
+            Guid.NewGuid().ToString("N"),
+            "data",
+            "local");
+        var familyStorage = new JsonFamilyMemberStorageService(metadataRoot);
+        var policyClaimStorage = new JsonPolicyClaimStorageService(
+            metadataRoot,
+            familyStorage);
+        var documentStorage = new JsonDocumentStorageService(metadataRoot);
+        var submissionStorage = new JsonClaimSubmissionStorageService(
+            metadataRoot,
+            policyClaimStorage,
+            policyClaimStorage,
+            documentStorage);
+        var paymentStorage = new JsonClaimPaymentStorageService(
+            metadataRoot,
+            submissionStorage,
+            policyClaimStorage,
+            policyClaimStorage);
+        return new ClaimCompleteSummaryViewModel(
+            policyClaimStorage,
+            submissionStorage,
+            paymentStorage,
+            policyClaimStorage,
+            familyStorage,
             uiTextProvider);
     }
 

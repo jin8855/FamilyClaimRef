@@ -271,6 +271,7 @@ public sealed class ProductWireframeRouteCoverageTests
         Assert.Contains(ProductScreenRoutes.PolicyDocumentRegister, triggerValues);
         Assert.Contains(ProductScreenRoutes.ClaimDocumentRegister, triggerValues);
         Assert.Contains(ProductScreenRoutes.ClaimSubmission, triggerValues);
+        Assert.Contains(ProductScreenRoutes.ClaimComplete, triggerValues);
         Assert.Contains(ProductScreenRoutes.DocumentBox, triggerValues);
         Assert.Contains(ProductScreenRoutes.FamilyMembers, triggerValues);
         Assert.Contains(ProductScreenRoutes.FamilyRegister, triggerValues);
