@@ -54,7 +54,7 @@ Legacy alias:
 | `18_claim_document_register.html` | 현재 청구 사건 후보에 청구 서류 연결 | 청구 서류 유형, 현재 청구 사건 후보, 가족, 진료일 후보 | `ClaimDocument`, `OcrCandidate` 후보 | `ClaimCase`, `FamilyMember` | `registered`, `ocr_needed`, `user_confirmed` Candidate | `ClaimDocument -> ClaimCase` | 있음 | 청구 시작 단계의 보조 화면 |
 | `06_ocr_review.html` | 문서 후보, OCR 후보값, 사용자 확정값 확인 | 후보값 승인, 수정, 제외, 사용자 확인 상태 | `OcrCandidate`, 사용자 확정값 반영 대상 객체 | `PolicyDocument`, `ClaimDocument`, `OcrCandidate` | `candidate`, `edited`, `confirmed`, `ignored`, `needs_user_review` | 문서 목적에 따라 `PolicyDocument` 또는 `ClaimDocument` | 있음 | 사용자 확정값만 업무 객체에 반영 |
 | `09_claim_reference_result.html` | 보험 찾기 결과와 과거 유사 청구 Top 3 검토 | 보험 선택 후보, 담보 후보, 제출 서류, 청구 메모 | `ClaimReferenceResult` Candidate, `ClaimCase` 보강 후보 | `Policy`, `PolicyCoverage`, `HistoryItem`, `ClaimSubmission`, `ClaimPayment`, `Tag` | `matched`, `needs_review`, `selected` Candidate | 선택 담보의 근거 문서 참조 | 있음 | 조건 불일치 담보는 제외, 확인 필요 담보만 표시 |
-| `08_claim_submission.html` | 현재 청구 진행과 이력 요약 확인 | 진행 메모, 지급 결과 후보 | `ClaimSubmission`, `ClaimPayment`, 메모 후보 | `ClaimCase`, `ClaimSubmission`, `ClaimPayment`, `HistoryItem`, `ClaimReferenceResult` | `preparing`, `submitted`, `reviewing`, `paid`, `denied`, `cancelled` Candidate | 제출 서류 목록은 `ClaimDocument` 참조 | 있음 | 우측 패널은 조회 중심 |
+| `08_claim_submission.html` | 현재 청구 진행과 지급 결과 관리 | 진행 메모, 제출 상태, 지급 결과 | `ClaimSubmission`, `ClaimPayment` | `ClaimCase`, `ClaimSubmission`, `ClaimPayment`, `ClaimDocument` | 제출: `preparing`, `submitted`, `additional_documents_requested`, `reviewing`, `cancelled`, `submission_completed`; 지급: `pending`, `paid`, `partially_paid`, `denied`, `cancelled` | 제출 서류 목록은 `ClaimDocument` 참조 | 있음 | 지급 결과 목록·상세·생성·저장을 같은 화면에서 제공 |
 | `14_claim_complete.html` | 청구 흐름 완료와 후속 이동 확인 | 완료 메모 후보 | `ClaimCase`, `ClaimSubmission` 완료 후보 | 저장 요약, `HistoryItem` 후보 | `case_completed`, `submission_completed` Needs Decision | 없음 | 있음 | `ClaimCase` 완료와 `ClaimSubmission` 완료 분리 필요 |
 | `03_policy_list.html` | 조건 기반 보험 후보 검색 | 진단명, 진료상황, 기간, 키워드/태그 | 없음 | `Policy`, `PolicyCoverage`, `PolicyDocument`, `CategoryItem`, `Tag` | `matched`, `needs_review` Candidate | 약관 근거 문서 참조 | 있음 | 검색 조건은 진료 단서 |
 | `04_policy_detail.html` | 보험 상세 기준 정보 검토 | 보험 선택 | 없음 | `Policy`, `PolicyCoverage`, `PolicyDocument` | `active`, `needs_review` Candidate | 연결 문서 조회 | 있음 | 문서 등록으로 이동 가능 |
@@ -77,8 +77,8 @@ Legacy alias:
 | `OcrCandidate` | `06_ocr_review.html`, `17_policy_document_register.html`, `18_claim_document_register.html` | `05_document_box.html`, `06_ocr_review.html` | `PolicyCoverage`, `ClaimCase`, `ClaimDocument` 확정값 반영 | OCR 후보값 객체는 Confirmed for planning. 후보값/확정값 저장 경계는 Needs Decision |
 | `OcrExtraction` | 없음 | 없음 | `OcrCandidate` 생성 전후 실행 기록 후보 | OCR 실행 기록 후보. 별도 객체 유지 여부는 Needs Decision |
 | `ClaimReferenceResult` | `09_claim_reference_result.html` Candidate | `09_claim_reference_result.html`, `08_claim_submission.html` | `ClaimCase`, `PolicyCoverage`, `HistoryItem` | 전체 자동 저장은 미확정. 선택/제출 판단 사용 결과만 snapshot 저장 후보 |
-| `ClaimSubmission` | `08_claim_submission.html`, `14_claim_complete.html` Candidate | `08_claim_submission.html`, `10_history_view.html`, `21_history_detail.html` | `ClaimPayment`, `HistoryItem` | 보험사별 진행 기록 |
-| `ClaimPayment` | `08_claim_submission.html` Candidate | `08_claim_submission.html`, `10_history_view.html`, `21_history_detail.html` | `HistoryItem` | `ClaimCase` 직접 연결 여부 Needs Decision |
+| `ClaimSubmission` | `08_claim_submission.html` | `08_claim_submission.html`, `10_history_view.html`, `21_history_detail.html` | `ClaimPayment`, `HistoryItem` | 보험사별 진행 기록 |
+| `ClaimPayment` | `08_claim_submission.html` | `08_claim_submission.html`, `10_history_view.html`, `21_history_detail.html` | `HistoryItem` | ClaimSubmission만 직접 참조하며 ClaimCase/Policy는 중복 저장하지 않음 |
 | `HistoryItem` | 없음 또는 projection 생성 | `10_history_view.html`, `21_history_detail.html`, `01_home_dashboard.html` | `09_claim_reference_result.html`, `08_claim_submission.html` | 우선 projection 후보. 저장 객체 전환 여부는 Needs Decision |
 | `Category` | `19_category_register.html`, `16_category_manage.html` | `16_category_manage.html` | 검색 조건 화면, 등록 화면 | Confirmed for planning |
 | `CategoryItem` | `20_category_item_register.html`, `16_category_manage.html` | `16_category_manage.html` | `03_policy_list.html`, `07_claim_case.html`, `10_history_view.html` | Confirmed for planning. MVP 태그성 항목의 중심 |
@@ -130,8 +130,8 @@ Legacy alias:
 | `OcrCandidate` | `needs_user_review`, `edited`, `confirmed`, `ignored` | 기존 데이터 모델의 `ReviewCandidate` 상태와 유사 |
 | `ClaimCase` | `draft`, `saved`, `needs_ocr`, `reference_checked`, `case_completed`, `cancelled` | 완료 기준 Needs Decision |
 | `ClaimReferenceResult` | `generated`, `selected`, `ignored`, `expired` | 조회 결과 후보 상태. 전체 자동 저장은 미확정, snapshot 저장 범위는 Needs Decision |
-| `ClaimSubmission` | `preparing`, `submitted`, `additional_documents_requested`, `reviewing`, `paid`, `denied`, `cancelled`, `submission_completed` | 기존 데이터 모델 상태 후보 유지 |
-| `ClaimPayment` | `pending`, `paid`, `partially_paid`, `denied`, `cancelled` | 감액 사유 필요 |
+| `ClaimSubmission` | `preparing`, `submitted`, `additional_documents_requested`, `reviewing`, `cancelled`, `submission_completed` | 지급 결과 상태를 포함하지 않음 |
+| `ClaimPayment` | `pending`, `paid`, `partially_paid`, `denied`, `cancelled` | terminal 결과와 상태별 필드 검증 적용 |
 | `Category`, `CategoryItem`, `Tag` | `active`, `disabled`, `delete_requested` | 사용 중지와 삭제 정책 필요 |
 
 ## 8. 민감정보 저장 기준

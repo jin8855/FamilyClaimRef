@@ -325,7 +325,7 @@ ClaimCase
 - `reviewing` -> `additional_documents_requested` | `submission_completed` | `cancelled`
 - `cancelled`, `submission_completed` -> terminal
 
-지급·삭감·부지급 결과는 ClaimSubmission 상태가 아니라 후속 ClaimPayment가 소유한다.
+지급·삭감·부지급 결과는 ClaimSubmission 상태가 아니라 ClaimPayment가 소유한다.
 
 ---
 
@@ -333,23 +333,48 @@ ClaimCase
 
 ```json
 {
-  "paymentId": "PAY001",
-  "submissionId": "SUB001",
-  "paymentStatus": "paid",
+  "id": "payment_001",
+  "claimSubmissionId": "submission_001",
+  "status": "partially_paid",
   "paidDate": "2026-06-28",
   "paidAmount": 34500,
-  "paidCoverageNameCandidate": "담보 후보 A",
+  "paidCoverageDisplayName": "입원의료비",
   "denyReason": null,
   "reductionReason": "비급여 자기부담",
-  "memo": ""
+  "additionalDocumentsMemo": null,
+  "memo": "지급 결과 확인",
+  "revision": 2,
+  "createdAt": "2026-06-27T09:00:00+09:00",
+  "updatedAt": "2026-06-28T10:30:00+09:00"
 }
 ```
+
+저장 및 참조 계약:
+
+- 저장 파일은 runtime metadata root의 `claim-payments.json` schema v1이다.
+- Id는 immutable string이며 생성 Revision은 1, 성공한 mutation마다 정확히 1 증가한다.
+- ClaimSubmissionId는 생성 후 변경하지 않으며 ClaimCaseId와 PolicyId를 중복 저장하지 않는다.
+- 부모 ClaimSubmission, active saved ClaimCase, active same-family Policy 참조를 mutation마다 검증한다.
+- `preparing` 또는 `cancelled` ClaimSubmission에는 ClaimPayment를 만들 수 없다. `paid`, `partially_paid`, `denied` 결과는 `submission_completed`에서만 저장하며 `cancelled` Payment는 이 완료 조건의 적용 대상이 아니다.
+- canonical 저장 경로별 process-scoped gate와 expectedRevision으로 lost update를 방지한다.
+- 저장은 temp write, flush-to-disk, 재검증, atomic replace/rename을 사용하고 직전 정상본 `.bak`을 보존한다.
+- malformed/unsupported JSON은 fail closed이며 자동 migration, recovery, cross-process lock은 제공하지 않는다.
+
+상태와 전이:
+
+- `pending` -> `paid` | `partially_paid` | `denied` | `cancelled`
+- `paid`, `partially_paid`, `denied`, `cancelled` -> terminal
+- `paid`: PaidDate, 0보다 큰 PaidAmount, PaidCoverageDisplayName 필수
+- `partially_paid`: paid 필드와 ReductionReason 필수
+- `denied`: DenyReason 필수, paid 필드와 ReductionReason 금지
+- `cancelled`: 모든 결과 필드 금지
 
 저장 금지:
 
 - 계좌번호
 - 카드번호
 - 주민번호
+- ClaimCaseId와 PolicyId 중복 참조
 
 ---
 

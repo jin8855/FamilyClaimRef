@@ -12,6 +12,7 @@ public sealed class ClaimSubmissionManagementViewModel : INotifyPropertyChanged
     private readonly IClaimSubmissionStorageService submissionStorageService;
     private readonly IClaimCaseStorageService claimCaseStorageService;
     private readonly IDocumentStorageService documentStorageService;
+    private readonly ClaimPaymentManagementViewModel paymentManagement;
     private readonly IUiTextProvider uiTextProvider;
     private readonly SemaphoreSlim operationGate = new(1, 1);
     private readonly Dictionary<string, ClaimSubmissionRecord> recordsById =
@@ -46,6 +47,7 @@ public sealed class ClaimSubmissionManagementViewModel : INotifyPropertyChanged
         IClaimSubmissionStorageService submissionStorageService,
         IClaimCaseStorageService claimCaseStorageService,
         IDocumentStorageService documentStorageService,
+        ClaimPaymentManagementViewModel paymentManagement,
         IUiTextProvider uiTextProvider)
     {
         this.submissionStorageService = submissionStorageService
@@ -54,11 +56,16 @@ public sealed class ClaimSubmissionManagementViewModel : INotifyPropertyChanged
             ?? throw new ArgumentNullException(nameof(claimCaseStorageService));
         this.documentStorageService = documentStorageService
             ?? throw new ArgumentNullException(nameof(documentStorageService));
+        this.paymentManagement = paymentManagement
+            ?? throw new ArgumentNullException(nameof(paymentManagement));
         this.uiTextProvider = uiTextProvider
             ?? throw new ArgumentNullException(nameof(uiTextProvider));
+        this.paymentManagement.PropertyChanged += PaymentManagement_PropertyChanged;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    public ClaimPaymentManagementViewModel PaymentManagement => paymentManagement;
 
     public IReadOnlyList<ClaimSubmissionClaimCaseOptionViewModel> AvailableClaimCases
     {
@@ -222,22 +229,32 @@ public sealed class ClaimSubmissionManagementViewModel : INotifyPropertyChanged
 
     public bool CanCreate =>
         !IsBusy
+        && PaymentManagement.CanNavigateAway
         && !IsEditMode
         && !string.IsNullOrWhiteSpace(SelectedClaimCaseId)
         && !string.IsNullOrWhiteSpace(SelectedPolicyId);
 
     public bool CanSave =>
         !IsBusy
+        && PaymentManagement.CanNavigateAway
         && IsEditMode
         && HasUnsavedChanges
         && !ClaimSubmissionValues.IsTerminal(editingStatus ?? string.Empty);
 
     public bool CanEditDetails =>
         !IsBusy
+        && PaymentManagement.CanNavigateAway
         && (editingStatus is null
             || !ClaimSubmissionValues.IsTerminal(editingStatus));
 
-    public bool CanNavigateAway => !IsBusy && !HasUnsavedChanges;
+    public bool CanSwitchSubmission => !IsBusy && PaymentManagement.CanNavigateAway;
+
+    public bool CanEditPayment => !IsBusy && IsEditMode;
+
+    public bool CanNavigateAway =>
+        !IsBusy
+        && !HasUnsavedChanges
+        && PaymentManagement.CanNavigateAway;
 
     public string? ValidationMessage
     {
@@ -277,6 +294,11 @@ public sealed class ClaimSubmissionManagementViewModel : INotifyPropertyChanged
 
     public async Task<bool> LoadAsync(CancellationToken cancellationToken = default)
     {
+        if (!PaymentManagement.CanNavigateAway)
+        {
+            return false;
+        }
+
         if (!await operationGate.WaitAsync(0, cancellationToken))
         {
             return false;
@@ -348,6 +370,11 @@ public sealed class ClaimSubmissionManagementViewModel : INotifyPropertyChanged
     public async Task<bool> LoadClaimContextAsync(
         CancellationToken cancellationToken = default)
     {
+        if (!PaymentManagement.CanNavigateAway)
+        {
+            return false;
+        }
+
         if (!await operationGate.WaitAsync(0, cancellationToken))
         {
             return false;
@@ -398,6 +425,11 @@ public sealed class ClaimSubmissionManagementViewModel : INotifyPropertyChanged
 
     public void StartNew()
     {
+        if (!PaymentManagement.CanNavigateAway)
+        {
+            return;
+        }
+
         ClearMessages();
         ApplyEditorState(() =>
         {
@@ -418,20 +450,28 @@ public sealed class ClaimSubmissionManagementViewModel : INotifyPropertyChanged
             AvailableStatusOptions = CreateStatusOptions(ClaimSubmissionValues.StatusPreparing);
             HasUnsavedChanges = false;
         });
+        PaymentManagement.ClearContext();
         OnCommandStateChanged();
     }
 
     public bool LoadSelectedSubmission()
     {
+        return LoadSelectedSubmissionAsync().GetAwaiter().GetResult();
+    }
+
+    public async Task<bool> LoadSelectedSubmissionAsync(
+        CancellationToken cancellationToken = default)
+    {
         ClearMessages();
-        if (string.IsNullOrWhiteSpace(SelectedSubmissionId)
+        if (!PaymentManagement.CanNavigateAway
+            || string.IsNullOrWhiteSpace(SelectedSubmissionId)
             || !recordsById.TryGetValue(SelectedSubmissionId, out var record))
         {
             return false;
         }
 
         ApplyRecord(record);
-        return true;
+        return await PaymentManagement.LoadForSubmissionAsync(record.Id, cancellationToken);
     }
 
     public async Task<bool> CreatePreparingAsync(
@@ -604,6 +644,7 @@ public sealed class ClaimSubmissionManagementViewModel : INotifyPropertyChanged
             && recordsById.TryGetValue(SelectedSubmissionId, out var selected))
         {
             ApplyRecord(selected);
+            await PaymentManagement.LoadForSubmissionAsync(selected.Id, cancellationToken);
         }
         else
         {
@@ -643,6 +684,8 @@ public sealed class ClaimSubmissionManagementViewModel : INotifyPropertyChanged
         {
             // The durable mutation succeeded; preserve its returned state when refresh fails.
         }
+
+        await PaymentManagement.LoadForSubmissionAsync(record.Id, CancellationToken.None);
     }
 
     private void RebuildSubmissionList()
@@ -787,6 +830,7 @@ public sealed class ClaimSubmissionManagementViewModel : INotifyPropertyChanged
             HasUnsavedChanges = false;
         });
         OnCommandStateChanged();
+        PaymentManagement.ClearContext();
     }
 
     public void ClearMessages()
@@ -846,7 +890,21 @@ public sealed class ClaimSubmissionManagementViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(CanCreate));
         OnPropertyChanged(nameof(CanSave));
         OnPropertyChanged(nameof(CanEditDetails));
+        OnPropertyChanged(nameof(CanSwitchSubmission));
+        OnPropertyChanged(nameof(CanEditPayment));
         OnPropertyChanged(nameof(CanNavigateAway));
+    }
+
+    private void PaymentManagement_PropertyChanged(
+        object? sender,
+        PropertyChangedEventArgs e)
+    {
+        if (string.Equals(e.PropertyName, nameof(ClaimPaymentManagementViewModel.CanNavigateAway), StringComparison.Ordinal)
+            || string.Equals(e.PropertyName, nameof(ClaimPaymentManagementViewModel.IsBusy), StringComparison.Ordinal)
+            || string.Equals(e.PropertyName, nameof(ClaimPaymentManagementViewModel.HasUnsavedChanges), StringComparison.Ordinal))
+        {
+            OnCommandStateChanged();
+        }
     }
 
     private bool SetProperty<T>(

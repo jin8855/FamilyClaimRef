@@ -398,4 +398,37 @@ public static class UiTextKeys
     public const string ProductClaimSubmissionStatusReviewing = "Ui.Product.ClaimSubmission.Status.Reviewing";
     public const string ProductClaimSubmissionStatusCancelled = "Ui.Product.ClaimSubmission.Status.Cancelled";
     public const string ProductClaimSubmissionStatusCompleted = "Ui.Product.ClaimSubmission.Status.Completed";
+    public const string ProductClaimPaymentSectionTitle = "Ui.Product.ClaimPayment.SectionTitle";
+    public const string ProductClaimPaymentGuidance = "Ui.Product.ClaimPayment.Guidance";
+    public const string ProductClaimPaymentListTitle = "Ui.Product.ClaimPayment.ListTitle";
+    public const string ProductClaimPaymentEmptyMessage = "Ui.Product.ClaimPayment.EmptyMessage";
+    public const string ProductClaimPaymentNewAction = "Ui.Product.ClaimPayment.NewAction";
+    public const string ProductClaimPaymentDetailTitle = "Ui.Product.ClaimPayment.DetailTitle";
+    public const string ProductClaimPaymentStatusLabel = "Ui.Product.ClaimPayment.StatusLabel";
+    public const string ProductClaimPaymentPaidDateLabel = "Ui.Product.ClaimPayment.PaidDateLabel";
+    public const string ProductClaimPaymentPaidAmountLabel = "Ui.Product.ClaimPayment.PaidAmountLabel";
+    public const string ProductClaimPaymentCoverageLabel = "Ui.Product.ClaimPayment.CoverageLabel";
+    public const string ProductClaimPaymentDenyReasonLabel = "Ui.Product.ClaimPayment.DenyReasonLabel";
+    public const string ProductClaimPaymentReductionReasonLabel = "Ui.Product.ClaimPayment.ReductionReasonLabel";
+    public const string ProductClaimPaymentAdditionalDocumentsLabel =
+        "Ui.Product.ClaimPayment.AdditionalDocumentsLabel";
+    public const string ProductClaimPaymentMemoLabel = "Ui.Product.ClaimPayment.MemoLabel";
+    public const string ProductClaimPaymentUpdatedAtLabel = "Ui.Product.ClaimPayment.UpdatedAtLabel";
+    public const string ProductClaimPaymentCreateAction = "Ui.Product.ClaimPayment.CreateAction";
+    public const string ProductClaimPaymentSaveAction = "Ui.Product.ClaimPayment.SaveAction";
+    public const string ProductClaimPaymentValidationMessage = "Ui.Product.ClaimPayment.ValidationMessage";
+    public const string ProductClaimPaymentConflictMessage = "Ui.Product.ClaimPayment.ConflictMessage";
+    public const string ProductClaimPaymentLegacyReviewMessage = "Ui.Product.ClaimPayment.LegacyReviewMessage";
+    public const string ProductClaimPaymentReferenceMessage = "Ui.Product.ClaimPayment.ReferenceMessage";
+    public const string ProductClaimPaymentTransitionMessage = "Ui.Product.ClaimPayment.TransitionMessage";
+    public const string ProductClaimPaymentOperationFailedMessage =
+        "Ui.Product.ClaimPayment.OperationFailedMessage";
+    public const string ProductClaimPaymentCreatedMessage = "Ui.Product.ClaimPayment.CreatedMessage";
+    public const string ProductClaimPaymentSavedMessage = "Ui.Product.ClaimPayment.SavedMessage";
+    public const string ProductClaimPaymentNotEnteredValue = "Ui.Product.ClaimPayment.NotEnteredValue";
+    public const string ProductClaimPaymentStatusPending = "Ui.Product.ClaimPayment.Status.Pending";
+    public const string ProductClaimPaymentStatusPaid = "Ui.Product.ClaimPayment.Status.Paid";
+    public const string ProductClaimPaymentStatusPartiallyPaid = "Ui.Product.ClaimPayment.Status.PartiallyPaid";
+    public const string ProductClaimPaymentStatusDenied = "Ui.Product.ClaimPayment.Status.Denied";
+    public const string ProductClaimPaymentStatusCancelled = "Ui.Product.ClaimPayment.Status.Cancelled";
 }

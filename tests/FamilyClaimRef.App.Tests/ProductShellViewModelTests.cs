@@ -330,6 +330,26 @@ public sealed class ProductShellViewModelTests
         viewModel.NavigateCommand.Execute(ProductScreenRoutes.HomeDashboard);
         Assert.Equal(ProductScreenRoutes.HomeDashboard, viewModel.CurrentRouteId);
     }
+
+    [Fact]
+    public async Task ClaimPayment_dirty_state_blocks_global_and_direct_navigation()
+    {
+        var viewModel = CreateViewModel();
+        viewModel.NavigateTo(ProductScreenRoutes.ClaimSubmission);
+        var payment = viewModel.ClaimSubmissionManagement.PaymentManagement;
+        Assert.True(await payment.LoadForSubmissionAsync("synthetic_submission"));
+
+        payment.Memo = "unsaved payment";
+
+        Assert.False(payment.CanNavigateAway);
+        Assert.False(viewModel.ClaimSubmissionManagement.CanNavigateAway);
+        Assert.False(viewModel.NavigateCommand.CanExecute(ProductScreenRoutes.HomeDashboard));
+        viewModel.NavigateTo(ProductScreenRoutes.HomeDashboard);
+        Assert.Equal(ProductScreenRoutes.ClaimSubmission, viewModel.CurrentRouteId);
+
+        payment.StartNew();
+        Assert.True(viewModel.NavigateCommand.CanExecute(ProductScreenRoutes.HomeDashboard));
+    }
     [Fact]
     public void Unsupported_presentation_commands_are_explicitly_disabled()
     {
@@ -795,11 +815,19 @@ public sealed class ProductShellViewModelTests
             policyClaimStorage,
             policyClaimStorage,
             documentStorage);
+        var paymentStorage = new JsonClaimPaymentStorageService(
+            metadataRoot,
+            submissionStorage,
+            policyClaimStorage,
+            policyClaimStorage);
 
         return new ClaimSubmissionManagementViewModel(
             submissionStorage,
             policyClaimStorage,
             documentStorage,
+            new ClaimPaymentManagementViewModel(
+                paymentStorage,
+                uiTextProvider),
             uiTextProvider);
     }
 

@@ -21,9 +21,9 @@ public sealed class ResourceUiTextProviderTests
     {
         var resources = LoadUiStrings();
 
-        Assert.Equal(275, resources.Count);
-        Assert.Equal(218, resources.Keys.Count(IsProductKey));
-        Assert.Equal(218, ExpectedProductResources.Count);
+        Assert.Equal(306, resources.Count);
+        Assert.Equal(249, resources.Keys.Count(IsProductKey));
+        Assert.Equal(249, ExpectedProductResources.Count);
         Assert.All(
             ExpectedProductResources,
             expected => Assert.Equal(expected.Value, resources[expected.Key]));
@@ -36,11 +36,11 @@ public sealed class ResourceUiTextProviderTests
         var resourceKeys = resourceEntries.Select(entry => entry.Key).ToArray();
         var constantValues = LoadUiTextKeyConstants();
 
-        Assert.Equal(275, resourceEntries.Count);
+        Assert.Equal(306, resourceEntries.Count);
         Assert.Equal(resourceKeys.Length, resourceKeys.Distinct(StringComparer.Ordinal).Count());
-        Assert.Equal(275, constantValues.Count);
+        Assert.Equal(306, constantValues.Count);
         Assert.Equal(constantValues.Count, constantValues.Distinct(StringComparer.Ordinal).Count());
-        Assert.Equal(218, constantValues.Count(IsProductKey));
+        Assert.Equal(249, constantValues.Count(IsProductKey));
         Assert.Equal(
             resourceKeys.OrderBy(key => key, StringComparer.Ordinal),
             constantValues.OrderBy(key => key, StringComparer.Ordinal));
@@ -713,7 +713,39 @@ public sealed class ResourceUiTextProviderTests
             [UiTextKeys.ProductClaimSubmissionStatusAdditionalDocumentsRequested] = "추가 서류 요청",
             [UiTextKeys.ProductClaimSubmissionStatusReviewing] = "심사중",
             [UiTextKeys.ProductClaimSubmissionStatusCancelled] = "취소",
-            [UiTextKeys.ProductClaimSubmissionStatusCompleted] = "청구 처리 완료"
+            [UiTextKeys.ProductClaimSubmissionStatusCompleted] = "청구 처리 완료",
+            [UiTextKeys.ProductClaimPaymentSectionTitle] = "지급 결과",
+            [UiTextKeys.ProductClaimPaymentGuidance] =
+                "선택한 보험사 청구 기록의 지급·부분 지급·부지급 결과를 관리합니다.",
+            [UiTextKeys.ProductClaimPaymentListTitle] = "지급 결과 목록",
+            [UiTextKeys.ProductClaimPaymentEmptyMessage] = "등록된 지급 결과가 없습니다.",
+            [UiTextKeys.ProductClaimPaymentNewAction] = "새 지급 결과",
+            [UiTextKeys.ProductClaimPaymentDetailTitle] = "지급 결과 상세",
+            [UiTextKeys.ProductClaimPaymentStatusLabel] = "지급 상태",
+            [UiTextKeys.ProductClaimPaymentPaidDateLabel] = "지급일",
+            [UiTextKeys.ProductClaimPaymentPaidAmountLabel] = "지급 금액",
+            [UiTextKeys.ProductClaimPaymentCoverageLabel] = "지급 담보명",
+            [UiTextKeys.ProductClaimPaymentDenyReasonLabel] = "부지급 사유",
+            [UiTextKeys.ProductClaimPaymentReductionReasonLabel] = "삭감 사유",
+            [UiTextKeys.ProductClaimPaymentAdditionalDocumentsLabel] = "추가 서류 메모",
+            [UiTextKeys.ProductClaimPaymentMemoLabel] = "메모",
+            [UiTextKeys.ProductClaimPaymentUpdatedAtLabel] = "최근 변경",
+            [UiTextKeys.ProductClaimPaymentCreateAction] = "대기 기록 생성",
+            [UiTextKeys.ProductClaimPaymentSaveAction] = "지급 결과 저장",
+            [UiTextKeys.ProductClaimPaymentValidationMessage] = "지급 상태와 상태별 필수 항목 및 지급 금액 형식을 확인해 주세요.",
+            [UiTextKeys.ProductClaimPaymentConflictMessage] = "다른 변경이 먼저 저장되었습니다. 지급 결과를 다시 불러온 뒤 시도해 주세요.",
+            [UiTextKeys.ProductClaimPaymentLegacyReviewMessage] = "기존 청구 건의 가족 연결을 확인할 수 없어 지급 결과를 처리할 수 없습니다.",
+            [UiTextKeys.ProductClaimPaymentReferenceMessage] = "보험사 청구, 청구 건 또는 보험 계약의 연결 상태를 확인해 주세요.",
+            [UiTextKeys.ProductClaimPaymentTransitionMessage] = "현재 상태에서는 선택한 지급 결과로 변경할 수 없습니다.",
+            [UiTextKeys.ProductClaimPaymentOperationFailedMessage] = "지급 결과를 처리하지 못했습니다. 다시 시도해 주세요.",
+            [UiTextKeys.ProductClaimPaymentCreatedMessage] = "지급 대기 기록을 생성했습니다.",
+            [UiTextKeys.ProductClaimPaymentSavedMessage] = "지급 결과를 저장했습니다.",
+            [UiTextKeys.ProductClaimPaymentNotEnteredValue] = "미입력",
+            [UiTextKeys.ProductClaimPaymentStatusPending] = "대기",
+            [UiTextKeys.ProductClaimPaymentStatusPaid] = "지급",
+            [UiTextKeys.ProductClaimPaymentStatusPartiallyPaid] = "부분 지급",
+            [UiTextKeys.ProductClaimPaymentStatusDenied] = "부지급",
+            [UiTextKeys.ProductClaimPaymentStatusCancelled] = "취소"
         };
 
     private const string ExistingResourceFingerprint =
