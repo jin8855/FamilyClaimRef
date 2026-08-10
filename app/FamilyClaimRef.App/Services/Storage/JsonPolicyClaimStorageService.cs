@@ -5,7 +5,8 @@ namespace FamilyClaimRef.App.Services.Storage;
 
 public sealed class JsonPolicyClaimStorageService :
     IPolicyClaimStorageService,
-    IClaimCaseStorageService
+    IClaimCaseStorageService,
+    IClaimHistoryStorageReader
 {
     private const string PoliciesFileName = "policies.json";
     private const string ClaimsFileName = "claims.json";
@@ -51,6 +52,12 @@ public sealed class JsonPolicyClaimStorageService :
         return envelope.Items
             .Where(policy => policy.DisabledAt is null)
             .ToList();
+    }
+
+    public async Task<IReadOnlyList<PolicyRecord>> GetAllPoliciesForHistoryAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return (await policyStore.LoadAsync(cancellationToken)).Items.ToList();
     }
 
     public async Task<PolicyRecord?> GetPolicyAsync(
@@ -222,6 +229,12 @@ public sealed class JsonPolicyClaimStorageService :
             .Where(claim => claim.DisabledAt is null)
             .Select(claim => ProjectClaimCase(claim, policies))
             .ToList();
+    }
+
+    public async Task<IReadOnlyList<ClaimRecord>> GetAllClaimCasesForHistoryAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return (await claimStore.LoadAsync(cancellationToken)).Items.ToList();
     }
 
     public async Task<IReadOnlyList<ClaimRecord>> GetClaimsByPolicyIdAsync(

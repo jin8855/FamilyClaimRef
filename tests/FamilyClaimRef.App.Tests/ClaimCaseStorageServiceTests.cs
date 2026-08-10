@@ -29,6 +29,27 @@ public sealed class ClaimCaseStorageServiceTests
             Assert.Equal(bytesBefore, await File.ReadAllBytesAsync(claimsPath));
         });
     }
+    [Fact]
+    public async Task History_read_preserves_raw_legacy_owner_and_does_not_rewrite_file()
+    {
+        await UsingTempRootAsync(async rootPath =>
+        {
+            var familyStore = new JsonFamilyMemberStorageService(rootPath);
+            var service = new JsonPolicyClaimStorageService(rootPath, familyStore);
+            var family = await CreateFamilyAsync(familyStore);
+            var policy = await CreatePolicyAsync(service, family.Id);
+            var claimsPath = await WriteLegacyClaimAsync(rootPath, policy.Id);
+            var bytesBefore = await File.ReadAllBytesAsync(claimsPath);
+            var historyReader = (IClaimHistoryStorageReader)service;
+
+            var claim = Assert.Single(await historyReader.GetAllClaimCasesForHistoryAsync());
+
+            Assert.Equal("claim_legacy", claim.Id);
+            Assert.Equal(policy.Id, claim.PolicyId);
+            Assert.Null(claim.FamilyMemberId);
+            Assert.Equal(bytesBefore, await File.ReadAllBytesAsync(claimsPath));
+        });
+    }
 
     [Fact]
     public async Task Unresolved_legacy_owner_blocks_update_without_write()

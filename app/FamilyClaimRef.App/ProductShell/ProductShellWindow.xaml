@@ -36,6 +36,15 @@
                 DataContext="{Binding DataContext.ClaimCompleteSummary, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
         </DataTemplate>
 
+        <DataTemplate x:Key="ClaimHistoryListContentTemplate">
+            <views:ProductClaimHistoryListView
+                DataContext="{Binding DataContext.ClaimHistory, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+        </DataTemplate>
+
+        <DataTemplate x:Key="ClaimHistoryDetailContentTemplate">
+            <views:ProductClaimHistoryDetailView
+                DataContext="{Binding DataContext.ClaimHistory, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+        </DataTemplate>
         <DataTemplate x:Key="DocumentRegistrationContentTemplate">
             <views:ProductDocumentRegistrationView
                 DataContext="{Binding DataContext.DocumentRegistration, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
@@ -172,6 +181,15 @@
                                     Value="{StaticResource ClaimCompleteContentTemplate}" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Content.Id, RelativeSource={RelativeSource Self}}"
+                                     Value="10_history_view">
+                            <Setter Property="ContentTemplate"
+                                    Value="{StaticResource ClaimHistoryListContentTemplate}" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Content.Id, RelativeSource={RelativeSource Self}}"
+                                     Value="21_history_detail">
+                            <Setter Property="ContentTemplate"
+                                    Value="{StaticResource ClaimHistoryDetailContentTemplate}" />
+                        </DataTrigger>                        <DataTrigger Binding="{Binding Content.Id, RelativeSource={RelativeSource Self}}"
                                      Value="17_policy_document_register">
                             <Setter Property="ContentTemplate"
                                     Value="{StaticResource DocumentRegistrationContentTemplate}" />

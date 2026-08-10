@@ -27,7 +27,8 @@ public sealed class ProductShellViewModelTests
                 familyMemberManagement,
                 CreateCategoryManagementViewModel(uiTextProvider),
                 CreateClaimSubmissionManagementViewModel(uiTextProvider),
-                CreateClaimCompleteSummaryViewModel(uiTextProvider)));
+                CreateClaimCompleteSummaryViewModel(uiTextProvider),
+                CreateClaimHistoryViewModel(uiTextProvider)));
 
         Assert.IsType<ArgumentNullException>(exception);
     }
@@ -45,7 +46,8 @@ public sealed class ProductShellViewModelTests
                 CreateFamilyMemberManagementViewModel(uiTextProvider),
                 CreateCategoryManagementViewModel(uiTextProvider),
                 CreateClaimSubmissionManagementViewModel(uiTextProvider),
-                CreateClaimCompleteSummaryViewModel(uiTextProvider)));
+                CreateClaimCompleteSummaryViewModel(uiTextProvider),
+                CreateClaimHistoryViewModel(uiTextProvider)));
 
         Assert.IsType<ArgumentNullException>(exception);
     }
@@ -63,7 +65,8 @@ public sealed class ProductShellViewModelTests
                 CreateFamilyMemberManagementViewModel(uiTextProvider),
                 CreateCategoryManagementViewModel(uiTextProvider),
                 CreateClaimSubmissionManagementViewModel(uiTextProvider),
-                CreateClaimCompleteSummaryViewModel(uiTextProvider)));
+                CreateClaimCompleteSummaryViewModel(uiTextProvider),
+                CreateClaimHistoryViewModel(uiTextProvider)));
 
         Assert.IsType<ArgumentNullException>(exception);
     }
@@ -81,7 +84,8 @@ public sealed class ProductShellViewModelTests
                 CreateFamilyMemberManagementViewModel(uiTextProvider),
                 CreateCategoryManagementViewModel(uiTextProvider),
                 CreateClaimSubmissionManagementViewModel(uiTextProvider),
-                CreateClaimCompleteSummaryViewModel(uiTextProvider)));
+                CreateClaimCompleteSummaryViewModel(uiTextProvider),
+                CreateClaimHistoryViewModel(uiTextProvider)));
 
         Assert.IsType<ArgumentNullException>(exception);
     }
@@ -99,7 +103,8 @@ public sealed class ProductShellViewModelTests
                 null!,
                 CreateCategoryManagementViewModel(uiTextProvider),
                 CreateClaimSubmissionManagementViewModel(uiTextProvider),
-                CreateClaimCompleteSummaryViewModel(uiTextProvider)));
+                CreateClaimCompleteSummaryViewModel(uiTextProvider),
+                CreateClaimHistoryViewModel(uiTextProvider)));
 
         Assert.IsType<ArgumentNullException>(exception);
     }
@@ -117,7 +122,8 @@ public sealed class ProductShellViewModelTests
                 CreateFamilyMemberManagementViewModel(uiTextProvider),
                 null!,
                 CreateClaimSubmissionManagementViewModel(uiTextProvider),
-                CreateClaimCompleteSummaryViewModel(uiTextProvider)));
+                CreateClaimCompleteSummaryViewModel(uiTextProvider),
+                CreateClaimHistoryViewModel(uiTextProvider)));
 
         Assert.IsType<ArgumentNullException>(exception);
     }
@@ -135,7 +141,8 @@ public sealed class ProductShellViewModelTests
                 CreateFamilyMemberManagementViewModel(uiTextProvider),
                 CreateCategoryManagementViewModel(uiTextProvider),
                 null!,
-                CreateClaimCompleteSummaryViewModel(uiTextProvider)));
+                CreateClaimCompleteSummaryViewModel(uiTextProvider),
+                CreateClaimHistoryViewModel(uiTextProvider)));
 
         Assert.IsType<ArgumentNullException>(exception);
     }
@@ -153,6 +160,26 @@ public sealed class ProductShellViewModelTests
                 CreateFamilyMemberManagementViewModel(uiTextProvider),
                 CreateCategoryManagementViewModel(uiTextProvider),
                 CreateClaimSubmissionManagementViewModel(uiTextProvider),
+                null!,
+                CreateClaimHistoryViewModel(uiTextProvider)));
+
+        Assert.IsType<ArgumentNullException>(exception);
+    }
+
+    [Fact]
+    public void Constructor_rejects_null_claim_history_view_model()
+    {
+        var uiTextProvider = CreateUiTextProvider();
+        var exception = Record.Exception(
+            () => new ProductShellViewModel(
+                uiTextProvider,
+                CreateDocumentRegistrationViewModel(uiTextProvider),
+                CreateDocumentListViewModel(uiTextProvider),
+                CreatePolicyClaimManagementViewModel(uiTextProvider),
+                CreateFamilyMemberManagementViewModel(uiTextProvider),
+                CreateCategoryManagementViewModel(uiTextProvider),
+                CreateClaimSubmissionManagementViewModel(uiTextProvider),
+                CreateClaimCompleteSummaryViewModel(uiTextProvider),
                 null!));
 
         Assert.IsType<ArgumentNullException>(exception);
@@ -277,7 +304,8 @@ public sealed class ProductShellViewModelTests
             parameter => Assert.Equal(typeof(FamilyMemberManagementViewModel), parameter.ParameterType),
             parameter => Assert.Equal(typeof(CategoryManagementViewModel), parameter.ParameterType),
             parameter => Assert.Equal(typeof(ClaimSubmissionManagementViewModel), parameter.ParameterType),
-            parameter => Assert.Equal(typeof(ClaimCompleteSummaryViewModel), parameter.ParameterType));
+            parameter => Assert.Equal(typeof(ClaimCompleteSummaryViewModel), parameter.ParameterType),
+            parameter => Assert.Equal(typeof(ClaimHistoryViewModel), parameter.ParameterType));
     }
 
     [Fact]
@@ -349,6 +377,44 @@ public sealed class ProductShellViewModelTests
 
         Assert.Equal(ProductScreenRoutes.ClaimSubmission, viewModel.CurrentRouteId);
         Assert.Equal(selectedClaimId, viewModel.ClaimSubmissionManagement.SelectedClaimCaseId);
+    }
+    [Fact]
+    public void History_entry_scopes_screen8_and_screen14_but_home_uses_all_claims()
+    {
+        var viewModel = CreateViewModel();
+
+        viewModel.ClaimSubmissionManagement.SelectedClaimCaseId = "claim_from_screen8";
+        viewModel.NavigateTo(ProductScreenRoutes.ClaimSubmission);
+        viewModel.NavigateTo(ProductScreenRoutes.HistoryView);
+
+        Assert.Equal("claim_from_screen8", viewModel.ClaimHistory.ClaimCaseScopeId);
+        Assert.False(viewModel.NavigateCommand.CanExecute(ProductScreenRoutes.HistoryDetail));
+        viewModel.NavigateTo(ProductScreenRoutes.HistoryDetail);
+        Assert.Equal(ProductScreenRoutes.HistoryView, viewModel.CurrentRouteId);
+
+        viewModel.NavigateTo(ProductScreenRoutes.HomeDashboard);
+        viewModel.NavigateTo(ProductScreenRoutes.HistoryView);
+
+        Assert.Null(viewModel.ClaimHistory.ClaimCaseScopeId);
+
+        viewModel.NavigateTo(ProductScreenRoutes.ClaimSubmission);
+        viewModel.ClaimSubmissionManagement.SelectedClaimCaseId = "claim_from_screen14";
+        viewModel.NavigateTo(ProductScreenRoutes.ClaimComplete);
+        viewModel.NavigateTo(ProductScreenRoutes.HistoryView);
+
+        Assert.Equal("claim_from_screen14", viewModel.ClaimHistory.ClaimCaseScopeId);
+    }
+
+    [Fact]
+    public void ClaimSubmission_dirty_state_also_blocks_history_navigation()
+    {
+        var viewModel = CreateViewModel();
+        viewModel.NavigateTo(ProductScreenRoutes.ClaimSubmission);
+        viewModel.ClaimSubmissionManagement.Memo = "unsaved";
+
+        Assert.False(viewModel.NavigateCommand.CanExecute(ProductScreenRoutes.HistoryView));
+        viewModel.NavigateTo(ProductScreenRoutes.HistoryView);
+        Assert.Equal(ProductScreenRoutes.ClaimSubmission, viewModel.CurrentRouteId);
     }
     [Fact]
     public void ClaimSubmission_dirty_state_blocks_global_and_direct_navigation()
@@ -518,7 +584,8 @@ public sealed class ProductShellViewModelTests
                 family,
                 CreateCategoryManagementViewModel(uiTextProvider),
                 CreateClaimSubmissionManagementViewModel(uiTextProvider),
-                CreateClaimCompleteSummaryViewModel(uiTextProvider));
+                CreateClaimCompleteSummaryViewModel(uiTextProvider),
+                CreateClaimHistoryViewModel(uiTextProvider));
 
             Assert.True(await viewModel.NavigateToFamilyEditAsync(record.Id, record.Version));
             Assert.Equal(ProductScreenRoutes.FamilyRegister, viewModel.CurrentRouteId);
@@ -723,7 +790,8 @@ public sealed class ProductShellViewModelTests
             familyMemberManagement,
             CreateCategoryManagementViewModel(uiTextProvider),
             CreateClaimSubmissionManagementViewModel(uiTextProvider),
-            CreateClaimCompleteSummaryViewModel(uiTextProvider));
+            CreateClaimCompleteSummaryViewModel(uiTextProvider),
+            CreateClaimHistoryViewModel(uiTextProvider));
 
         Assert.Same(documentRegistration, viewModel.DocumentRegistration);
     }
@@ -745,7 +813,8 @@ public sealed class ProductShellViewModelTests
             familyMemberManagement,
             CreateCategoryManagementViewModel(uiTextProvider),
             CreateClaimSubmissionManagementViewModel(uiTextProvider),
-            CreateClaimCompleteSummaryViewModel(uiTextProvider));
+            CreateClaimCompleteSummaryViewModel(uiTextProvider),
+            CreateClaimHistoryViewModel(uiTextProvider));
 
         Assert.Same(documentList, viewModel.DocumentList);
     }
@@ -767,7 +836,8 @@ public sealed class ProductShellViewModelTests
             familyMemberManagement,
             CreateCategoryManagementViewModel(uiTextProvider),
             CreateClaimSubmissionManagementViewModel(uiTextProvider),
-            CreateClaimCompleteSummaryViewModel(uiTextProvider));
+            CreateClaimCompleteSummaryViewModel(uiTextProvider),
+            CreateClaimHistoryViewModel(uiTextProvider));
 
         Assert.Same(policyClaimManagement, viewModel.PolicyClaimManagement);
     }
@@ -785,7 +855,8 @@ public sealed class ProductShellViewModelTests
             familyMemberManagement,
             CreateCategoryManagementViewModel(uiTextProvider),
             CreateClaimSubmissionManagementViewModel(uiTextProvider),
-            CreateClaimCompleteSummaryViewModel(uiTextProvider));
+            CreateClaimCompleteSummaryViewModel(uiTextProvider),
+            CreateClaimHistoryViewModel(uiTextProvider));
 
         Assert.Same(familyMemberManagement, viewModel.FamilyMemberManagement);
     }
@@ -801,7 +872,8 @@ public sealed class ProductShellViewModelTests
             CreateFamilyMemberManagementViewModel(uiTextProvider),
             CreateCategoryManagementViewModel(uiTextProvider),
             CreateClaimSubmissionManagementViewModel(uiTextProvider),
-            CreateClaimCompleteSummaryViewModel(uiTextProvider));
+            CreateClaimCompleteSummaryViewModel(uiTextProvider),
+            CreateClaimHistoryViewModel(uiTextProvider));
     }
 
     private static ProductShellViewModel CreateViewModel(
@@ -816,7 +888,8 @@ public sealed class ProductShellViewModelTests
             familyMemberManagement,
             CreateCategoryManagementViewModel(uiTextProvider),
             CreateClaimSubmissionManagementViewModel(uiTextProvider),
-            CreateClaimCompleteSummaryViewModel(uiTextProvider));
+            CreateClaimCompleteSummaryViewModel(uiTextProvider),
+            CreateClaimHistoryViewModel(uiTextProvider));
     }
 
     private static ProductShellViewModel CreateViewModel(
@@ -832,7 +905,8 @@ public sealed class ProductShellViewModelTests
             familyMemberManagement,
             CreateCategoryManagementViewModel(uiTextProvider),
             CreateClaimSubmissionManagementViewModel(uiTextProvider),
-            CreateClaimCompleteSummaryViewModel(uiTextProvider));
+            CreateClaimCompleteSummaryViewModel(uiTextProvider),
+            CreateClaimHistoryViewModel(uiTextProvider));
     }
 
     private static void FillInsuranceEditor(
@@ -917,6 +991,39 @@ public sealed class ProductShellViewModelTests
             submissionStorage,
             paymentStorage,
             policyClaimStorage,
+            familyStorage,
+            uiTextProvider);
+    }
+
+    private static ClaimHistoryViewModel CreateClaimHistoryViewModel(
+        IUiTextProvider uiTextProvider)
+    {
+        var metadataRoot = Path.Combine(
+            Path.GetTempPath(),
+            "FamilyClaimRef.App.Tests",
+            "ProductShellViewModelTests",
+            Guid.NewGuid().ToString("N"),
+            "data",
+            "local");
+        var familyStorage = new JsonFamilyMemberStorageService(metadataRoot);
+        var policyClaimStorage = new JsonPolicyClaimStorageService(
+            metadataRoot,
+            familyStorage);
+        var documentStorage = new JsonDocumentStorageService(metadataRoot);
+        var submissionStorage = new JsonClaimSubmissionStorageService(
+            metadataRoot,
+            policyClaimStorage,
+            policyClaimStorage,
+            documentStorage);
+        var paymentStorage = new JsonClaimPaymentStorageService(
+            metadataRoot,
+            submissionStorage,
+            policyClaimStorage,
+            policyClaimStorage);
+        return new ClaimHistoryViewModel(
+            policyClaimStorage,
+            submissionStorage,
+            paymentStorage,
             familyStorage,
             uiTextProvider);
     }

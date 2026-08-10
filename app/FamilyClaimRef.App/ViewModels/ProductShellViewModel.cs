@@ -24,7 +24,8 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
         FamilyMemberManagementViewModel familyMemberManagement,
         CategoryManagementViewModel categoryManagement,
         ClaimSubmissionManagementViewModel claimSubmissionManagement,
-        ClaimCompleteSummaryViewModel claimCompleteSummary)
+        ClaimCompleteSummaryViewModel claimCompleteSummary,
+        ClaimHistoryViewModel claimHistory)
     {
         ArgumentNullException.ThrowIfNull(uiTextProvider);
         ArgumentNullException.ThrowIfNull(documentRegistration);
@@ -34,6 +35,7 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
         ArgumentNullException.ThrowIfNull(categoryManagement);
         ArgumentNullException.ThrowIfNull(claimSubmissionManagement);
         ArgumentNullException.ThrowIfNull(claimCompleteSummary);
+        ArgumentNullException.ThrowIfNull(claimHistory);
 
         ShellTitle = uiTextProvider.Get(UiTextKeys.ProductShellTitle);
         emptyDisplayValue = uiTextProvider.Get(ProductScreenTextKeys.EmptyValue);
@@ -47,6 +49,7 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
         CategoryManagement = categoryManagement;
         ClaimSubmissionManagement = claimSubmissionManagement;
         ClaimCompleteSummary = claimCompleteSummary;
+        ClaimHistory = claimHistory;
         NavigationItems = Array.AsReadOnly(
         [
             new ProductNavigationItemViewModel(
@@ -75,6 +78,7 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
         PolicyClaimManagement.PropertyChanged += OnPolicyClaimManagementPropertyChanged;
         ClaimSubmissionManagement.PropertyChanged +=
             OnClaimSubmissionManagementPropertyChanged;
+        ClaimHistory.PropertyChanged += OnClaimHistoryPropertyChanged;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -94,6 +98,8 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
     public ClaimSubmissionManagementViewModel ClaimSubmissionManagement { get; }
 
     public ClaimCompleteSummaryViewModel ClaimCompleteSummary { get; }
+
+    public ClaimHistoryViewModel ClaimHistory { get; }
 
     public ReadOnlyCollection<ProductNavigationItemViewModel> NavigationItems { get; }
 
@@ -361,6 +367,8 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
     private bool CanNavigateTo(string routeId)
     {
         return ScreensById.ContainsKey(routeId)
+            && (!string.Equals(routeId, ProductScreenRoutes.HistoryDetail, StringComparison.Ordinal)
+                || ClaimHistory.HasDetail)
             && (!string.Equals(
                     CurrentRouteId,
                     ProductScreenRoutes.ClaimSubmission,
@@ -378,6 +386,7 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
 
         ConfigureClaimSubmissionTarget(routeId);
         ConfigureClaimCompleteTarget(routeId);
+        ConfigureClaimHistoryTarget(routeId);
         ConfigureRegistrationTarget(routeId);
         CurrentScreen = destination;
         SynchronizeLegacyNavigation(routeId);
@@ -411,6 +420,24 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
     }
 
 
+    private void ConfigureClaimHistoryTarget(string routeId)
+    {
+        if (!string.Equals(routeId, ProductScreenRoutes.HistoryView, StringComparison.Ordinal)
+            || string.Equals(CurrentRouteId, ProductScreenRoutes.HistoryDetail, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        var claimCaseId = CurrentRouteId switch
+        {
+            ProductScreenRoutes.ClaimSubmission =>
+                ClaimSubmissionManagement.SelectedClaimCaseId,
+            ProductScreenRoutes.ClaimComplete =>
+                ClaimCompleteSummary.SelectedClaimCaseId,
+            _ => null
+        };
+        ClaimHistory.SetClaimCaseScope(claimCaseId, resetFilters: true);
+    }
     private void ConfigureRegistrationTarget(string routeId)
     {
         if (string.Equals(routeId, ProductScreenRoutes.PolicyDocumentRegister, StringComparison.Ordinal))
@@ -508,6 +535,15 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
         }
     }
 
+    private void OnClaimHistoryPropertyChanged(
+        object? sender,
+        PropertyChangedEventArgs eventArgs)
+    {
+        if (eventArgs.PropertyName == nameof(ClaimHistoryViewModel.HasDetail))
+        {
+            navigateCommand.RaiseCanExecuteChanged();
+        }
+    }
     private static string? NormalizeDisplayTitle(string? value)
     {
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();

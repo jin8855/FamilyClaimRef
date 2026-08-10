@@ -21,9 +21,9 @@ public sealed class ResourceUiTextProviderTests
     {
         var resources = LoadUiStrings();
 
-        Assert.Equal(340, resources.Count);
-        Assert.Equal(283, resources.Keys.Count(IsProductKey));
-        Assert.Equal(283, ExpectedProductResources.Count);
+        Assert.Equal(374, resources.Count);
+        Assert.Equal(317, resources.Keys.Count(IsProductKey));
+        Assert.Equal(317, ExpectedProductResources.Count);
         Assert.All(
             ExpectedProductResources,
             expected => Assert.Equal(expected.Value, resources[expected.Key]));
@@ -36,11 +36,11 @@ public sealed class ResourceUiTextProviderTests
         var resourceKeys = resourceEntries.Select(entry => entry.Key).ToArray();
         var constantValues = LoadUiTextKeyConstants();
 
-        Assert.Equal(340, resourceEntries.Count);
+        Assert.Equal(374, resourceEntries.Count);
         Assert.Equal(resourceKeys.Length, resourceKeys.Distinct(StringComparer.Ordinal).Count());
-        Assert.Equal(340, constantValues.Count);
+        Assert.Equal(374, constantValues.Count);
         Assert.Equal(constantValues.Count, constantValues.Distinct(StringComparer.Ordinal).Count());
-        Assert.Equal(283, constantValues.Count(IsProductKey));
+        Assert.Equal(317, constantValues.Count(IsProductKey));
         Assert.Equal(
             resourceKeys.OrderBy(key => key, StringComparer.Ordinal),
             constantValues.OrderBy(key => key, StringComparer.Ordinal));
@@ -785,7 +785,41 @@ public sealed class ResourceUiTextProviderTests
             [UiTextKeys.ProductClaimCompleteNoPaymentsValue] = "지급 결과 없음",
             [UiTextKeys.ProductClaimCompleteNotEnteredValue] = "미입력",
             [UiTextKeys.ProductClaimCompletePaymentSummaryFormat] =
-                "대기 {0} · 지급 {1} · 부분 지급 {2} · 부지급 {3} · 취소 {4}"
+                "대기 {0} · 지급 {1} · 부분 지급 {2} · 부지급 {3} · 취소 {4}",
+            [UiTextKeys.ProductHistoryGuidance] = "청구 건별 보험사 청구와 지급 결과를 읽기 전용으로 조회합니다.",
+            [UiTextKeys.ProductHistoryDetailGuidance] = "선택한 보험사 청구와 연결된 지급 결과를 읽기 전용으로 확인합니다.",
+            [UiTextKeys.ProductHistoryFilterSectionTitle] = "이력 검색 조건",
+            [UiTextKeys.ProductHistoryFamilyFilterLabel] = "가족",
+            [UiTextKeys.ProductHistoryInsurerFilterLabel] = "보험사",
+            [UiTextKeys.ProductHistoryDateFromLabel] = "진료일 시작",
+            [UiTextKeys.ProductHistoryDateToLabel] = "진료일 종료",
+            [UiTextKeys.ProductHistoryVisitTypeFilterLabel] = "진료 구분",
+            [UiTextKeys.ProductHistorySearchLabel] = "표시 텍스트",
+            [UiTextKeys.ProductHistoryApplyFilterAction] = "조회",
+            [UiTextKeys.ProductHistoryResetFilterAction] = "초기화",
+            [UiTextKeys.ProductHistoryListSectionTitle] = "통합 청구 이력",
+            [UiTextKeys.ProductHistoryInsurerLabel] = "보험사",
+            [UiTextKeys.ProductHistoryClaimCaseLabel] = "청구 건",
+            [UiTextKeys.ProductHistoryParentStateLabel] = "연결 상태",
+            [UiTextKeys.ProductHistoryDetailAction] = "상세",
+            [UiTextKeys.ProductHistoryAllOption] = "전체",
+            [UiTextKeys.ProductHistoryActiveState] = "사용 중",
+            [UiTextKeys.ProductHistoryDisabledState] = "사용 중지",
+            [UiTextKeys.ProductHistoryEmptyMessage] = "표시할 청구 이력이 없습니다.",
+            [UiTextKeys.ProductHistoryFilterEmptyMessage] = "검색 조건에 맞는 청구 이력이 없습니다.",
+            [UiTextKeys.ProductHistoryReferenceMessage] = "청구 건, 가족, 보험 계약 또는 지급 결과의 연결 상태를 확인해 주세요.",
+            [UiTextKeys.ProductHistoryLegacyReviewMessage] = "기존 청구 건 또는 보험 계약의 가족 연결을 확인할 수 없어 이력을 표시할 수 없습니다.",
+            [UiTextKeys.ProductHistoryOwnershipMessage] = "청구 건과 보험 계약의 가족 연결이 일치하지 않아 이력을 표시할 수 없습니다.",
+            [UiTextKeys.ProductHistoryUnknownStatusMessage] = "지원하지 않는 청구 또는 지급 상태가 있어 이력을 표시할 수 없습니다.",
+            [UiTextKeys.ProductHistoryLoadFailedMessage] = "청구 이력을 불러오지 못했습니다. 다시 시도해 주세요.",
+            [UiTextKeys.ProductHistoryDateRangeMessage] = "진료일 시작은 종료보다 늦을 수 없습니다.",
+            [UiTextKeys.ProductHistoryClaimStatusDraft] = "초안",
+            [UiTextKeys.ProductHistoryDetailSelectionRequiredMessage] = "이력 목록에서 확인할 항목을 선택해 주세요.",
+            [UiTextKeys.ProductHistoryBackToListAction] = "이력 목록으로 돌아가기",
+            [UiTextKeys.ProductHistoryClaimSectionTitle] = "청구 건 정보",
+            [UiTextKeys.ProductHistorySubmissionSectionTitle] = "보험사 청구 정보",
+            [UiTextKeys.ProductHistoryPaymentSectionTitle] = "지급 결과",
+            [UiTextKeys.ProductHistoryNoPaymentsMessage] = "등록된 지급 결과가 없습니다.",
         };
 
     private const string ExistingResourceFingerprint =
