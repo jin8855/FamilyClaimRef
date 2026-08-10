@@ -31,6 +31,11 @@
                 DataContext="{Binding DataContext.ClaimSubmissionManagement, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
         </DataTemplate>
 
+        <DataTemplate x:Key="ClaimCompleteContentTemplate">
+            <views:ProductClaimCompleteSummaryView
+                DataContext="{Binding DataContext.ClaimCompleteSummary, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+        </DataTemplate>
+
         <DataTemplate x:Key="DocumentRegistrationContentTemplate">
             <views:ProductDocumentRegistrationView
                 DataContext="{Binding DataContext.DocumentRegistration, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
@@ -160,6 +165,11 @@
                                      Value="08_claim_submission">
                             <Setter Property="ContentTemplate"
                                     Value="{StaticResource ClaimSubmissionContentTemplate}" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Content.Id, RelativeSource={RelativeSource Self}}"
+                                     Value="14_claim_complete">
+                            <Setter Property="ContentTemplate"
+                                    Value="{StaticResource ClaimCompleteContentTemplate}" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Content.Id, RelativeSource={RelativeSource Self}}"
                                      Value="17_policy_document_register">

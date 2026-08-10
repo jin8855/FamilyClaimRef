@@ -23,7 +23,8 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
         PolicyClaimManagementViewModel policyClaimManagement,
         FamilyMemberManagementViewModel familyMemberManagement,
         CategoryManagementViewModel categoryManagement,
-        ClaimSubmissionManagementViewModel claimSubmissionManagement)
+        ClaimSubmissionManagementViewModel claimSubmissionManagement,
+        ClaimCompleteSummaryViewModel claimCompleteSummary)
     {
         ArgumentNullException.ThrowIfNull(uiTextProvider);
         ArgumentNullException.ThrowIfNull(documentRegistration);
@@ -32,6 +33,7 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
         ArgumentNullException.ThrowIfNull(familyMemberManagement);
         ArgumentNullException.ThrowIfNull(categoryManagement);
         ArgumentNullException.ThrowIfNull(claimSubmissionManagement);
+        ArgumentNullException.ThrowIfNull(claimCompleteSummary);
 
         ShellTitle = uiTextProvider.Get(UiTextKeys.ProductShellTitle);
         emptyDisplayValue = uiTextProvider.Get(ProductScreenTextKeys.EmptyValue);
@@ -44,6 +46,7 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
         FamilyMemberManagement = familyMemberManagement;
         CategoryManagement = categoryManagement;
         ClaimSubmissionManagement = claimSubmissionManagement;
+        ClaimCompleteSummary = claimCompleteSummary;
         NavigationItems = Array.AsReadOnly(
         [
             new ProductNavigationItemViewModel(
@@ -89,6 +92,8 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
     public CategoryManagementViewModel CategoryManagement { get; }
 
     public ClaimSubmissionManagementViewModel ClaimSubmissionManagement { get; }
+
+    public ClaimCompleteSummaryViewModel ClaimCompleteSummary { get; }
 
     public ReadOnlyCollection<ProductNavigationItemViewModel> NavigationItems { get; }
 
@@ -372,17 +377,36 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
         }
 
         ConfigureClaimSubmissionTarget(routeId);
+        ConfigureClaimCompleteTarget(routeId);
         ConfigureRegistrationTarget(routeId);
         CurrentScreen = destination;
         SynchronizeLegacyNavigation(routeId);
     }
     private void ConfigureClaimSubmissionTarget(string routeId)
     {
-        if (string.Equals(routeId, ProductScreenRoutes.ClaimSubmission, StringComparison.Ordinal)
-            && !string.IsNullOrWhiteSpace(PolicyClaimManagement.SelectedClaimId))
+        if (!string.Equals(routeId, ProductScreenRoutes.ClaimSubmission, StringComparison.Ordinal))
         {
-            ClaimSubmissionManagement.SelectedClaimCaseId =
-                PolicyClaimManagement.SelectedClaimId;
+            return;
+        }
+
+        var claimCaseId = string.Equals(
+                CurrentRouteId,
+                ProductScreenRoutes.ClaimComplete,
+                StringComparison.Ordinal)
+            ? ClaimCompleteSummary.SelectedClaimCaseId
+            : PolicyClaimManagement.SelectedClaimId;
+        if (!string.IsNullOrWhiteSpace(claimCaseId))
+        {
+            ClaimSubmissionManagement.SelectedClaimCaseId = claimCaseId;
+        }
+    }
+
+    private void ConfigureClaimCompleteTarget(string routeId)
+    {
+        if (string.Equals(routeId, ProductScreenRoutes.ClaimComplete, StringComparison.Ordinal))
+        {
+            ClaimCompleteSummary.SelectedClaimCaseId =
+                ClaimSubmissionManagement.SelectedClaimCaseId;
         }
     }
 
