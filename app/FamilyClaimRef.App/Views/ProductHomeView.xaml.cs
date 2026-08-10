@@ -13,12 +13,19 @@ public partial class ProductHomeView : UserControl
 
     private async void UserControl_Loaded(object sender, RoutedEventArgs e)
     {
-        if (DataContext is not ProductShellViewModel viewModel)
-        {
-            return;
-        }
+        await LoadDashboardAsync();
+    }
 
-        await viewModel.PolicyClaimManagement.LoadAsync();
-        await viewModel.DocumentList.LoadAsync();
+    private async void Refresh_Click(object sender, RoutedEventArgs e)
+    {
+        await LoadDashboardAsync();
+    }
+
+    private async Task LoadDashboardAsync()
+    {
+        if (DataContext is ProductShellViewModel viewModel)
+        {
+            await viewModel.HomeDashboard.LoadAsync();
+        }
     }
 }

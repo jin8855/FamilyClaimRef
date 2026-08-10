@@ -151,6 +151,12 @@ public sealed class AppServices
             claimPaymentHistoryStorageReader,
             familyMemberStorageService,
             uiTextProvider);
+        var homeDashboardViewModel = new HomeDashboardViewModel(
+            claimHistoryStorageReader,
+            claimSubmissionHistoryStorageReader,
+            claimPaymentHistoryStorageReader,
+            familyMemberStorageService,
+            uiTextProvider);
         var productShellViewModel = new ProductShellViewModel(
             uiTextProvider,
             productShellDocumentRegistrationViewModel,
@@ -160,7 +166,8 @@ public sealed class AppServices
             categoryManagementViewModel,
             claimSubmissionManagementViewModel,
             claimCompleteSummaryViewModel,
-            claimHistoryViewModel);
+            claimHistoryViewModel,
+            homeDashboardViewModel);
 
         return new AppServices(
             mainWindowViewModel,
