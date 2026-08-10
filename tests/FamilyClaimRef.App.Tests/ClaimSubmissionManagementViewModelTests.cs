@@ -16,13 +16,15 @@ public sealed class ClaimSubmissionManagementViewModelTests
         try
         {
             Assert.Throws<ArgumentNullException>(() => new ClaimSubmissionManagementViewModel(
-                null!, fixture.PolicyClaims, fixture.Documents, fixture.UiText));
+                null!, fixture.PolicyClaims, fixture.Documents, fixture.CreatePaymentViewModel(), fixture.UiText));
             Assert.Throws<ArgumentNullException>(() => new ClaimSubmissionManagementViewModel(
-                fixture.Submissions, null!, fixture.Documents, fixture.UiText));
+                fixture.Submissions, null!, fixture.Documents, fixture.CreatePaymentViewModel(), fixture.UiText));
             Assert.Throws<ArgumentNullException>(() => new ClaimSubmissionManagementViewModel(
-                fixture.Submissions, fixture.PolicyClaims, null!, fixture.UiText));
+                fixture.Submissions, fixture.PolicyClaims, null!, fixture.CreatePaymentViewModel(), fixture.UiText));
             Assert.Throws<ArgumentNullException>(() => new ClaimSubmissionManagementViewModel(
-                fixture.Submissions, fixture.PolicyClaims, fixture.Documents, null!));
+                fixture.Submissions, fixture.PolicyClaims, fixture.Documents, null!, fixture.UiText));
+            Assert.Throws<ArgumentNullException>(() => new ClaimSubmissionManagementViewModel(
+                fixture.Submissions, fixture.PolicyClaims, fixture.Documents, fixture.CreatePaymentViewModel(), null!));
         }
         finally
         {
@@ -313,7 +315,13 @@ public sealed class ClaimSubmissionManagementViewModelTests
         Assert.Contains("ProductClaimSubmission_Memo", values);
         Assert.Contains("ProductClaimSubmission_Create", values);
         Assert.Contains("ProductClaimSubmission_Save", values);
-        Assert.Equal(6, values.Count(value => value == "{Binding CanEditDetails}"));
+        Assert.Contains("ProductClaimPayment_List", values);
+        Assert.Contains("ProductClaimPayment_Status", values);
+        Assert.Contains("ProductClaimPayment_PaidDate", values);
+        Assert.Contains("ProductClaimPayment_PaidAmount", values);
+        Assert.Contains("ProductClaimPayment_Create", values);
+        Assert.Contains("ProductClaimPayment_Save", values);
+        Assert.Equal(8, values.Count(value => value == "{Binding CanEditDetails}"));
         Assert.Contains("{x:Static viewModels:ProductScreenRoutes.ClaimReferenceResult}", values);
         Assert.Contains("{x:Static viewModels:ProductScreenRoutes.ClaimComplete}", values);
         Assert.Contains("{x:Static viewModels:ProductScreenRoutes.HistoryView}", values);
@@ -322,7 +330,10 @@ public sealed class ClaimSubmissionManagementViewModelTests
         Assert.DoesNotContain(values, value => value.Contains("PolicyCoverageId", StringComparison.Ordinal));
         var submissionRowStyle = Assert.Single(
             document.Descendants(presentation + "Style"),
-            style => style.Attribute("TargetType")?.Value == "DataGridRow");
+            style => style.Attribute("TargetType")?.Value == "DataGridRow"
+                && style.Elements(presentation + "Setter").Any(
+                    setter => setter.Attribute("Property")?.Value == "AutomationProperties.Name"
+                        && setter.Attribute("Value")?.Value == "{Binding PolicyDisplayTitle}"));
         Assert.Contains(
             submissionRowStyle.Elements(presentation + "Setter"),
             setter => setter.Attribute("Property")?.Value == "AutomationProperties.Name"
@@ -401,6 +412,11 @@ public sealed class ClaimSubmissionManagementViewModelTests
                 PolicyClaims,
                 PolicyClaims,
                 Documents);
+            Payments = new JsonClaimPaymentStorageService(
+                RootPath,
+                Submissions,
+                PolicyClaims,
+                PolicyClaims);
             UiText = new FakeUiTextProvider();
         }
 
@@ -414,8 +430,15 @@ public sealed class ClaimSubmissionManagementViewModelTests
 
         public JsonClaimSubmissionStorageService Submissions { get; }
 
+        public JsonClaimPaymentStorageService Payments { get; }
+
         public IUiTextProvider UiText { get; }
 
+
+        public ClaimPaymentManagementViewModel CreatePaymentViewModel()
+        {
+            return new ClaimPaymentManagementViewModel(Payments, UiText);
+        }
         public ClaimSubmissionManagementViewModel CreateViewModel(
             IClaimSubmissionStorageService? submissions = null,
             IClaimCaseStorageService? claimCases = null)
@@ -424,6 +447,7 @@ public sealed class ClaimSubmissionManagementViewModelTests
                 submissions ?? Submissions,
                 claimCases ?? PolicyClaims,
                 Documents,
+                CreatePaymentViewModel(),
                 UiText);
         }
 

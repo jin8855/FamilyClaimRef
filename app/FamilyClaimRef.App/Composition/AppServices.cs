@@ -65,6 +65,12 @@ public sealed class AppServices
                 claimCaseStorageService,
                 policyClaimStorageService,
                 documentStorageService);
+        IClaimPaymentStorageService claimPaymentStorageService =
+            new JsonClaimPaymentStorageService(
+                metadataRootPath,
+                claimSubmissionStorageService,
+                claimCaseStorageService,
+                policyClaimStorageService);
         IFileAttachmentService fileAttachmentService = new LocalFileAttachmentService(attachmentRootPath);
         var fileValidationService = new DocumentFileValidationService();
         var attachmentCoordinator = new DocumentAttachmentCoordinator(
@@ -118,10 +124,14 @@ public sealed class AppServices
         var categoryManagementViewModel = new CategoryManagementViewModel(
             categoryAggregateStorageService,
             uiTextProvider);
+        var claimPaymentManagementViewModel = new ClaimPaymentManagementViewModel(
+            claimPaymentStorageService,
+            uiTextProvider);
         var claimSubmissionManagementViewModel = new ClaimSubmissionManagementViewModel(
             claimSubmissionStorageService,
             claimCaseStorageService,
             documentStorageService,
+            claimPaymentManagementViewModel,
             uiTextProvider);
         var productShellViewModel = new ProductShellViewModel(
             uiTextProvider,
@@ -373,7 +383,27 @@ public sealed class AppServices
             [UiTextKeys.PolicyManagementValidationTitleRequired] = "보험 계약 이름을 입력해 주세요.",
             [UiTextKeys.ClaimManagementValidationSelectClaimTarget] = "사용 중지할 청구 건을 선택해 주세요.",
             [UiTextKeys.PolicyManagementValidationSelectPolicyTarget] =
-                "사용 중지할 보험 계약을 선택해 주세요."
+                "사용 중지할 보험 계약을 선택해 주세요.",
+            [UiTextKeys.ProductClaimPaymentValidationMessage] =
+                "지급 상태와 상태별 필수 항목 및 지급 금액 형식을 확인해 주세요.",
+            [UiTextKeys.ProductClaimPaymentConflictMessage] =
+                "다른 변경이 먼저 저장되었습니다. 지급 결과를 다시 불러온 뒤 시도해 주세요.",
+            [UiTextKeys.ProductClaimPaymentLegacyReviewMessage] =
+                "기존 청구 건의 가족 연결을 확인할 수 없어 지급 결과를 처리할 수 없습니다.",
+            [UiTextKeys.ProductClaimPaymentReferenceMessage] =
+                "보험사 청구, 청구 건 또는 보험 계약의 연결 상태를 확인해 주세요.",
+            [UiTextKeys.ProductClaimPaymentTransitionMessage] =
+                "현재 상태에서는 선택한 지급 결과로 변경할 수 없습니다.",
+            [UiTextKeys.ProductClaimPaymentOperationFailedMessage] =
+                "지급 결과를 처리하지 못했습니다. 다시 시도해 주세요.",
+            [UiTextKeys.ProductClaimPaymentCreatedMessage] = "지급 대기 기록을 생성했습니다.",
+            [UiTextKeys.ProductClaimPaymentSavedMessage] = "지급 결과를 저장했습니다.",
+            [UiTextKeys.ProductClaimPaymentNotEnteredValue] = "미입력",
+            [UiTextKeys.ProductClaimPaymentStatusPending] = "대기",
+            [UiTextKeys.ProductClaimPaymentStatusPaid] = "지급",
+            [UiTextKeys.ProductClaimPaymentStatusPartiallyPaid] = "부분 지급",
+            [UiTextKeys.ProductClaimPaymentStatusDenied] = "부지급",
+            [UiTextKeys.ProductClaimPaymentStatusCancelled] = "취소",
         });
     }
 }

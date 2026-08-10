@@ -74,7 +74,7 @@
                                   DisplayMemberPath="DisplayTitle"
                                   SelectedValuePath="Id"
                                   SelectedValue="{Binding SelectedClaimCaseId, Mode=TwoWay}"
-                                  IsEnabled="{Binding CanNavigateAway}"
+                                  IsEnabled="{Binding CanSwitchSubmission}"
                                   SelectionChanged="ClaimCase_SelectionChanged"
                                   AutomationProperties.AutomationId="ProductClaimSubmission_ClaimCase" />
                     </StackPanel>
@@ -114,6 +114,7 @@
                                   CanUserDeleteRows="False"
                                   CanUserResizeRows="False"
                                   IsReadOnly="True"
+                                  IsEnabled="{Binding CanSwitchSubmission}"
                                   SelectionMode="Single"
                                   SelectionChanged="SubmissionList_SelectionChanged"
                                   MaxHeight="430"
@@ -155,6 +156,7 @@
                         <Button Grid.Row="2"
                                 Content="{StaticResource Ui.Product.ClaimSubmission.NewAction}"
                                 Click="NewButton_Click"
+                                IsEnabled="{Binding CanSwitchSubmission}"
                                 AutomationProperties.AutomationId="ProductClaimSubmission_New"
                                 Style="{StaticResource ProductSecondaryButtonStyle}"
                                 HorizontalAlignment="Right"
@@ -277,14 +279,224 @@
             <Border Grid.Row="3"
                     Style="{StaticResource ProductPanelStyle}"
                     Margin="0,0,0,14">
-                <StackPanel>
-                    <TextBlock Text="{StaticResource Ui.Product.ClaimSubmission.PaymentFutureTitle}"
+                <Grid DataContext="{Binding PaymentManagement}"
+                      IsEnabled="{Binding DataContext.CanEditPayment, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="{StaticResource Ui.Product.ClaimPayment.SectionTitle}"
                                Style="{StaticResource ProductSectionTitleStyle}" />
-                    <TextBlock Text="{StaticResource Ui.Product.ClaimSubmission.PaymentFutureMessage}"
+                    <TextBlock Grid.Row="1"
+                               Text="{StaticResource Ui.Product.ClaimPayment.Guidance}"
                                Style="{StaticResource ProductSubtitleStyle}"
                                TextWrapping="Wrap"
-                               Margin="0,6,0,0" />
-                </StackPanel>
+                               Margin="0,6,0,12" />
+                    <Grid Grid.Row="2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="380" />
+                            <ColumnDefinition Width="18" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="{StaticResource Ui.Product.ClaimPayment.ListTitle}"
+                                       Style="{StaticResource ProductSubtitleStyle}"
+                                       Margin="0,0,0,8" />
+                            <DataGrid Grid.Row="1"
+                                      ItemsSource="{Binding Payments}"
+                                      AutoGenerateColumns="False"
+                                      CanUserAddRows="False"
+                                      CanUserDeleteRows="False"
+                                      CanUserResizeRows="False"
+                                      IsReadOnly="True"
+                                      SelectionMode="Single"
+                                      SelectionChanged="PaymentList_SelectionChanged"
+                                      IsEnabled="{Binding CanNavigateAway}"
+                                      MaxHeight="250"
+                                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                      ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                      AutomationProperties.AutomationId="ProductClaimPayment_List">
+                                <DataGrid.RowStyle>
+                                    <Style TargetType="DataGridRow">
+                                        <Setter Property="AutomationProperties.Name"
+                                                Value="{Binding StatusDisplay}" />
+                                    </Style>
+                                </DataGrid.RowStyle>
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="{StaticResource Ui.Product.ClaimPayment.StatusLabel}"
+                                                        Binding="{Binding StatusDisplay}"
+                                                        Width="*" />
+                                    <DataGridTextColumn Header="{StaticResource Ui.Product.ClaimPayment.PaidDateLabel}"
+                                                        Binding="{Binding PaidDateDisplay}"
+                                                        Width="94" />
+                                    <DataGridTextColumn Header="{StaticResource Ui.Product.ClaimPayment.PaidAmountLabel}"
+                                                        Binding="{Binding PaidAmountDisplay}"
+                                                        Width="100" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                            <TextBlock Grid.Row="1"
+                                       Text="{StaticResource Ui.Product.ClaimPayment.EmptyMessage}"
+                                       TextWrapping="Wrap"
+                                       Margin="8,12,8,0">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock"
+                                           BasedOn="{StaticResource ProductSubtitleStyle}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsPaymentListEmpty}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                            <Button Grid.Row="2"
+                                    Content="{StaticResource Ui.Product.ClaimPayment.NewAction}"
+                                    Click="NewPaymentButton_Click"
+                                    IsEnabled="{Binding CanNavigateAway}"
+                                    AutomationProperties.AutomationId="ProductClaimPayment_New"
+                                    Style="{StaticResource ProductSecondaryButtonStyle}"
+                                    HorizontalAlignment="Right"
+                                    Margin="0,10,0,0" />
+                        </Grid>
+                        <Grid Grid.Column="2">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="{StaticResource Ui.Product.ClaimPayment.DetailTitle}"
+                                       Style="{StaticResource ProductSubtitleStyle}"
+                                       Margin="0,0,0,8" />
+                            <UniformGrid Grid.Row="1" Columns="3">
+                                <StackPanel Margin="0,0,12,10">
+                                    <TextBlock Text="{StaticResource Ui.Product.ClaimPayment.StatusLabel}"
+                                               Style="{StaticResource ProductSubtitleStyle}"
+                                               Margin="0,0,0,4" />
+                                    <ComboBox ItemsSource="{Binding AvailableStatusOptions}"
+                                              DisplayMemberPath="DisplayText"
+                                              SelectedValuePath="Value"
+                                              SelectedValue="{Binding SelectedStatus, Mode=TwoWay}"
+                                              IsEnabled="{Binding CanEditDetails}"
+                                              AutomationProperties.AutomationId="ProductClaimPayment_Status" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,12,10">
+                                    <TextBlock Text="{StaticResource Ui.Product.ClaimPayment.PaidDateLabel}"
+                                               Style="{StaticResource ProductSubtitleStyle}"
+                                               Margin="0,0,0,4" />
+                                    <DatePicker SelectedDate="{Binding PaidDate, Mode=TwoWay}"
+                                                IsEnabled="{Binding IsPaidResultEnabled}"
+                                                AutomationProperties.AutomationId="ProductClaimPayment_PaidDate" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,0,10">
+                                    <TextBlock Text="{StaticResource Ui.Product.ClaimPayment.PaidAmountLabel}"
+                                               Style="{StaticResource ProductSubtitleStyle}"
+                                               Margin="0,0,0,4" />
+                                    <TextBox Text="{Binding PaidAmountText, UpdateSourceTrigger=PropertyChanged}"
+                                             IsEnabled="{Binding IsPaidResultEnabled}"
+                                             TextAlignment="Right"
+                                             AutomationProperties.AutomationId="ProductClaimPayment_PaidAmount" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,12,10">
+                                    <TextBlock Text="{StaticResource Ui.Product.ClaimPayment.CoverageLabel}"
+                                               Style="{StaticResource ProductSubtitleStyle}"
+                                               Margin="0,0,0,4" />
+                                    <TextBox Text="{Binding PaidCoverageDisplayName, UpdateSourceTrigger=PropertyChanged}"
+                                             IsEnabled="{Binding IsPaidResultEnabled}"
+                                             AutomationProperties.AutomationId="ProductClaimPayment_Coverage" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,12,10">
+                                    <TextBlock Text="{StaticResource Ui.Product.ClaimPayment.DenyReasonLabel}"
+                                               Style="{StaticResource ProductSubtitleStyle}"
+                                               Margin="0,0,0,4" />
+                                    <TextBox Text="{Binding DenyReason, UpdateSourceTrigger=PropertyChanged}"
+                                             IsEnabled="{Binding IsDenyReasonEnabled}"
+                                             AutomationProperties.AutomationId="ProductClaimPayment_DenyReason" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,0,10">
+                                    <TextBlock Text="{StaticResource Ui.Product.ClaimPayment.ReductionReasonLabel}"
+                                               Style="{StaticResource ProductSubtitleStyle}"
+                                               Margin="0,0,0,4" />
+                                    <TextBox Text="{Binding ReductionReason, UpdateSourceTrigger=PropertyChanged}"
+                                             IsEnabled="{Binding IsReductionReasonEnabled}"
+                                             AutomationProperties.AutomationId="ProductClaimPayment_ReductionReason" />
+                                </StackPanel>
+                            </UniformGrid>
+                            <Grid Grid.Row="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="12" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="{StaticResource Ui.Product.ClaimPayment.AdditionalDocumentsLabel}"
+                                               Style="{StaticResource ProductSubtitleStyle}"
+                                               Margin="0,0,0,4" />
+                                    <TextBox Text="{Binding AdditionalDocumentsMemo, UpdateSourceTrigger=PropertyChanged}"
+                                             IsEnabled="{Binding IsAdditionalDocumentsEnabled}"
+                                             TextWrapping="Wrap"
+                                             AcceptsReturn="True"
+                                             VerticalContentAlignment="Top"
+                                             MinHeight="58"
+                                             AutomationProperties.AutomationId="ProductClaimPayment_AdditionalDocuments" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="{StaticResource Ui.Product.ClaimPayment.MemoLabel}"
+                                               Style="{StaticResource ProductSubtitleStyle}"
+                                               Margin="0,0,0,4" />
+                                    <TextBox Text="{Binding Memo, UpdateSourceTrigger=PropertyChanged}"
+                                             IsEnabled="{Binding CanEditDetails}"
+                                             TextWrapping="Wrap"
+                                             AcceptsReturn="True"
+                                             VerticalContentAlignment="Top"
+                                             MinHeight="58"
+                                             AutomationProperties.AutomationId="ProductClaimPayment_Memo" />
+                                </StackPanel>
+                            </Grid>
+                            <WrapPanel Grid.Row="3" HorizontalAlignment="Right" Margin="0,12,0,0">
+                                <Button Content="{StaticResource Ui.Product.ClaimPayment.CreateAction}"
+                                        Click="CreatePaymentButton_Click"
+                                        IsEnabled="{Binding CanCreate}"
+                                        AutomationProperties.AutomationId="ProductClaimPayment_Create"
+                                        Style="{StaticResource ProductPrimaryButtonStyle}"
+                                        Margin="0,0,8,0" />
+                                <Button Content="{StaticResource Ui.Product.ClaimPayment.SaveAction}"
+                                        Click="SavePaymentButton_Click"
+                                        IsEnabled="{Binding CanSave}"
+                                        AutomationProperties.AutomationId="ProductClaimPayment_Save"
+                                        Style="{StaticResource ProductPrimaryButtonStyle}" />
+                            </WrapPanel>
+                            <StackPanel Grid.Row="4" Margin="0,10,0,0">
+                                <TextBlock Text="{Binding ValidationMessage}"
+                                           AutomationProperties.AutomationId="ProductClaimPayment_ValidationMessage"
+                                           TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding ConflictMessage}"
+                                           AutomationProperties.AutomationId="ProductClaimPayment_ConflictMessage"
+                                           TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding LegacyReviewMessage}"
+                                           AutomationProperties.AutomationId="ProductClaimPayment_LegacyMessage"
+                                           TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding ReferenceMessage}"
+                                           AutomationProperties.AutomationId="ProductClaimPayment_ReferenceMessage"
+                                           TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding TransitionMessage}"
+                                           AutomationProperties.AutomationId="ProductClaimPayment_TransitionMessage"
+                                           TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding OperationMessage}"
+                                           AutomationProperties.AutomationId="ProductClaimPayment_OperationMessage"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </Grid>
             </Border>
 
             <Border Grid.Row="4"

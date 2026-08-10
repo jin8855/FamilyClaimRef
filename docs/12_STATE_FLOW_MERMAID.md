@@ -53,32 +53,30 @@ stateDiagram-v2
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Planned
-    Planned --> Submitted: 접수 완료
-    Submitted --> InReview: 보험사 심사 중
-    InReview --> NeedSupplement: 보완 요청
-    NeedSupplement --> InReview: 보완 제출
-    InReview --> PaymentDecided: 지급 결정
-    InReview --> Rejected: 미지급 결정
-    PaymentDecided --> Closed: 지급 결과 기록
-    Rejected --> Closed: 미지급 사유 기록
+    [*] --> preparing
+    preparing --> submitted: 접수 완료
+    preparing --> cancelled: 취소
+    submitted --> additional_documents_requested: 보완 요청
+    submitted --> reviewing: 보험사 심사 중
+    submitted --> submission_completed: 처리 완료
+    submitted --> cancelled: 취소
+    additional_documents_requested --> submitted: 보완 제출
+    additional_documents_requested --> reviewing: 심사 재개
+    additional_documents_requested --> cancelled: 취소
+    reviewing --> additional_documents_requested: 추가 보완 요청
+    reviewing --> submission_completed: 처리 완료
+    reviewing --> cancelled: 취소
 ```
 
 ## 6. ClaimPayment 상태
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Unknown
-    Unknown --> Expected: 지급 예상 메모
-    Unknown --> Paid: 지급 입력
-    Unknown --> PartiallyPaid: 일부 지급 입력
-    Unknown --> NotPaid: 미지급 입력
-    Expected --> Paid
-    Expected --> PartiallyPaid
-    Expected --> NotPaid
-    Paid --> Confirmed
-    PartiallyPaid --> Confirmed
-    NotPaid --> Confirmed
+    [*] --> pending
+    pending --> paid: 지급 결과 저장
+    pending --> partially_paid: 부분 지급과 삭감 사유 저장
+    pending --> denied: 부지급 사유 저장
+    pending --> cancelled: 결과 기록 취소
 ```
 
 ## 7. 상태 설계 원칙

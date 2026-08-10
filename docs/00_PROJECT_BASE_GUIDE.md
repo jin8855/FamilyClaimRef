@@ -136,6 +136,14 @@ HTML 프로토타입은 실제 구현 예정 화면과 최대한 유사하게 �
   - mutation concurrency: canonical `claim-submissions.json`별 process-scoped gate + `expectedRevision`
   - 저장: schema v1, temp write, flush-to-disk, 재검증, atomic replace와 `.bak` 보존
   - 최종 로컬 검증: ClaimSubmission focused `26/26`, related contract focused `11/11`, full regression `822/822`, build warning/error `0/0`
+- ClaimPayment MVP 영속화(T3-CLAIM-C): `IMPLEMENTED_AND_LOCALLY_VALIDATED`
+  - owner: active `ClaimSubmission`; 지급 결과는 `ClaimCase` 또는 `Policy`를 중복 참조하지 않음
+  - 동일 ClaimSubmission에 복수 지급 결과 기록 허용
+  - 상태: `pending`, `paid`, `partially_paid`, `denied`, `cancelled`; terminal 결과는 수정 불가
+  - mutation concurrency: canonical `claim-payments.json`별 process-scoped gate + `expectedRevision`
+  - 저장: schema v1, temp write, flush-to-disk, 재검증, atomic replace와 `.bak` 보존
+  - 최종 로컬 검증: ClaimPayment focused `35/35`, related focused `242/242`, full regression `858/858`, build warning/error `0/0`
+  - 프로덕션 준비도와 배포는 별도 평가·승인 대상
 - 프로덕션 준비도: `평가하지 않음`
 - 배포: `승인되지 않음`
 - 검토 대상 문서 후보:

@@ -28,14 +28,14 @@ public partial class ProductClaimSubmissionView : UserControl
         }
     }
 
-    private void SubmissionList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private async void SubmissionList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (e.AddedItems.Count > 0
             && e.AddedItems[0] is ClaimSubmissionListItemViewModel selected
             && DataContext is ClaimSubmissionManagementViewModel viewModel)
         {
             viewModel.SelectedSubmissionId = selected.Id;
-            viewModel.LoadSelectedSubmission();
+            await viewModel.LoadSelectedSubmissionAsync();
         }
     }
 
@@ -60,6 +60,48 @@ public partial class ProductClaimSubmissionView : UserControl
         if (DataContext is ClaimSubmissionManagementViewModel viewModel)
         {
             await viewModel.SaveAsync();
+        }
+    }
+
+    private void PaymentList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (e.AddedItems.Count > 0
+            && e.AddedItems[0] is ClaimPaymentListItemViewModel selected
+            && DataContext is ClaimSubmissionManagementViewModel viewModel)
+        {
+            if (!viewModel.PaymentManagement.SelectPayment(selected.Id)
+                && sender is DataGrid paymentList)
+            {
+                paymentList.SelectedItem = viewModel.PaymentManagement.Payments.FirstOrDefault(
+                    item => string.Equals(
+                        item.Id,
+                        viewModel.PaymentManagement.SelectedPaymentId,
+                        StringComparison.Ordinal));
+            }
+        }
+    }
+
+    private void NewPaymentButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is ClaimSubmissionManagementViewModel viewModel)
+        {
+            viewModel.PaymentManagement.StartNew();
+        }
+    }
+
+    private async void CreatePaymentButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is ClaimSubmissionManagementViewModel viewModel)
+        {
+            await viewModel.PaymentManagement.CreatePendingAsync();
+        }
+    }
+
+    private async void SavePaymentButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is ClaimSubmissionManagementViewModel viewModel)
+        {
+            await viewModel.PaymentManagement.SaveAsync();
         }
     }
 }

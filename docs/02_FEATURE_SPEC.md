@@ -222,7 +222,7 @@ ClaimSubmission은 하나의 active saved ClaimCase를 같은 가족의 특정 �
 - `cancelled`
 - `submission_completed`
 
-`paid`, `partially_paid`, `denied` 등 지급 결과 상태는 ClaimSubmission에 저장하지 않고 후속 ClaimPayment가 소유한다.
+`paid`, `partially_paid`, `denied` 등 지급 결과 상태는 ClaimSubmission에 저장하지 않고 ClaimPayment가 소유한다.
 
 ### 전이와 검증
 
@@ -247,16 +247,38 @@ validation, conflict, legacy review, reference, transition 오류를 제품용 �
 
 ## 9. 지급 결과 관리
 
-### 저장 항목
+### 정의와 저장 항목
 
-- 연결된 보험사별 청구 기록
-- 지급일
-- 지급금액
-- 지급 담보
-- 지급상태
-- 부지급 사유
-- 삭감 사유
-- 추가서류 메모
+ClaimPayment는 하나의 active ClaimSubmission에 연결된 지급 결과 기록이다. 같은 ClaimSubmission에 복수 기록을 둘 수 있으며, ClaimCase나 Policy를 중복 참조하지 않는다.
+
+- immutable string Id
+- ClaimSubmissionId
+- Status
+- PaidDate
+- PaidAmount
+- PaidCoverageDisplayName
+- DenyReason
+- ReductionReason
+- AdditionalDocumentsMemo
+- Memo
+- Revision
+- CreatedAt / UpdatedAt
+
+### 상태와 검증
+
+- 생성 상태는 `pending`이고 Revision은 1이다.
+- `pending`은 `paid`, `partially_paid`, `denied`, `cancelled`로만 전이한다.
+- 결과 상태는 terminal이며 수정할 수 없다.
+- `paid`는 지급일, 0보다 큰 지급금액, 지급 담보 표시명이 필요하다.
+- `partially_paid`는 지급 필드와 삭감 사유가 필요하다.
+- `denied`는 부지급 사유가 필요하며 지급 필드와 삭감 사유를 허용하지 않는다.
+- `cancelled`는 결과 필드를 허용하지 않는다.
+- `paid`, `partially_paid`, `denied` 결과 저장은 부모 ClaimSubmission이 `submission_completed`일 때만 허용한다. `cancelled`는 이 완료 조건의 적용 대상이 아니다.
+- 저장과 상태 변경은 exact Id와 expected Revision을 요구하며 stale Revision은 no-write conflict다.
+
+### Product 화면
+
+화면 8은 선택된 ClaimSubmission의 지급 결과 목록, 상세, 생성, 저장과 상태별 필드 활성화를 제공한다. 저장되지 않은 지급 결과가 있으면 제출 전환과 화면 이동을 막고, 제품 UI에는 raw Id, 경로, JSON 또는 예외 전문을 표시하지 않는다.
 
 ### 저장 제외
 
