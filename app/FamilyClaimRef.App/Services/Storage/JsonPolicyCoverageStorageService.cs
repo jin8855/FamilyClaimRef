@@ -180,6 +180,7 @@ public sealed class JsonPolicyCoverageStorageService : IPolicyCoverageStorageSer
                     && HasSubstantiveRuleOrSourceChange(current, normalizedDraft)
                         ? PolicyCoverageValues.ReviewStatusNeedsReview
                         : current.ReviewStatus;
+                var timestamp = GetMutationTimestamp(current);
 
                 var updated = current with
                 {
@@ -197,7 +198,7 @@ public sealed class JsonPolicyCoverageStorageService : IPolicyCoverageStorageSer
                     SourceLocator = normalizedDraft.SourceLocator,
                     Memo = normalizedDraft.Memo,
                     Revision = checked(current.Revision + 1),
-                    UpdatedAt = DateTimeOffset.UtcNow
+                    UpdatedAt = timestamp
                 };
 
                 records[index] = updated;
@@ -248,7 +249,7 @@ public sealed class JsonPolicyCoverageStorageService : IPolicyCoverageStorageSer
                 {
                     ReviewStatus = normalizedTargetStatus,
                     Revision = checked(current.Revision + 1),
-                    UpdatedAt = DateTimeOffset.UtcNow
+                    UpdatedAt = GetMutationTimestamp(current)
                 };
                 records[index] = updated;
                 await store.SaveAsync(records, cancellationToken);
@@ -281,7 +282,7 @@ public sealed class JsonPolicyCoverageStorageService : IPolicyCoverageStorageSer
                 EnsureRevision(current, expectedRevision);
                 EnsureActiveTarget(current);
 
-                var timestamp = DateTimeOffset.UtcNow;
+                var timestamp = GetMutationTimestamp(current);
                 var updated = current with
                 {
                     Revision = checked(current.Revision + 1),
@@ -332,7 +333,7 @@ public sealed class JsonPolicyCoverageStorageService : IPolicyCoverageStorageSer
                 var updated = current with
                 {
                     Revision = checked(current.Revision + 1),
-                    UpdatedAt = DateTimeOffset.UtcNow,
+                    UpdatedAt = GetMutationTimestamp(current),
                     DisabledAt = null
                 };
                 records[index] = updated;
@@ -622,6 +623,12 @@ public sealed class JsonPolicyCoverageStorageService : IPolicyCoverageStorageSer
                     policy.ContractStatus,
                     InsurancePolicyValues.LegacyContractStatusActive,
                     StringComparison.Ordinal));
+    }
+
+    private static DateTimeOffset GetMutationTimestamp(PolicyCoverageRecord current)
+    {
+        var timestamp = DateTimeOffset.UtcNow;
+        return timestamp < current.UpdatedAt ? current.UpdatedAt : timestamp;
     }
 
     private static int FindTargetIndex(

@@ -500,6 +500,86 @@ public sealed class JsonPolicyCoverageStorageServiceTests
         });
     }
 
+    [Fact]
+    public async Task Missing_items_property_fails_closed_without_rewrite_backup_or_temp_file()
+    {
+        await UsingFixtureAsync(async fixture =>
+        {
+            Directory.CreateDirectory(fixture.RootPath);
+            await File.WriteAllTextAsync(
+                fixture.CoveragePath,
+                """
+                {
+                  "schemaVersion": 1,
+                  "savedAt": "2026-08-11T00:00:00Z"
+                }
+                """);
+            var before = await File.ReadAllBytesAsync(fixture.CoveragePath);
+
+            await AssertErrorAsync(
+                PolicyCoverageStorageErrorCode.IntegrityViolation,
+                () => fixture.Coverages.GetPolicyCoveragesAsync());
+
+            Assert.Equal(before, await File.ReadAllBytesAsync(fixture.CoveragePath));
+            Assert.False(File.Exists(fixture.CoveragePath + ".bak"));
+            Assert.Empty(Directory.GetFiles(fixture.RootPath, "*.tmp", SearchOption.TopDirectoryOnly));
+        });
+    }
+
+    [Fact]
+    public async Task Future_updated_timestamp_remains_monotonic_through_all_mutations_and_reloads()
+    {
+        await UsingFixtureAsync(async fixture =>
+        {
+            var policy = await fixture.CreateActivePolicyAsync();
+            var created = await fixture.Coverages.CreatePolicyCoverageAsync(CreateDraft(policy.Id));
+            var futureTimestamp = DateTimeOffset.UtcNow.AddDays(30);
+            var root = JsonNode.Parse(await File.ReadAllTextAsync(fixture.CoveragePath))!.AsObject();
+            var item = root["items"]![0]!.AsObject();
+            item["createdAt"] = futureTimestamp.AddMinutes(-1).ToString("O");
+            item["updatedAt"] = futureTimestamp.ToString("O");
+            await File.WriteAllTextAsync(fixture.CoveragePath, root.ToJsonString(JsonOptions));
+
+            var futureRecord = await fixture.Coverages.GetPolicyCoverageAsync(created.PolicyCoverageId);
+            Assert.NotNull(futureRecord);
+            var updated = await fixture.Coverages.UpdatePolicyCoverageAsync(
+                futureRecord.PolicyCoverageId,
+                futureRecord.Revision,
+                CreateUpdateDraft(futureRecord) with { DisplayName = "future update" });
+            Assert.True(updated.UpdatedAt >= futureRecord.UpdatedAt);
+            AssertRecordEqual(
+                updated,
+                await fixture.CreateCoverageService().GetPolicyCoverageAsync(updated.PolicyCoverageId));
+
+            var statusChanged = await fixture.Coverages.ChangePolicyCoverageReviewStatusAsync(
+                updated.PolicyCoverageId,
+                updated.Revision,
+                PolicyCoverageValues.ReviewStatusNeedsReview);
+            Assert.True(statusChanged.UpdatedAt >= updated.UpdatedAt);
+            AssertRecordEqual(
+                statusChanged,
+                await fixture.CreateCoverageService().GetPolicyCoverageAsync(statusChanged.PolicyCoverageId));
+
+            var disabled = await fixture.Coverages.DisablePolicyCoverageAsync(
+                statusChanged.PolicyCoverageId,
+                statusChanged.Revision);
+            Assert.True(disabled.UpdatedAt >= statusChanged.UpdatedAt);
+            Assert.Equal(disabled.UpdatedAt, disabled.DisabledAt);
+            AssertRecordEqual(
+                disabled,
+                await fixture.CreateCoverageService().GetPolicyCoverageAsync(disabled.PolicyCoverageId));
+
+            var restored = await fixture.Coverages.RestorePolicyCoverageAsync(
+                disabled.PolicyCoverageId,
+                disabled.Revision);
+            Assert.True(restored.UpdatedAt >= disabled.UpdatedAt);
+            Assert.Null(restored.DisabledAt);
+            AssertRecordEqual(
+                restored,
+                await fixture.CreateCoverageService().GetPolicyCoverageAsync(restored.PolicyCoverageId));
+        });
+    }
+
     [Theory]
     [InlineData("unknown_status")]
     [InlineData("unknown_rule")]
