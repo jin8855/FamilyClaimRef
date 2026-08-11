@@ -6,10 +6,11 @@
 - Marker: `POLICY_COVERAGE_MATCHING_PRODUCT_CONTRACT_READY`
 - Contract risk tier: `T2_MODERATE`
 - WBS-PCS-02 implementation risk tier: `T3_HIGH`
-- Implementation baseline: `9df1b9a49e3de5ed373588e7d73d0f37f584c1bd`
+- Implementation baseline: `5d77b1f39823a5173e73bd03c9132e8c791faee7`
 - Scope: 화면 03 보험 검색, 화면 09 보험 찾기, `PolicyCoverage` 논리 모델, read-only 매칭 및 결과 계약
-- Implementation authorization: `APPROVED_T3_POLICY_COVERAGE_PERSISTENCE_MVP_AUTHORIZED`
-- `PolicyCoverage` persistence: `IMPLEMENTED_PENDING_INDEPENDENT_REVIEW`
+- WBS-PCS-02: `MERGED_AND_MAIN_VALIDATED`
+- WBS-PCS-03 implementation authorization: `APPROVED_T2_CLAIM_REFERENCE_MATCHING_ENGINE_AUTHORIZED`
+- WBS-PCS-03 implementation state: `IMPLEMENTED_TESTED_PENDING_INDEPENDENT_REVIEW`
 - Production readiness: `NOT_EVALUATED`
 - Deployment: `NOT_AUTHORIZED`
 
@@ -49,7 +50,7 @@
 | `app/FamilyClaimRef.App/Models/Storage/ClaimSubmissionRecord.cs` | `PolicyCoverageId`는 nullable | 향후 선택 reference 호환 필드 |
 | `app/FamilyClaimRef.App/Models/Storage/ClaimSubmissionRecord.cs` | `CoverageDisplayName`은 nullable | 저장 시점 표시 snapshot 호환 필드 |
 
-현재 `PolicyCoverage` production model과 전용 storage는 WBS-PCS-02 범위로 구현되었으며 독립 검토 전 상태다. 화면과 matching engine은 이 storage를 아직 사용하지 않는다.
+현재 `PolicyCoverage` production model과 전용 storage는 WBS-PCS-02 범위로 구현·병합·main 검증되었다. WBS-PCS-03 pure matching engine은 구현·테스트 완료 후 독립 검토 대기 상태이며 화면은 아직 engine을 사용하지 않는다.
 
 ### 3.2 Source documents reconciled
 
@@ -646,7 +647,7 @@ Deferred minor preserved:
 
 `PolicyCoverage` 저장, 수정, 사용 중지, 복원 및 reference integrity는 별도 T3 지시서로 승인되어 구현되었다.
 
-Current state: `IMPLEMENTED_PENDING_INDEPENDENT_REVIEW`.
+Current state: `MERGED_AND_MAIN_VALIDATED`.
 
 - create initial status: `candidate`, `needs_review`
 - explicit review status transitions: DEC-PCS-003 그대로 적용
@@ -661,6 +662,8 @@ Current state: `IMPLEMENTED_PENDING_INDEPENDENT_REVIEW`.
 
 확정된 `PolicyCoverage`와 `ClaimCase`를 사용하는 pure read-only matching engine을 구현한다.
 
+Current state: `IMPLEMENTED_TESTED_PENDING_INDEPENDENT_REVIEW`.
+
 ### WBS-PCS-04 - T2_CLAIM_REFERENCE_RESULT_UI
 
 화면 09 결과 그룹, 근거, 유사 청구 및 화면 08 draft 이동을 구현한다.
@@ -671,7 +674,7 @@ Current state: `IMPLEMENTED_PENDING_INDEPENDENT_REVIEW`.
 
 WBS order: `WBS-PCS-01 -> WBS-PCS-02 -> WBS-PCS-03 -> WBS-PCS-04 -> WBS-PCS-05`.
 
-WBS-PCS-02는 후속 사용자 지시 `APPROVED_T3_POLICY_COVERAGE_PERSISTENCE_MVP_AUTHORIZED`로 구현 권한을 받았으며, 현재 PR 독립 검토 대기 상태다.
+WBS-PCS-02는 구현·병합·main 검증이 완료되었다. WBS-PCS-03은 사용자 지시 `APPROVED_T2_CLAIM_REFERENCE_MATCHING_ENGINE_AUTHORIZED`로 구현 권한을 받아 구현·테스트 완료 후 독립 검토 대기 상태다.
 
 ## 13. ID Inventory and Gate Result
 
@@ -699,11 +702,15 @@ WBS-PCS-02는 후속 사용자 지시 `APPROVED_T3_POLICY_COVERAGE_PERSISTENCE_M
 - External API/AI/cloud use: `0`
 - Production/deployment authorization: `0`
 
-Final document gate: `PASS_WBS_PCS_02_IMPLEMENTED_PENDING_INDEPENDENT_REVIEW`
+Final document gate: `PASS_WBS_PCS_03_IMPLEMENTED_TESTED_PENDING_INDEPENDENT_REVIEW`
 
-Implementation readiness: `READY_T3_POLICY_COVERAGE_PERSISTENCE_MVP_FOR_INDEPENDENT_REVIEW`
+Implementation readiness: `READY_T2_CLAIM_REFERENCE_MATCHING_ENGINE_FOR_INDEPENDENT_REVIEW`
 
-PolicyCoverage persistence: `IMPLEMENTED_PENDING_INDEPENDENT_REVIEW`
+PolicyCoverage persistence: `MERGED_AND_MAIN_VALIDATED`
+
+Claim reference matching engine: `IMPLEMENTED_TESTED_PENDING_INDEPENDENT_REVIEW`
+
+WBS-PCS-04 claim reference result UI: `NOT_AUTHORIZED`
 
 Production readiness: `NOT_EVALUATED`
 
