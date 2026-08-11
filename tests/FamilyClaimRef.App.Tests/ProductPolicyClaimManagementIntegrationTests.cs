@@ -21,10 +21,11 @@ public sealed class ProductPolicyClaimManagementIntegrationTests
         var xaml = File.ReadAllText(xamlPath);
 
         Assert.Contains("<views:ProductPolicyContractsView", xaml, StringComparison.Ordinal);
+        Assert.Contains("<views:ProductPolicySearchView", xaml, StringComparison.Ordinal);
         Assert.Contains("<views:ProductClaimCasesView", xaml, StringComparison.Ordinal);
         Assert.Contains("<views:ProductInsurancePolicyEditorView", xaml, StringComparison.Ordinal);
         Assert.Equal(
-            3,
+            4,
             CountOccurrences(xaml, "DataContext.PolicyClaimManagement"));
     }
 

@@ -139,7 +139,7 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="{StaticResource Ui.Product.History.ListSectionTitle}"
+                        <TextBlock Text="{StaticResource Ui.Product.Home.RecentActivityTitle}"
                                    Style="{StaticResource ProductSectionTitleStyle}" />
                         <StackPanel Grid.Column="1" Orientation="Horizontal">
                             <TextBlock Text="{Binding HomeDashboard.RecentActivities.Count}"

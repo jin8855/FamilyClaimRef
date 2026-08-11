@@ -266,6 +266,7 @@ public sealed class ProductWireframeRouteCoverageTests
             .ToHashSet(StringComparer.Ordinal);
 
         Assert.Contains(ProductScreenRoutes.HomeDashboard, triggerValues);
+        Assert.Contains(ProductScreenRoutes.PolicyList, triggerValues);
         Assert.Contains(ProductScreenRoutes.PolicyManage, triggerValues);
         Assert.Contains(ProductScreenRoutes.ClaimCase, triggerValues);
         Assert.Contains(ProductScreenRoutes.PolicyDocumentRegister, triggerValues);
@@ -280,6 +281,61 @@ public sealed class ProductWireframeRouteCoverageTests
             document.Descendants(Presentation + "Setter"),
             setter => setter.Attribute("Value")?.Value
                 == "{StaticResource WireframeContentTemplate}");
+    }
+
+    [Fact]
+    public void Policy_search_route_uses_dedicated_read_only_view_and_registered_policy_copy()
+    {
+        var root = FindProjectRoot();
+        var shell = XDocument.Load(Path.Combine(
+            root,
+            "app",
+            "FamilyClaimRef.App",
+            "ProductShell",
+            "ProductShellWindow.xaml"));
+        var templates = shell
+            .Descendants(Presentation + "DataTemplate")
+            .ToArray();
+        var searchTemplate = Assert.Single(
+            templates,
+            template => template.Attribute(Xaml + "Key")?.Value == "PolicySearchContentTemplate");
+        var managementTemplate = Assert.Single(
+            templates,
+            template => template.Attribute(Xaml + "Key")?.Value == "PolicyContractsContentTemplate");
+        Assert.Contains(searchTemplate.Descendants(), element => element.Name.LocalName == "ProductPolicySearchView");
+        Assert.Contains(managementTemplate.Descendants(), element => element.Name.LocalName == "ProductPolicyContractsView");
+
+        var view = XDocument.Load(Path.Combine(
+            root,
+            "app",
+            "FamilyClaimRef.App",
+            "Views",
+            "ProductPolicySearchView.xaml"));
+        var results = Assert.Single(
+            view.Descendants(Presentation + "DataGrid"),
+            element => AttributeValue(element, "AutomationId") == "ProductPolicySearch_Results");
+        Assert.Equal("True", results.Attribute("IsReadOnly")?.Value);
+
+        var content = XDocument.Load(Path.Combine(
+            root,
+            "app",
+            "FamilyClaimRef.App",
+            "Resources",
+            "ProductScreenContent.xaml"));
+        var screen03 = string.Join(
+            Environment.NewLine,
+            content.Root!
+                .Elements()
+                .Where(element => element.Attribute(Xaml + "Key")?.Value.StartsWith(
+                    "Ui.Product.Wireframe.03_policy_list.",
+                    StringComparison.Ordinal) == true)
+                .Select(element => element.Value));
+        Assert.Contains("가족", screen03, StringComparison.Ordinal);
+        Assert.Contains("보험 이름 키워드", screen03, StringComparison.Ordinal);
+        Assert.DoesNotContain("진단", screen03, StringComparison.Ordinal);
+        Assert.DoesNotContain("진료", screen03, StringComparison.Ordinal);
+        Assert.DoesNotContain("담보", screen03, StringComparison.Ordinal);
+        Assert.DoesNotContain("검색 저장소", screen03, StringComparison.Ordinal);
     }
 
     [Fact]

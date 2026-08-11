@@ -8,12 +8,12 @@
     <sys:String x:Key="Ui.Product.Navigation.ClaimCases">청구 건</sys:String>
     <sys:String x:Key="Ui.Product.Navigation.DocumentRegistration">문서 등록</sys:String>
     <sys:String x:Key="Ui.Product.Navigation.DocumentList">문서 목록</sys:String>
-    <sys:String x:Key="Ui.Product.Home.Title">홈</sys:String>
+    <sys:String x:Key="Ui.Product.Home.RecentActivityTitle">최근 청구 활동</sys:String>
     <sys:String x:Key="Ui.Product.PolicyContracts.Title">보험 계약</sys:String>
     <sys:String x:Key="Ui.Product.ClaimCases.Title">청구 건</sys:String>
     <sys:String x:Key="Ui.Product.PolicyContracts.EmptyMessage">등록된 보험 계약이 없습니다.</sys:String>
     <sys:String x:Key="Ui.Product.ClaimCases.EmptyMessage">등록된 청구 건이 없습니다.</sys:String>
-    <sys:String x:Key="Ui.Product.PolicyContracts.CreationSection">보험 계약 등록</sys:String>
+    <sys:String x:Key="Ui.Product.PolicySearch.FilterEmptyMessage">검색 조건에 맞는 보험 계약이 없습니다.</sys:String>
     <sys:String x:Key="Ui.Product.ClaimCases.CreationSection">청구 건 등록</sys:String>
     <sys:String x:Key="Ui.Product.PolicyContracts.ActiveListLabel">보험 계약 목록</sys:String>
     <sys:String x:Key="Ui.Product.ClaimCases.ActiveListLabel">청구 건 목록</sys:String>
