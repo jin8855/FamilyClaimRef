@@ -167,7 +167,7 @@
                             <DataGridTextColumn Header="{StaticResource Ui.Product.InsurancePolicy.EnrollmentDateLabel}"
                                                 Binding="{Binding EnrollmentDate}"
                                                 Width="0.8*" />
-                            <DataGridTextColumn Header="{StaticResource Ui.Product.InsurancePolicy.TotalPlannedPremiumAmountLabel}"
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.Wireframe.03_policy_list.TotalPlannedPremiumAmountColumn}"
                                                 Binding="{Binding TotalPlannedPremiumAmount}"
                                                 Width="0.9*" />
                             <DataGridTemplateColumn Header="{StaticResource Ui.Product.Wireframe.03_policy_list.DetailAction}"

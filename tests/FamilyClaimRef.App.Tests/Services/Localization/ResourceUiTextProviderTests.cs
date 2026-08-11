@@ -21,9 +21,9 @@ public sealed class ResourceUiTextProviderTests
     {
         var resources = LoadUiStrings();
 
-        Assert.Equal(374, resources.Count);
-        Assert.Equal(317, resources.Keys.Count(IsProductKey));
-        Assert.Equal(317, ExpectedProductResources.Count);
+        Assert.Equal(376, resources.Count);
+        Assert.Equal(319, resources.Keys.Count(IsProductKey));
+        Assert.Equal(319, ExpectedProductResources.Count);
         Assert.All(
             ExpectedProductResources,
             expected => Assert.Equal(expected.Value, resources[expected.Key]));
@@ -36,11 +36,11 @@ public sealed class ResourceUiTextProviderTests
         var resourceKeys = resourceEntries.Select(entry => entry.Key).ToArray();
         var constantValues = LoadUiTextKeyConstants();
 
-        Assert.Equal(374, resourceEntries.Count);
+        Assert.Equal(376, resourceEntries.Count);
         Assert.Equal(resourceKeys.Length, resourceKeys.Distinct(StringComparer.Ordinal).Count());
-        Assert.Equal(374, constantValues.Count);
+        Assert.Equal(376, constantValues.Count);
         Assert.Equal(constantValues.Count, constantValues.Distinct(StringComparer.Ordinal).Count());
-        Assert.Equal(317, constantValues.Count(IsProductKey));
+        Assert.Equal(319, constantValues.Count(IsProductKey));
         Assert.Equal(
             resourceKeys.OrderBy(key => key, StringComparer.Ordinal),
             constantValues.OrderBy(key => key, StringComparer.Ordinal));
@@ -449,11 +449,13 @@ public sealed class ResourceUiTextProviderTests
             [UiTextKeys.ProductNavigationClaimCases] = "청구 건",
             [UiTextKeys.ProductNavigationDocumentRegistration] = "문서 등록",
             [UiTextKeys.ProductNavigationDocumentList] = "문서 목록",
+            [UiTextKeys.ProductHomeTitle] = "홈",
             [UiTextKeys.ProductHomeRecentActivityTitle] = "최근 청구 활동",
             [UiTextKeys.ProductPolicyContractsTitle] = "보험 계약",
             [UiTextKeys.ProductClaimCasesTitle] = "청구 건",
             [UiTextKeys.ProductPolicyContractsEmptyMessage] = "등록된 보험 계약이 없습니다.",
             [UiTextKeys.ProductClaimCasesEmptyMessage] = "등록된 청구 건이 없습니다.",
+            [UiTextKeys.ProductPolicyContractsCreationSection] = "보험 계약 등록",
             [UiTextKeys.ProductPolicySearchFilterEmptyMessage] = "검색 조건에 맞는 보험 계약이 없습니다.",
             [UiTextKeys.ProductClaimCasesCreationSection] = "청구 건 등록",
             [UiTextKeys.ProductPolicyContractsActiveListLabel] = "보험 계약 목록",
