@@ -114,6 +114,7 @@
     <sys:String x:Key="Ui.Product.Wireframe.03_policy_list.ResetAction">초기화</sys:String>
     <sys:String x:Key="Ui.Product.Wireframe.03_policy_list.DetailAction">상세</sys:String>
     <sys:String x:Key="Ui.Product.Wireframe.03_policy_list.ResultRowAutomationName">보험 검색 결과 행</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.03_policy_list.TotalPlannedPremiumAmountColumn">총 납입 예정 보험료</sys:String>
 
     <sys:String x:Key="Ui.Product.Wireframe.04_policy_detail.Title">보험 상세</sys:String>
     <sys:String x:Key="Ui.Product.Wireframe.04_policy_detail.Subtitle">선택한 보험의 담보, 특약, 연결 문서와 참고 정보를 확인합니다.</sys:String>
@@ -222,8 +223,8 @@
 
     <sys:String x:Key="Ui.Product.Wireframe.03_policy_list.GroupTitles">검색 조건|보험 검색 결과</sys:String>
     <sys:String x:Key="Ui.Product.Wireframe.03_policy_list.GroupBodies">다섯 조건은 모두 함께 적용되며 검색 조건은 이 화면에서만 유지됩니다.|활성 보험 계약이 없거나 조건과 일치하는 결과가 없으면 각각 안내합니다.</sys:String>
-    <sys:String x:Key="Ui.Product.Wireframe.03_policy_list.GroupFields">가족|보험사|계약 상태|상품 구분|보험 이름 키워드||보험 계약 이름|가족|보험사|상품 구분|계약 상태|가입일|납입액|상세</sys:String>
-    <sys:String x:Key="Ui.Product.Wireframe.03_policy_list.Columns">보험 계약 이름|가족|보험사|상품 구분|계약 상태|가입일|납입액|상세</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.03_policy_list.GroupFields">가족|보험사|계약 상태|상품 구분|보험 이름 키워드||보험 계약 이름|가족|보험사|상품 구분|계약 상태|가입일|총 납입 예정 보험료|상세</sys:String>
+    <sys:String x:Key="Ui.Product.Wireframe.03_policy_list.Columns">보험 계약 이름|가족|보험사|상품 구분|계약 상태|가입일|총 납입 예정 보험료|상세</sys:String>
     <sys:String x:Key="Ui.Product.Wireframe.03_policy_list.TableTitle">보험 검색 결과</sys:String>
 
     <sys:String x:Key="Ui.Product.Wireframe.04_policy_detail.GroupTitles">보험 요약|연결 문서|담보 및 특약 후보</sys:String>

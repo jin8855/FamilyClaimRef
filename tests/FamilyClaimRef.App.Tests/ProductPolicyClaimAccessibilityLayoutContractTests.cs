@@ -156,6 +156,12 @@ public sealed class ProductPolicyClaimAccessibilityLayoutContractTests
             element => AttributeValue(element, "AutomationId") == "ProductPolicySearch_Results");
         Assert.Equal("True", AttributeValue(results, "IsReadOnly"));
         Assert.Equal("False", AttributeValue(results, "CanUserAddRows"));
+        var totalPlannedPremiumColumn = Assert.Single(
+            results.Descendants(Presentation + "DataGridTextColumn"),
+            column => AttributeValue(column, "Binding") == "{Binding TotalPlannedPremiumAmount}");
+        Assert.Equal(
+            "{StaticResource Ui.Product.Wireframe.03_policy_list.TotalPlannedPremiumAmountColumn}",
+            AttributeValue(totalPlannedPremiumColumn, "Header"));
         var rowName = Assert.Single(
             results
                 .Elements(Presentation + "DataGrid.RowStyle")

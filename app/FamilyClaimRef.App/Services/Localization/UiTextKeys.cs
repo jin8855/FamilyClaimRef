@@ -9,11 +9,13 @@ public static class UiTextKeys
     public const string ProductNavigationClaimCases = "Ui.Product.Navigation.ClaimCases";
     public const string ProductNavigationDocumentRegistration = "Ui.Product.Navigation.DocumentRegistration";
     public const string ProductNavigationDocumentList = "Ui.Product.Navigation.DocumentList";
+    public const string ProductHomeTitle = "Ui.Product.Home.Title";
     public const string ProductHomeRecentActivityTitle = "Ui.Product.Home.RecentActivityTitle";
     public const string ProductPolicyContractsTitle = "Ui.Product.PolicyContracts.Title";
     public const string ProductClaimCasesTitle = "Ui.Product.ClaimCases.Title";
     public const string ProductPolicyContractsEmptyMessage = "Ui.Product.PolicyContracts.EmptyMessage";
     public const string ProductClaimCasesEmptyMessage = "Ui.Product.ClaimCases.EmptyMessage";
+    public const string ProductPolicyContractsCreationSection = "Ui.Product.PolicyContracts.CreationSection";
     public const string ProductPolicySearchFilterEmptyMessage = "Ui.Product.PolicySearch.FilterEmptyMessage";
     public const string ProductClaimCasesCreationSection = "Ui.Product.ClaimCases.CreationSection";
     public const string ProductPolicyContractsActiveListLabel = "Ui.Product.PolicyContracts.ActiveListLabel";
