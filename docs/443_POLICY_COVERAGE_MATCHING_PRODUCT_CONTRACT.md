@@ -4,15 +4,16 @@
 
 - Status: `AUTHORITATIVE_PRODUCT_CONTRACT`
 - Marker: `POLICY_COVERAGE_MATCHING_PRODUCT_CONTRACT_READY`
-- Risk tier: `T2_MODERATE`
-- Baseline: `f632cdd0c84795439ce1494729d24ba1346802ac`
+- Contract risk tier: `T2_MODERATE`
+- WBS-PCS-02 implementation risk tier: `T3_HIGH`
+- Implementation baseline: `9df1b9a49e3de5ed373588e7d73d0f37f584c1bd`
 - Scope: 화면 03 보험 검색, 화면 09 보험 찾기, `PolicyCoverage` 논리 모델, read-only 매칭 및 결과 계약
-- Implementation authorization: 문서 계약만 승인
-- `PolicyCoverage` persistence: `NOT_IMPLEMENTED`, `NOT_AUTHORIZED_IN_THIS_BATCH`
+- Implementation authorization: `APPROVED_T3_POLICY_COVERAGE_PERSISTENCE_MVP_AUTHORIZED`
+- `PolicyCoverage` persistence: `IMPLEMENTED_PENDING_INDEPENDENT_REVIEW`
 - Production readiness: `NOT_EVALUATED`
 - Deployment: `NOT_AUTHORIZED`
 
-이 문서는 이 문서의 주제에 한해 기존 draft 또는 candidate 문서보다 우선한다. 앱, 테스트, JSON, schema, migration, runtime, 실제 데이터는 변경하지 않는다.
+이 문서는 이 문서의 주제에 한해 기존 draft 또는 candidate 문서보다 우선한다. WBS-PCS-02는 승인된 전용 JSON storage, composition 및 격리 테스트 범위만 구현하며 UI, OCR, matching, 기존 JSON schema, migration 및 실제 데이터는 변경하지 않는다.
 
 ## 2. Objectives and Scope
 
@@ -28,9 +29,8 @@
 
 저장된 `ClaimCase`와 확인된 `PolicyCoverage`를 사용하는 read-only 매칭, 과거 유사 청구, 안전한 결과 표현 및 저장 경계를 확정한다.
 
-### Non-scope
+### Current WBS non-scope
 
-- `PolicyCoverage` production class, interface, storage 또는 JSON 구현
 - 기존 JSON, schema, migration 또는 데이터 변경
 - 화면 03 또는 화면 09 UI 구현
 - OCR, 문서 분석, 외부 보험 API, 외부 AI 또는 원격 전송
@@ -49,7 +49,7 @@
 | `app/FamilyClaimRef.App/Models/Storage/ClaimSubmissionRecord.cs` | `PolicyCoverageId`는 nullable | 향후 선택 reference 호환 필드 |
 | `app/FamilyClaimRef.App/Models/Storage/ClaimSubmissionRecord.cs` | `CoverageDisplayName`은 nullable | 저장 시점 표시 snapshot 호환 필드 |
 
-현재 `PolicyCoverage` production model 또는 storage는 존재하지 않는다. 이 문서는 해당 구현을 생성하지 않는다.
+현재 `PolicyCoverage` production model과 전용 storage는 WBS-PCS-02 범위로 구현되었으며 독립 검토 전 상태다. 화면과 matching engine은 이 storage를 아직 사용하지 않는다.
 
 ### 3.2 Source documents reconciled
 
@@ -166,7 +166,19 @@ raw ID, 경로, JSON, 예외 및 민감정보를 UI와 Automation 속성에 노�
 | `UpdatedAt` | last update timestamp |
 | `DisabledAt` | optional disabled timestamp |
 
-JSON 파일명, envelope, atomic write, backup, migration 및 물리 저장 형식은 WBS-PCS-02에서 별도 승인한다.
+WBS-PCS-02의 물리 저장 계약은 다음으로 확정한다.
+
+- file: `policy-coverages.json`
+- envelope: `JsonFileEnvelope<PolicyCoverageRecord>`
+- schema: `1`
+- missing store: 파일을 만들지 않고 empty result 반환
+- save: 전체 envelope를 고유 temp 파일에 기록, flush-to-disk 및 deserialize/schema 재검증 후 atomic replace
+- backup: 기존 파일이 있으면 직전 정상본을 `policy-coverages.json.bak`으로 보존
+- failure: 기존 정상본과 revision을 보존하고 잔여 `*.tmp`를 정리
+- malformed JSON 또는 schema mismatch: fail-closed, no rewrite, no automatic backup restore
+- migration: 없음
+
+`SourceLocator`는 opaque private metadata다. filesystem open, URI 실행, UI/Automation/error message 노출에 사용하지 않는다.
 
 ### DEC-PCS-003 - 상태와 전이
 
@@ -516,7 +528,7 @@ WBS-PCS-03의 non-UI engine은 정규화, 조건 판정, 결과 분류 및 deter
 
 ### FUNC-PCS-009 - Persistence owner
 
-WBS-PCS-02의 storage는 사용자 확인된 `PolicyCoverage` 생명주기와 reference integrity만 소유한다. 이 문서는 물리 구현을 승인하지 않는다.
+WBS-PCS-02의 `IPolicyCoverageStorageService`와 `JsonPolicyCoverageStorageService`는 사용자 확인된 `PolicyCoverage` 생명주기, revision concurrency 및 Policy/PolicyDocument reference integrity만 소유한다. `AppServices.Create`는 실제 metadata root에 대해 서비스 인스턴스 하나를 구성하고 ViewModel에는 아직 주입하지 않는다.
 
 ### FUNC-PCS-010 - ClaimSubmission save owner
 
@@ -611,15 +623,14 @@ Traceability result: every `DEC-PCS-*` is connected to at least one requirement,
 
 ## 11. Deferred Decisions and Boundaries
 
-이 계약에 필요한 mandatory product decisions는 모두 확정되었다. 다음 물리 구현 결정은 의도적으로 후속 승인에 남긴다.
+이 계약에 필요한 mandatory product decisions와 WBS-PCS-02 물리 저장 결정은 모두 확정되었다. 다음 기능은 의도적으로 후속 WBS에 남긴다.
 
-- JSON 파일명과 envelope
-- atomic write, backup 및 migration 방식
-- `PolicyCoverage` storage interface와 implementation
 - OCR 후보 생성 및 사용자 확인 workflow
-- source locator의 물리 형식과 공개 범위
+- read-only matching engine
+- 화면 09 결과 UI와 화면 08 draft 연결
+- source locator의 후속 생성 방식. 공개 범위는 opaque private로 고정한다.
 
-이 항목은 승인 규칙의 미결정이 아니라 WBS-PCS-02의 별도 T3 scope다.
+이 항목은 WBS-PCS-02 미완료가 아니라 WBS-PCS-03 이후의 별도 scope다.
 
 Deferred minor preserved:
 
@@ -633,7 +644,18 @@ Deferred minor preserved:
 
 ### WBS-PCS-02 - T3_POLICY_COVERAGE_PERSISTENCE_MVP
 
-`PolicyCoverage` 저장, 수정, 사용 중지, 복원 및 reference integrity를 구현한다. 새 schema와 storage이므로 별도 T3 지시서가 필요하다.
+`PolicyCoverage` 저장, 수정, 사용 중지, 복원 및 reference integrity는 별도 T3 지시서로 승인되어 구현되었다.
+
+Current state: `IMPLEMENTED_PENDING_INDEPENDENT_REVIEW`.
+
+- create initial status: `candidate`, `needs_review`
+- explicit review status transitions: DEC-PCS-003 그대로 적용
+- substantive rule/source update after `user_confirmed`: `needs_review`로 demotion
+- display name 또는 memo만 변경: 기존 `user_confirmed` 유지
+- disabled parent Policy: coverage 조회와 disable만 허용
+- restore: active parent Policy와 source reference 재검증
+- concurrency: canonical path별 process-wide gate와 `expectedRevision`
+- cascade, hard delete, migration, automatic retry, cross-process lock: 없음
 
 ### WBS-PCS-03 - T2_CLAIM_REFERENCE_MATCHING_ENGINE
 
@@ -649,7 +671,7 @@ Deferred minor preserved:
 
 WBS order: `WBS-PCS-01 -> WBS-PCS-02 -> WBS-PCS-03 -> WBS-PCS-04 -> WBS-PCS-05`.
 
-WBS-PCS-02는 이 문서로 구현 권한을 받지 않는다.
+WBS-PCS-02는 후속 사용자 지시 `APPROVED_T3_POLICY_COVERAGE_PERSISTENCE_MVP_AUTHORIZED`로 구현 권한을 받았으며, 현재 PR 독립 검토 대기 상태다.
 
 ## 13. ID Inventory and Gate Result
 
@@ -667,19 +689,21 @@ WBS-PCS-02는 이 문서로 구현 권한을 받지 않는다.
 | `WBS-PCS` | 5 |
 
 - Unresolved mandatory decisions: `0`
-- Code changes: `0`
-- Test changes: `0`
-- JSON/schema/migration changes: `0`
-- Runtime changes or execution: `0`
+- Production implementation files: `7`
+- Test implementation files: `3`
+- New JSON schema: `policy-coverages.json` schema `1`
+- Existing JSON schema changes: `0`
+- Migration changes: `0`
+- Runtime scope: isolated synthetic root lifecycle only
 - Actual data access: `0`
 - External API/AI/cloud use: `0`
 - Production/deployment authorization: `0`
 
-Final document gate: `PASS_USER_REVIEW_AND_DOCUMENTATION_COMMIT_AUTHORIZED`
+Final document gate: `PASS_WBS_PCS_02_IMPLEMENTED_PENDING_INDEPENDENT_REVIEW`
 
-Implementation readiness: `READY_FOR_T2_POLICY_SEARCH_B_REGISTERED_POLICY_READ_ONLY_SEARCH`
+Implementation readiness: `READY_T3_POLICY_COVERAGE_PERSISTENCE_MVP_FOR_INDEPENDENT_REVIEW`
 
-PolicyCoverage persistence: `NOT_IMPLEMENTED`, `NOT_AUTHORIZED_IN_THIS_BATCH`
+PolicyCoverage persistence: `IMPLEMENTED_PENDING_INDEPENDENT_REVIEW`
 
 Production readiness: `NOT_EVALUATED`
 
