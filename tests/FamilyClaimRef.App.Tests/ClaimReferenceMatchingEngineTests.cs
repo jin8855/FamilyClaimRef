@@ -631,6 +631,194 @@ public sealed class ClaimReferenceMatchingEngineTests
     }
 
     [Theory]
+    [InlineData(ClaimSubmissionValues.StatusSubmitted)]
+    [InlineData(ClaimSubmissionValues.StatusAdditionalDocumentsRequested)]
+    [InlineData(ClaimSubmissionValues.StatusReviewing)]
+    [InlineData(ClaimSubmissionValues.StatusCompleted)]
+    public void TestPcs027_Submission_states_requiring_details_reject_missing_date(string status)
+    {
+        var request = CreateRequest();
+        var submission = CreateSubmission(
+            "submission-a",
+            "claim-current",
+            "policy-a",
+            null,
+            BaseTime) with
+        {
+            Status = status,
+            SubmittedDate = null
+        };
+
+        AssertMatchingFailure(request with { ClaimSubmissions = [submission] });
+    }
+
+    [Theory]
+    [InlineData(ClaimSubmissionValues.StatusSubmitted)]
+    [InlineData(ClaimSubmissionValues.StatusAdditionalDocumentsRequested)]
+    [InlineData(ClaimSubmissionValues.StatusReviewing)]
+    [InlineData(ClaimSubmissionValues.StatusCompleted)]
+    public void TestPcs027_Submission_states_requiring_details_reject_invalid_coverage(
+        string status)
+    {
+        var request = CreateRequest();
+        var submission = CreateSubmission(
+            "submission-a",
+            "claim-current",
+            "policy-a",
+            null,
+            BaseTime) with { Status = status };
+
+        foreach (var invalidCoverage in new string?[] { null, " ", " Synthetic coverage " })
+        {
+            AssertMatchingFailure(request with
+            {
+                ClaimSubmissions = [submission with { CoverageDisplayName = invalidCoverage }]
+            });
+        }
+    }
+
+    [Theory]
+    [InlineData(" ")]
+    [InlineData(" Synthetic memo ")]
+    public void TestPcs027_Submission_memo_must_be_normalized(string invalidMemo)
+    {
+        var request = CreateRequest();
+        var submission = CreateSubmission(
+            "submission-a",
+            "claim-current",
+            "policy-a",
+            null,
+            BaseTime) with { Memo = invalidMemo };
+
+        AssertMatchingFailure(request with { ClaimSubmissions = [submission] });
+    }
+
+    [Theory]
+    [InlineData(0L)]
+    [InlineData(-1L)]
+    public void TestPcs027_Payment_amount_must_be_positive_when_present(long invalidAmount)
+    {
+        var request = CreateRequest();
+        var submission = CreateSubmission(
+            "submission-a",
+            "claim-current",
+            "policy-a",
+            null,
+            BaseTime);
+        var payment = CreatePayment(
+            "payment-a",
+            submission.Id,
+            ClaimPaymentValues.StatusPaid,
+            BaseTime) with { PaidAmount = invalidAmount };
+
+        AssertMatchingFailure(request with
+        {
+            ClaimSubmissions = [submission],
+            ClaimPayments = [payment]
+        });
+    }
+
+    [Theory]
+    [InlineData(ClaimPaymentValues.StatusPaid, "missing_paid_date")]
+    [InlineData(ClaimPaymentValues.StatusPaid, "missing_paid_amount")]
+    [InlineData(ClaimPaymentValues.StatusPaid, "missing_paid_coverage")]
+    [InlineData(ClaimPaymentValues.StatusPaid, "deny_reason")]
+    [InlineData(ClaimPaymentValues.StatusPaid, "reduction_reason")]
+    [InlineData(ClaimPaymentValues.StatusPartiallyPaid, "missing_paid_date")]
+    [InlineData(ClaimPaymentValues.StatusPartiallyPaid, "missing_paid_amount")]
+    [InlineData(ClaimPaymentValues.StatusPartiallyPaid, "missing_paid_coverage")]
+    [InlineData(ClaimPaymentValues.StatusPartiallyPaid, "missing_reduction_reason")]
+    [InlineData(ClaimPaymentValues.StatusPartiallyPaid, "deny_reason")]
+    [InlineData(ClaimPaymentValues.StatusDenied, "missing_deny_reason")]
+    [InlineData(ClaimPaymentValues.StatusDenied, "paid_date")]
+    [InlineData(ClaimPaymentValues.StatusDenied, "paid_amount")]
+    [InlineData(ClaimPaymentValues.StatusDenied, "paid_coverage")]
+    [InlineData(ClaimPaymentValues.StatusDenied, "reduction_reason")]
+    [InlineData(ClaimPaymentValues.StatusCancelled, "paid_date")]
+    [InlineData(ClaimPaymentValues.StatusCancelled, "paid_amount")]
+    [InlineData(ClaimPaymentValues.StatusCancelled, "paid_coverage")]
+    [InlineData(ClaimPaymentValues.StatusCancelled, "deny_reason")]
+    [InlineData(ClaimPaymentValues.StatusCancelled, "reduction_reason")]
+    [InlineData(ClaimPaymentValues.StatusCancelled, "additional_documents_memo")]
+    public void TestPcs027_Payment_status_fields_must_match_storage_contract(
+        string status,
+        string invalidField)
+    {
+        var request = CreateRequest();
+        var submission = CreateSubmission(
+            "submission-a",
+            "claim-current",
+            "policy-a",
+            null,
+            BaseTime);
+        var payment = MakePaymentStatusFieldsInvalid(
+            CreatePayment("payment-a", submission.Id, status, BaseTime),
+            invalidField);
+
+        AssertMatchingFailure(request with
+        {
+            ClaimSubmissions = [submission],
+            ClaimPayments = [payment]
+        });
+    }
+
+    [Theory]
+    [InlineData("paid_coverage")]
+    [InlineData("deny_reason")]
+    [InlineData("reduction_reason")]
+    [InlineData("additional_documents_memo")]
+    [InlineData("memo")]
+    public void TestPcs027_Payment_optional_strings_must_be_normalized(string field)
+    {
+        var request = CreateRequest();
+        var submission = CreateSubmission(
+            "submission-a",
+            "claim-current",
+            "policy-a",
+            null,
+            BaseTime);
+
+        foreach (var invalidValue in new[] { " ", " Synthetic value " })
+        {
+            var payment = CreatePaymentWithInvalidNormalizedField(
+                "payment-a",
+                submission.Id,
+                field,
+                invalidValue);
+            AssertMatchingFailure(request with
+            {
+                ClaimSubmissions = [submission],
+                ClaimPayments = [payment]
+            });
+        }
+    }
+
+    [Theory]
+    [InlineData(ClaimPaymentValues.StatusPending)]
+    [InlineData(ClaimPaymentValues.StatusPaid)]
+    [InlineData(ClaimPaymentValues.StatusPartiallyPaid)]
+    [InlineData(ClaimPaymentValues.StatusDenied)]
+    [InlineData(ClaimPaymentValues.StatusCancelled)]
+    public void TestPcs027_Valid_payment_status_contracts_are_accepted(string status)
+    {
+        var request = CreateRequest();
+        var submission = CreateSubmission(
+            "submission-a",
+            "claim-current",
+            "policy-a",
+            null,
+            BaseTime);
+
+        var result = engine.BuildProjection(request with
+        {
+            ClaimSubmissions = [submission],
+            ClaimPayments = [CreatePayment("payment-a", submission.Id, status, BaseTime)]
+        });
+
+        Assert.Empty(result.SimilarClaims);
+    }
+
+    [Theory]
     [InlineData(0)]
     [InlineData(1)]
     [InlineData(2)]
@@ -942,7 +1130,70 @@ public sealed class ClaimReferenceMatchingEngineTests
 
     private void AssertMatchingFailure(ClaimReferenceMatchingRequest request)
     {
-        Assert.Throws<ClaimReferenceMatchingException>(() => engine.BuildProjection(request));
+        var exception = Assert.Throws<ClaimReferenceMatchingException>(() =>
+            engine.BuildProjection(request));
+        Assert.Equal(ClaimReferenceMatchingErrorCode.InvalidGraph, exception.ErrorCode);
+    }
+
+    private static ClaimPaymentRecord MakePaymentStatusFieldsInvalid(
+        ClaimPaymentRecord payment,
+        string invalidField)
+    {
+        return invalidField switch
+        {
+            "missing_paid_date" => payment with { PaidDate = null },
+            "missing_paid_amount" => payment with { PaidAmount = null },
+            "missing_paid_coverage" => payment with { PaidCoverageDisplayName = null },
+            "missing_deny_reason" => payment with { DenyReason = null },
+            "missing_reduction_reason" => payment with { ReductionReason = null },
+            "paid_date" => payment with { PaidDate = new DateOnly(2025, 1, 3) },
+            "paid_amount" => payment with { PaidAmount = 10_000 },
+            "paid_coverage" => payment with { PaidCoverageDisplayName = "Synthetic coverage" },
+            "deny_reason" => payment with { DenyReason = "Synthetic denial" },
+            "reduction_reason" => payment with { ReductionReason = "Synthetic reduction" },
+            "additional_documents_memo" => payment with
+            {
+                AdditionalDocumentsMemo = "Synthetic additional documents"
+            },
+            _ => throw new ArgumentOutOfRangeException(nameof(invalidField))
+        };
+    }
+
+    private static ClaimPaymentRecord CreatePaymentWithInvalidNormalizedField(
+        string id,
+        string submissionId,
+        string field,
+        string invalidValue)
+    {
+        return field switch
+        {
+            "paid_coverage" => CreatePayment(
+                id,
+                submissionId,
+                ClaimPaymentValues.StatusPaid,
+                BaseTime) with { PaidCoverageDisplayName = invalidValue },
+            "deny_reason" => CreatePayment(
+                id,
+                submissionId,
+                ClaimPaymentValues.StatusDenied,
+                BaseTime) with { DenyReason = invalidValue },
+            "reduction_reason" => CreatePayment(
+                id,
+                submissionId,
+                ClaimPaymentValues.StatusPartiallyPaid,
+                BaseTime) with { ReductionReason = invalidValue },
+            "additional_documents_memo" => CreatePayment(
+                id,
+                submissionId,
+                ClaimPaymentValues.StatusPending,
+                BaseTime) with { AdditionalDocumentsMemo = invalidValue },
+            "memo" => CreatePayment(
+                id,
+                submissionId,
+                ClaimPaymentValues.StatusPending,
+                BaseTime) with { Memo = invalidValue },
+            _ => throw new ArgumentOutOfRangeException(nameof(field))
+        };
     }
 
     private static string Evidence(
@@ -1095,7 +1346,7 @@ public sealed class ClaimReferenceMatchingEngineTests
             claimCaseId,
             policyId,
             policyCoverageId,
-            policyCoverageId is null ? null : "Synthetic coverage",
+            "Synthetic coverage",
             new DateOnly(2025, 1, 2),
             null,
             [],
@@ -1112,13 +1363,13 @@ public sealed class ClaimReferenceMatchingEngineTests
         string status,
         DateTimeOffset updatedAt)
     {
-        return new ClaimPaymentRecord(
+        var payment = new ClaimPaymentRecord(
             id,
             submissionId,
             status,
-            new DateOnly(2025, 1, 3),
-            10_000,
-            "Synthetic coverage",
+            null,
+            null,
+            null,
             null,
             null,
             null,
@@ -1126,6 +1377,28 @@ public sealed class ClaimReferenceMatchingEngineTests
             1,
             BaseTime,
             updatedAt);
+
+        return status switch
+        {
+            ClaimPaymentValues.StatusPaid => payment with
+            {
+                PaidDate = new DateOnly(2025, 1, 3),
+                PaidAmount = 10_000,
+                PaidCoverageDisplayName = "Synthetic coverage"
+            },
+            ClaimPaymentValues.StatusPartiallyPaid => payment with
+            {
+                PaidDate = new DateOnly(2025, 1, 3),
+                PaidAmount = 10_000,
+                PaidCoverageDisplayName = "Synthetic coverage",
+                ReductionReason = "Synthetic reduction"
+            },
+            ClaimPaymentValues.StatusDenied => payment with
+            {
+                DenyReason = "Synthetic denial"
+            },
+            _ => payment
+        };
     }
 
     private static PolicyDocumentRecord CreatePolicyDocument(string id, string policyId)

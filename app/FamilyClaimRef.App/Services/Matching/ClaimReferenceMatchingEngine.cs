@@ -328,11 +328,19 @@ public sealed class ClaimReferenceMatchingEngine : IClaimReferenceMatchingEngine
             || !ClaimSubmissionValues.Statuses.Contains(record.Status, StringComparer.Ordinal)
             || !IsNormalizedOptional(record.PolicyCoverageId)
             || !IsNormalizedOptional(record.CoverageDisplayName)
+            || !IsNormalizedOptional(record.Memo)
             || !IsValidDate(record.SubmittedDate)
             || record.SubmittedAmount < 0
             || record.SubmittedClaimDocumentIds is null
             || record.Revision < 1
             || !HasValidLifecycle(record.CreatedAt, record.UpdatedAt, null))
+        {
+            throw InvalidGraph();
+        }
+
+        if (ClaimSubmissionValues.RequiresSubmittedDetails(record.Status)
+            && (record.SubmittedDate is null
+                || !IsNormalizedRequired(record.CoverageDisplayName)))
         {
             throw InvalidGraph();
         }
@@ -362,13 +370,51 @@ public sealed class ClaimReferenceMatchingEngine : IClaimReferenceMatchingEngine
             || !submissions.ContainsKey(record.ClaimSubmissionId)
             || !ClaimPaymentValues.Statuses.Contains(record.Status, StringComparer.Ordinal)
             || !IsValidDate(record.PaidDate)
-            || record.PaidAmount < 0
+            || record.PaidAmount is <= 0
             || !IsNormalizedOptional(record.PaidCoverageDisplayName)
+            || !IsNormalizedOptional(record.DenyReason)
+            || !IsNormalizedOptional(record.ReductionReason)
+            || !IsNormalizedOptional(record.AdditionalDocumentsMemo)
+            || !IsNormalizedOptional(record.Memo)
+            || !HasValidClaimPaymentStatusFields(record)
             || record.Revision < 1
             || !HasValidLifecycle(record.CreatedAt, record.UpdatedAt, null))
         {
             throw InvalidGraph();
         }
+    }
+
+    private static bool HasValidClaimPaymentStatusFields(ClaimPaymentRecord record)
+    {
+        return record.Status switch
+        {
+            ClaimPaymentValues.StatusPending => true,
+            ClaimPaymentValues.StatusPaid => HasRequiredPaidFields(record)
+                && record.DenyReason is null
+                && record.ReductionReason is null,
+            ClaimPaymentValues.StatusPartiallyPaid => HasRequiredPaidFields(record)
+                && IsNormalizedRequired(record.ReductionReason)
+                && record.DenyReason is null,
+            ClaimPaymentValues.StatusDenied => IsNormalizedRequired(record.DenyReason)
+                && record.PaidDate is null
+                && record.PaidAmount is null
+                && record.PaidCoverageDisplayName is null
+                && record.ReductionReason is null,
+            ClaimPaymentValues.StatusCancelled => record.PaidDate is null
+                && record.PaidAmount is null
+                && record.PaidCoverageDisplayName is null
+                && record.DenyReason is null
+                && record.ReductionReason is null
+                && record.AdditionalDocumentsMemo is null,
+            _ => false
+        };
+    }
+
+    private static bool HasRequiredPaidFields(ClaimPaymentRecord record)
+    {
+        return record.PaidDate is not null
+            && record.PaidAmount is not null
+            && IsNormalizedRequired(record.PaidCoverageDisplayName);
     }
 
     private static ClaimRecord RequireSelectedClaim(
