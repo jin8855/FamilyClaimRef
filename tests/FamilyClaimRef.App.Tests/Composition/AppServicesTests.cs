@@ -25,6 +25,10 @@ public sealed class AppServicesTests
         Assert.Equal(runtimeRootPaths.AttachmentRootPath, services.AttachmentRootPath);
         Assert.StartsWith(services.RuntimeRootPath, services.MetadataRootPath, StringComparison.OrdinalIgnoreCase);
         Assert.StartsWith(services.RuntimeRootPath, services.AttachmentRootPath, StringComparison.OrdinalIgnoreCase);
+        Assert.IsType<JsonPolicyCoverageStorageService>(services.PolicyCoverageStorageService);
+        Assert.False(File.Exists(Path.Combine(
+            services.MetadataRootPath,
+            JsonPolicyCoverageStorageService.StoreFileName)));
     }
 
     [Fact]
@@ -142,6 +146,9 @@ public sealed class AppServicesTests
         Assert.NotSame(
             first.ProductShellViewModel.HomeDashboard,
             second.ProductShellViewModel.HomeDashboard);
+        Assert.NotSame(
+            first.PolicyCoverageStorageService,
+            second.PolicyCoverageStorageService);
     }
 
     [Fact]

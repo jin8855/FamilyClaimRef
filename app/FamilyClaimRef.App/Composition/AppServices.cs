@@ -12,6 +12,7 @@ public sealed class AppServices
     private AppServices(
         MainWindowViewModel mainWindowViewModel,
         ProductShellViewModel productShellViewModel,
+        IPolicyCoverageStorageService policyCoverageStorageService,
         string runtimeRootPath,
         string metadataRootPath,
         string attachmentRootPath)
@@ -20,6 +21,8 @@ public sealed class AppServices
             ?? throw new ArgumentNullException(nameof(mainWindowViewModel));
         ProductShellViewModel = productShellViewModel
             ?? throw new ArgumentNullException(nameof(productShellViewModel));
+        PolicyCoverageStorageService = policyCoverageStorageService
+            ?? throw new ArgumentNullException(nameof(policyCoverageStorageService));
         RuntimeRootPath = runtimeRootPath
             ?? throw new ArgumentNullException(nameof(runtimeRootPath));
         MetadataRootPath = metadataRootPath
@@ -31,6 +34,8 @@ public sealed class AppServices
     public MainWindowViewModel MainWindowViewModel { get; }
 
     public ProductShellViewModel ProductShellViewModel { get; }
+
+    public IPolicyCoverageStorageService PolicyCoverageStorageService { get; }
 
     public string RuntimeRootPath { get; }
 
@@ -60,6 +65,11 @@ public sealed class AppServices
             new JsonPolicyClaimStorageService(metadataRootPath, familyMemberStorageService);
         var claimCaseStorageService = (IClaimCaseStorageService)policyClaimStorageService;
         var claimHistoryStorageReader = (IClaimHistoryStorageReader)policyClaimStorageService;
+        IPolicyCoverageStorageService policyCoverageStorageService =
+            new JsonPolicyCoverageStorageService(
+                metadataRootPath,
+                claimHistoryStorageReader,
+                documentStorageService);
         IClaimSubmissionStorageService claimSubmissionStorageService =
             new JsonClaimSubmissionStorageService(
                 metadataRootPath,
@@ -172,6 +182,7 @@ public sealed class AppServices
         return new AppServices(
             mainWindowViewModel,
             productShellViewModel,
+            policyCoverageStorageService,
             runtimeRootPaths.RuntimeRootPath,
             metadataRootPath,
             attachmentRootPath);
