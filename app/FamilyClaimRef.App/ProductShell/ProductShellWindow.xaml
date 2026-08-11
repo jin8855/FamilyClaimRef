@@ -21,6 +21,11 @@
                 DataContext="{Binding DataContext.PolicyClaimManagement, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
         </DataTemplate>
 
+        <DataTemplate x:Key="PolicySearchContentTemplate">
+            <views:ProductPolicySearchView
+                DataContext="{Binding DataContext.PolicyClaimManagement, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+        </DataTemplate>
+
         <DataTemplate x:Key="ClaimCasesContentTemplate">
             <views:ProductClaimCasesView
                 DataContext="{Binding DataContext.PolicyClaimManagement, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
@@ -159,6 +164,11 @@
                                      Value="01_home_dashboard">
                             <Setter Property="ContentTemplate"
                                     Value="{StaticResource HomeContentTemplate}" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Content.Id, RelativeSource={RelativeSource Self}}"
+                                     Value="03_policy_list">
+                            <Setter Property="ContentTemplate"
+                                    Value="{StaticResource PolicySearchContentTemplate}" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Content.Id, RelativeSource={RelativeSource Self}}"
                                      Value="11_policy_manage">

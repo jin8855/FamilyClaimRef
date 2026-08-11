@@ -388,6 +388,14 @@ public sealed class HomeDashboardViewModelTests
         Assert.Contains("ProductHomeDashboard_PaymentPendingCount", automationIds);
         Assert.Contains("ProductHomeDashboard_RecentActivities", automationIds);
         Assert.Contains("ProductHomeDashboard_StateMessage", automationIds);
+        Assert.Contains(
+            "{StaticResource Ui.Product.Home.RecentActivityTitle}",
+            viewText,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "{StaticResource Ui.Product.History.ListSectionTitle}",
+            viewText,
+            StringComparison.Ordinal);
         Assert.DoesNotContain("AvailableClaims.Count", viewText, StringComparison.Ordinal);
         Assert.DoesNotContain("DocumentList.Items.Count", viewText, StringComparison.Ordinal);
         Assert.DoesNotContain("PolicyClaimManagement.LoadAsync", codeText, StringComparison.Ordinal);

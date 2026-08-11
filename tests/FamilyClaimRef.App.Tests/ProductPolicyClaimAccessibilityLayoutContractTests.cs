@@ -97,6 +97,92 @@ public sealed class ProductPolicyClaimAccessibilityLayoutContractTests
     }
 
     [Fact]
+    public void Policy_search_controls_are_read_only_and_use_only_stable_automation_ids()
+    {
+        var document = LoadXaml(
+            "app",
+            "FamilyClaimRef.App",
+            "Views",
+            "ProductPolicySearchView.xaml");
+        var automationIds = document
+            .Descendants()
+            .Select(element => AttributeValue(element, "AutomationId"))
+            .Where(value => value is not null)
+            .ToArray();
+        var expected = new[]
+        {
+            "ProductScreen_03",
+            "ProductPolicySearch_Family",
+            "ProductPolicySearch_Insurer",
+            "ProductPolicySearch_ContractStatus",
+            "ProductPolicySearch_ProductCategory",
+            "ProductPolicySearch_Keyword",
+            "ProductPolicySearch_Apply",
+            "ProductPolicySearch_Reset",
+            "ProductPolicySearch_Results",
+            "ProductPolicySearch_StateMessage"
+        };
+        Assert.All(expected, id => Assert.Contains(id, automationIds));
+        Assert.DoesNotContain(
+            automationIds,
+            value => value!.Contains("{Binding", StringComparison.Ordinal)
+                || value.Contains("Id", StringComparison.Ordinal)
+                || value.Contains("FamilyDisplayName", StringComparison.Ordinal)
+                || value.Contains("InsurerName", StringComparison.Ordinal));
+        var filterOptionStyleReference =
+            "{StaticResource PolicySearchFilterOptionAutomationStyle}";
+        var filterIds = expected.Skip(1).Take(4).ToHashSet(StringComparer.Ordinal);
+        var filterControls = document
+            .Descendants(Presentation + "ComboBox")
+            .Where(element => filterIds.Contains(AttributeValue(element, "AutomationId") ?? string.Empty))
+            .ToArray();
+        Assert.Equal(4, filterControls.Length);
+        Assert.All(
+            filterControls,
+            element => Assert.Equal(
+                filterOptionStyleReference,
+                AttributeValue(element, "ItemContainerStyle")));
+        var filterOptionName = Assert.Single(
+            document.Descendants(Presentation + "Style")
+                .Where(style => AttributeValue(style, "Key") == "PolicySearchFilterOptionAutomationStyle")
+                .SelectMany(style => style.Descendants(Presentation + "Setter")),
+            setter => AttributeValue(setter, "Property") == "AutomationProperties.Name");
+        Assert.Equal(
+            "{StaticResource Ui.Product.Wireframe.03_policy_list.FilterSectionTitle}",
+            AttributeValue(filterOptionName, "Value"));
+
+        var results = Assert.Single(
+            document.Descendants(Presentation + "DataGrid"),
+            element => AttributeValue(element, "AutomationId") == "ProductPolicySearch_Results");
+        Assert.Equal("True", AttributeValue(results, "IsReadOnly"));
+        Assert.Equal("False", AttributeValue(results, "CanUserAddRows"));
+        var rowName = Assert.Single(
+            results
+                .Elements(Presentation + "DataGrid.RowStyle")
+                .Descendants(Presentation + "Setter"),
+            setter => AttributeValue(setter, "Property") == "AutomationProperties.Name");
+        Assert.Equal(
+            "{StaticResource Ui.Product.Wireframe.03_policy_list.ResultRowAutomationName}",
+            AttributeValue(rowName, "Value"));
+        var cellName = Assert.Single(
+            results
+                .Elements(Presentation + "DataGrid.CellStyle")
+                .Descendants(Presentation + "Setter"),
+            setter => AttributeValue(setter, "Property") == "AutomationProperties.Name");
+        Assert.Equal(
+            "{StaticResource Ui.Product.Wireframe.03_policy_list.ResultRowAutomationName}",
+            AttributeValue(cellName, "Value"));
+
+        var text = document.ToString(SaveOptions.DisableFormatting);
+        Assert.DoesNotContain("ProductPolicy_Register", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("EditPolicyButton_Click", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("DisableButton_Click", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("DocumentRegistration", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("PolicyCoverage", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("ClaimCase", text, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Registration_controls_hide_paths_and_use_display_text()
     {
         var document = LoadXaml(

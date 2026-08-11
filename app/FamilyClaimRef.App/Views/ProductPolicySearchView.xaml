@@ -1,0 +1,194 @@
+<UserControl x:Class="FamilyClaimRef.App.Views.ProductPolicySearchView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Loaded="UserControl_Loaded">
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled"
+                  AutomationProperties.AutomationId="ProductScreen_03">
+        <Grid MaxWidth="1420"
+              Margin="28,24,28,36"
+              HorizontalAlignment="Center">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <StackPanel Margin="0,0,0,20">
+                <TextBlock Text="{Binding DataContext.CurrentScreen.Breadcrumb, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                           Style="{StaticResource ProductSubtitleStyle}"
+                           Margin="0,0,0,8" />
+                <TextBlock Text="{Binding DataContext.CurrentScreen.Title, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                           Style="{StaticResource ProductPageTitleStyle}" />
+                <TextBlock Text="{Binding DataContext.CurrentScreen.Subtitle, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                           Style="{StaticResource ProductSubtitleStyle}"
+                           Margin="0,6,0,0" />
+            </StackPanel>
+
+            <Border Grid.Row="1"
+                    Style="{StaticResource ProductPanelStyle}"
+                    Margin="0,0,0,16">
+                <Border.Resources>
+                    <Style x:Key="PolicySearchFilterOptionAutomationStyle"
+                           TargetType="ComboBoxItem">
+                        <Setter Property="AutomationProperties.Name"
+                                Value="{StaticResource Ui.Product.Wireframe.03_policy_list.FilterSectionTitle}" />
+                    </Style>
+                </Border.Resources>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.ColumnSpan="3"
+                               Text="{StaticResource Ui.Product.Wireframe.03_policy_list.FilterSectionTitle}"
+                               Style="{StaticResource ProductSectionTitleStyle}"
+                               Margin="0,0,0,12" />
+
+                    <StackPanel Grid.Row="1" Margin="0,0,12,12">
+                        <TextBlock Text="{StaticResource Ui.Product.InsurancePolicy.FamilyLabel}"
+                                   Style="{StaticResource ProductSubtitleStyle}"
+                                   Margin="0,0,0,6" />
+                        <ComboBox ItemsSource="{Binding PolicySearchFamilyOptions}"
+                                  SelectedItem="{Binding SelectedPolicySearchFamily}"
+                                  DisplayMemberPath="DisplayName"
+                                  ItemContainerStyle="{StaticResource PolicySearchFilterOptionAutomationStyle}"
+                                  AutomationProperties.AutomationId="ProductPolicySearch_Family" />
+                    </StackPanel>
+                    <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,0,12,12">
+                        <TextBlock Text="{StaticResource Ui.Product.InsurancePolicy.InsurerLabel}"
+                                   Style="{StaticResource ProductSubtitleStyle}"
+                                   Margin="0,0,0,6" />
+                        <ComboBox ItemsSource="{Binding PolicySearchInsurerOptions}"
+                                  SelectedItem="{Binding SelectedPolicySearchInsurer}"
+                                  DisplayMemberPath="DisplayName"
+                                  ItemContainerStyle="{StaticResource PolicySearchFilterOptionAutomationStyle}"
+                                  AutomationProperties.AutomationId="ProductPolicySearch_Insurer" />
+                    </StackPanel>
+                    <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,0,0,12">
+                        <TextBlock Text="{StaticResource Ui.Product.InsurancePolicy.ContractStatusLabel}"
+                                   Style="{StaticResource ProductSubtitleStyle}"
+                                   Margin="0,0,0,6" />
+                        <ComboBox ItemsSource="{Binding PolicySearchContractStatusOptions}"
+                                  SelectedItem="{Binding SelectedPolicySearchContractStatus}"
+                                  DisplayMemberPath="DisplayName"
+                                  ItemContainerStyle="{StaticResource PolicySearchFilterOptionAutomationStyle}"
+                                  AutomationProperties.AutomationId="ProductPolicySearch_ContractStatus" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="2" Margin="0,0,12,0">
+                        <TextBlock Text="{StaticResource Ui.Product.InsurancePolicy.ProductCategoryLabel}"
+                                   Style="{StaticResource ProductSubtitleStyle}"
+                                   Margin="0,0,0,6" />
+                        <ComboBox ItemsSource="{Binding PolicySearchProductCategoryOptions}"
+                                  SelectedItem="{Binding SelectedPolicySearchProductCategory}"
+                                  DisplayMemberPath="DisplayName"
+                                  ItemContainerStyle="{StaticResource PolicySearchFilterOptionAutomationStyle}"
+                                  AutomationProperties.AutomationId="ProductPolicySearch_ProductCategory" />
+                    </StackPanel>
+                    <StackPanel Grid.Row="2" Grid.Column="1" Margin="0,0,12,0">
+                        <TextBlock Text="{StaticResource Ui.Product.Wireframe.03_policy_list.KeywordLabel}"
+                                   Style="{StaticResource ProductSubtitleStyle}"
+                                   Margin="0,0,0,6" />
+                        <TextBox Text="{Binding PolicySearchKeyword, UpdateSourceTrigger=PropertyChanged}"
+                                 AutomationProperties.AutomationId="ProductPolicySearch_Keyword" />
+                    </StackPanel>
+                    <StackPanel Grid.Row="2"
+                                Grid.Column="2"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Bottom">
+                        <Button Content="{StaticResource Ui.Product.Wireframe.03_policy_list.ApplyAction}"
+                                Click="ApplyButton_Click"
+                                AutomationProperties.AutomationId="ProductPolicySearch_Apply"
+                                Style="{StaticResource ProductPrimaryButtonStyle}" />
+                        <Button Content="{StaticResource Ui.Product.Wireframe.03_policy_list.ResetAction}"
+                                Click="ResetButton_Click"
+                                AutomationProperties.AutomationId="ProductPolicySearch_Reset"
+                                Style="{StaticResource ProductSecondaryButtonStyle}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Border Grid.Row="2"
+                    Style="{StaticResource ProductPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="{StaticResource Ui.Product.Wireframe.03_policy_list.TableTitle}"
+                               Style="{StaticResource ProductSectionTitleStyle}"
+                               Margin="0,0,0,12" />
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding PolicySearchResults}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserAddRows="False"
+                              MinHeight="280"
+                              HorizontalScrollBarVisibility="Disabled"
+                              AutomationProperties.AutomationId="ProductPolicySearch_Results">
+                        <DataGrid.CellStyle>
+                            <Style TargetType="DataGridCell">
+                                <Setter Property="AutomationProperties.Name"
+                                        Value="{StaticResource Ui.Product.Wireframe.03_policy_list.ResultRowAutomationName}" />
+                            </Style>
+                        </DataGrid.CellStyle>
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow">
+                                <Setter Property="AutomationProperties.Name"
+                                        Value="{StaticResource Ui.Product.Wireframe.03_policy_list.ResultRowAutomationName}" />
+                            </Style>
+                        </DataGrid.RowStyle>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.PolicyContracts.DisplayTitleLabel}"
+                                                Binding="{Binding DisplayTitle}"
+                                                Width="1.5*" />
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.InsurancePolicy.FamilyLabel}"
+                                                Binding="{Binding FamilyDisplayName}"
+                                                Width="*" />
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.InsurancePolicy.InsurerLabel}"
+                                                Binding="{Binding InsurerName}"
+                                                Width="*" />
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.InsurancePolicy.ProductCategoryLabel}"
+                                                Binding="{Binding ProductCategory}"
+                                                Width="*" />
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.InsurancePolicy.ContractStatusLabel}"
+                                                Binding="{Binding ContractStatus}"
+                                                Width="0.8*" />
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.InsurancePolicy.EnrollmentDateLabel}"
+                                                Binding="{Binding EnrollmentDate}"
+                                                Width="0.8*" />
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.InsurancePolicy.TotalPlannedPremiumAmountLabel}"
+                                                Binding="{Binding TotalPlannedPremiumAmount}"
+                                                Width="0.9*" />
+                            <DataGridTemplateColumn Header="{StaticResource Ui.Product.Wireframe.03_policy_list.DetailAction}"
+                                                    Width="Auto">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="{StaticResource Ui.Product.Wireframe.03_policy_list.DetailAction}"
+                                                Click="DetailButton_Click"
+                                                Style="{StaticResource ProductSecondaryButtonStyle}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <TextBlock Grid.Row="2"
+                               Text="{Binding PolicySearchMessage}"
+                               TextWrapping="Wrap"
+                               Margin="0,12,0,0"
+                               AutomationProperties.AutomationId="ProductPolicySearch_StateMessage" />
+                </Grid>
+            </Border>
+        </Grid>
+    </ScrollViewer>
+</UserControl>
