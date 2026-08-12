@@ -19,7 +19,6 @@ public sealed class ProductWireframeRouteCoverageTests
         ProductScreenRoutes.PolicyList,
         ProductScreenRoutes.PolicyDetail,
         ProductScreenRoutes.OcrReview,
-        ProductScreenRoutes.ClaimReferenceResult,
         ProductScreenRoutes.HistoryView,
         ProductScreenRoutes.PolicyRegister,
         ProductScreenRoutes.FamilyRegister,
@@ -272,6 +271,7 @@ public sealed class ProductWireframeRouteCoverageTests
         Assert.Contains(ProductScreenRoutes.PolicyDocumentRegister, triggerValues);
         Assert.Contains(ProductScreenRoutes.ClaimDocumentRegister, triggerValues);
         Assert.Contains(ProductScreenRoutes.ClaimSubmission, triggerValues);
+        Assert.Contains(ProductScreenRoutes.ClaimReferenceResult, triggerValues);
         Assert.Contains(ProductScreenRoutes.ClaimComplete, triggerValues);
         Assert.Contains(ProductScreenRoutes.DocumentBox, triggerValues);
         Assert.Contains(ProductScreenRoutes.FamilyMembers, triggerValues);
@@ -281,6 +281,36 @@ public sealed class ProductWireframeRouteCoverageTests
             document.Descendants(Presentation + "Setter"),
             setter => setter.Attribute("Value")?.Value
                 == "{StaticResource WireframeContentTemplate}");
+    }
+
+    [Fact]
+    public void Claim_reference_route_uses_dedicated_read_only_view()
+    {
+        var root = FindProjectRoot();
+        var shell = XDocument.Load(Path.Combine(
+            root,
+            "app",
+            "FamilyClaimRef.App",
+            "ProductShell",
+            "ProductShellWindow.xaml"));
+        var template = Assert.Single(
+            shell.Descendants(Presentation + "DataTemplate"),
+            candidate => candidate.Attribute(Xaml + "Key")?.Value == "ClaimReferenceResultContentTemplate");
+
+        Assert.Contains(template.Descendants(), element => element.Name.LocalName == "ProductClaimReferenceResultView");
+
+        var view = XDocument.Load(Path.Combine(
+            root,
+            "app",
+            "FamilyClaimRef.App",
+            "Views",
+            "ProductClaimReferenceResultView.xaml"));
+        var grids = view.Descendants(Presentation + "DataGrid").ToArray();
+        Assert.Equal(2, grids.Length);
+        Assert.All(grids, grid => Assert.Equal("True", grid.Attribute("IsReadOnly")?.Value));
+        Assert.DoesNotContain(
+            view.Descendants().SelectMany(element => element.Attributes()).Select(attribute => attribute.Value),
+            value => value.Contains("PolicyCoverageId", StringComparison.Ordinal));
     }
 
     [Fact]

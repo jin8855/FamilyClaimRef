@@ -26,7 +26,8 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
         ClaimSubmissionManagementViewModel claimSubmissionManagement,
         ClaimCompleteSummaryViewModel claimCompleteSummary,
         ClaimHistoryViewModel claimHistory,
-        HomeDashboardViewModel homeDashboard)
+        HomeDashboardViewModel homeDashboard,
+        ClaimReferenceResultViewModel? claimReferenceResult = null)
     {
         ArgumentNullException.ThrowIfNull(uiTextProvider);
         ArgumentNullException.ThrowIfNull(documentRegistration);
@@ -53,6 +54,7 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
         ClaimCompleteSummary = claimCompleteSummary;
         ClaimHistory = claimHistory;
         HomeDashboard = homeDashboard;
+        ClaimReferenceResult = claimReferenceResult;
         NavigationItems = Array.AsReadOnly(
         [
             new ProductNavigationItemViewModel(
@@ -105,6 +107,8 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
     public ClaimHistoryViewModel ClaimHistory { get; }
 
     public HomeDashboardViewModel HomeDashboard { get; }
+
+    public ClaimReferenceResultViewModel? ClaimReferenceResult { get; }
 
     public ReadOnlyCollection<ProductNavigationItemViewModel> NavigationItems { get; }
 
@@ -390,6 +394,7 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
         }
 
         ConfigureClaimSubmissionTarget(routeId);
+        ConfigureClaimReferenceTarget(routeId);
         ConfigureClaimCompleteTarget(routeId);
         ConfigureClaimHistoryTarget(routeId);
         ConfigureRegistrationTarget(routeId);
@@ -403,16 +408,32 @@ public sealed class ProductShellViewModel : INotifyPropertyChanged
             return;
         }
 
-        var claimCaseId = string.Equals(
-                CurrentRouteId,
-                ProductScreenRoutes.ClaimComplete,
-                StringComparison.Ordinal)
-            ? ClaimCompleteSummary.SelectedClaimCaseId
-            : PolicyClaimManagement.SelectedClaimId;
+        var claimCaseId = CurrentRouteId switch
+        {
+            ProductScreenRoutes.ClaimComplete => ClaimCompleteSummary.SelectedClaimCaseId,
+            ProductScreenRoutes.ClaimReferenceResult => ClaimReferenceResult?.SelectedClaimCaseId,
+            _ => PolicyClaimManagement.SelectedClaimId
+        };
         if (!string.IsNullOrWhiteSpace(claimCaseId))
         {
             ClaimSubmissionManagement.SelectedClaimCaseId = claimCaseId;
         }
+    }
+
+    private void ConfigureClaimReferenceTarget(string routeId)
+    {
+        if (ClaimReferenceResult is null
+            || !string.Equals(routeId, ProductScreenRoutes.ClaimReferenceResult, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        var claimCaseId = CurrentRouteId switch
+        {
+            ProductScreenRoutes.ClaimSubmission => ClaimSubmissionManagement.SelectedClaimCaseId,
+            _ => PolicyClaimManagement.SelectedClaimId
+        };
+        ClaimReferenceResult.SelectedClaimCaseId = claimCaseId;
     }
 
     private void ConfigureClaimCompleteTarget(string routeId)

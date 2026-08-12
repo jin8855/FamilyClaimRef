@@ -21,8 +21,8 @@ public sealed class ResourceUiTextProviderTests
     {
         var resources = LoadUiStrings();
 
-        Assert.Equal(376, resources.Count);
-        Assert.Equal(319, resources.Keys.Count(IsProductKey));
+        Assert.Equal(416, resources.Count);
+        Assert.Equal(359, resources.Keys.Count(IsProductKey));
         Assert.Equal(319, ExpectedProductResources.Count);
         Assert.All(
             ExpectedProductResources,
@@ -36,11 +36,11 @@ public sealed class ResourceUiTextProviderTests
         var resourceKeys = resourceEntries.Select(entry => entry.Key).ToArray();
         var constantValues = LoadUiTextKeyConstants();
 
-        Assert.Equal(376, resourceEntries.Count);
+        Assert.Equal(416, resourceEntries.Count);
         Assert.Equal(resourceKeys.Length, resourceKeys.Distinct(StringComparer.Ordinal).Count());
-        Assert.Equal(376, constantValues.Count);
+        Assert.Equal(416, constantValues.Count);
         Assert.Equal(constantValues.Count, constantValues.Distinct(StringComparer.Ordinal).Count());
-        Assert.Equal(319, constantValues.Count(IsProductKey));
+        Assert.Equal(359, constantValues.Count(IsProductKey));
         Assert.Equal(
             resourceKeys.OrderBy(key => key, StringComparer.Ordinal),
             constantValues.OrderBy(key => key, StringComparer.Ordinal));
@@ -130,6 +130,21 @@ public sealed class ResourceUiTextProviderTests
         var provider = new ResourceUiTextProvider(resources);
 
         Assert.All(RuntimeMessageKeys, key => Assert.False(string.IsNullOrWhiteSpace(provider.Get(key))));
+    }
+
+    [Fact]
+    public void Claim_reference_result_copy_is_safe_and_complete()
+    {
+        var resources = LoadUiStrings();
+
+        Assert.Equal("보험 찾기", resources[UiTextKeys.ProductClaimReferenceTitle]);
+        Assert.Equal("확인할 청구 건을 선택해 주세요.", resources[UiTextKeys.ProductClaimReferenceInitialMessage]);
+        Assert.Equal("현재 조건에 표시할 담보 또는 과거 유사 청구가 없습니다.", resources[UiTextKeys.ProductClaimReferenceEmptyMessage]);
+        Assert.Equal("청구 건과 연결 정보가 일치하지 않아 결과를 표시할 수 없습니다.", resources[UiTextKeys.ProductClaimReferenceDomainErrorMessage]);
+        Assert.Equal("보험 찾기 결과를 불러오지 못했습니다. 다시 시도해 주세요.", resources[UiTextKeys.ProductClaimReferenceUnexpectedErrorMessage]);
+        Assert.All(
+            LoadUiTextKeyConstants().Where(key => key.StartsWith("Ui.Product.ClaimReference.", StringComparison.Ordinal)),
+            key => Assert.False(string.IsNullOrWhiteSpace(resources[key])));
     }
 
     [Fact]
