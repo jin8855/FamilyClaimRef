@@ -633,9 +633,9 @@ Traceability result: every `DEC-PCS-*` is connected to at least one requirement,
 
 이 항목은 WBS-PCS-02 미완료가 아니라 WBS-PCS-03 이후의 별도 scope다.
 
-Deferred minor preserved:
+Completed minor:
 
-- 홈 최근 5건 영역의 `통합 청구 이력` 제목은 다음 UI resource 변경 배치에서 `최근 청구 활동`으로 수정한다.
+- 홈 최근 5건 영역 제목은 `최근 청구 활동`으로 이미 적용되어 있다. `Ui.Product.Home.RecentActivityTitle` 리소스와 ProductHomeView 소비 지점을 정적 확인했다.
 
 ## 12. Follow-up WBS
 
@@ -670,7 +670,7 @@ Current state: `IMPLEMENTED_TESTED_PENDING_INDEPENDENT_REVIEW`.
 
 ### WBS-PCS-05 - T2_HOME_RECENT_ACTIVITY_TITLE_MINOR
 
-`통합 청구 이력`을 `최근 청구 활동`으로 정정한다. 다음 UI resource 변경 배치에 함께 처리한다.
+홈 최근 5건 영역 제목을 `최근 청구 활동`으로 정정하는 제품 요구사항은 이미 구현되어 정적 확인을 마쳤다.
 
 WBS order: `WBS-PCS-01 -> WBS-PCS-02 -> WBS-PCS-03 -> WBS-PCS-04 -> WBS-PCS-05`.
 
