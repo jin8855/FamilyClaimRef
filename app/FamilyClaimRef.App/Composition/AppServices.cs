@@ -1,4 +1,5 @@
 using FamilyClaimRef.App.Services.Localization;
+using FamilyClaimRef.App.Services.Matching;
 using FamilyClaimRef.App.Services.Runtime;
 using FamilyClaimRef.App.Services.Storage;
 using FamilyClaimRef.App.Services.UI;
@@ -86,6 +87,8 @@ public sealed class AppServices
                 policyClaimStorageService);
         var claimPaymentHistoryStorageReader =
             (IClaimPaymentHistoryStorageReader)claimPaymentStorageService;
+        IClaimReferenceMatchingEngine claimReferenceMatchingEngine =
+            new ClaimReferenceMatchingEngine();
         IFileAttachmentService fileAttachmentService = new LocalFileAttachmentService(attachmentRootPath);
         var fileValidationService = new DocumentFileValidationService();
         var attachmentCoordinator = new DocumentAttachmentCoordinator(
@@ -161,6 +164,15 @@ public sealed class AppServices
             claimPaymentHistoryStorageReader,
             familyMemberStorageService,
             uiTextProvider);
+        var claimReferenceResultViewModel = new ClaimReferenceResultViewModel(
+            claimReferenceMatchingEngine,
+            familyMemberStorageService,
+            claimHistoryStorageReader,
+            policyCoverageStorageService,
+            claimSubmissionHistoryStorageReader,
+            claimPaymentHistoryStorageReader,
+            documentStorageService,
+            uiTextProvider);
         var homeDashboardViewModel = new HomeDashboardViewModel(
             claimHistoryStorageReader,
             claimSubmissionHistoryStorageReader,
@@ -177,7 +189,8 @@ public sealed class AppServices
             claimSubmissionManagementViewModel,
             claimCompleteSummaryViewModel,
             claimHistoryViewModel,
-            homeDashboardViewModel);
+            homeDashboardViewModel,
+            claimReferenceResultViewModel);
 
         return new AppServices(
             mainWindowViewModel,

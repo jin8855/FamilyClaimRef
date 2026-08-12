@@ -1,0 +1,124 @@
+<UserControl x:Class="FamilyClaimRef.App.Views.ProductClaimReferenceResultView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:viewModels="clr-namespace:FamilyClaimRef.App.ViewModels"
+             Loaded="UserControl_Loaded">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="28">
+            <DockPanel Margin="0,0,0,18">
+                <StackPanel DockPanel.Dock="Left">
+                    <TextBlock Text="{StaticResource Ui.Product.ClaimReference.Title}"
+                               Style="{StaticResource ProductPageTitleStyle}" />
+                    <TextBlock Text="{StaticResource Ui.Product.ClaimReference.Guidance}"
+                               Style="{StaticResource ProductSubtitleStyle}"
+                               Margin="0,6,0,0" />
+                </StackPanel>
+                <Button DockPanel.Dock="Right"
+                        Content="{StaticResource Ui.Product.ClaimReference.BackToSubmissionAction}"
+                        Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                        CommandParameter="{x:Static viewModels:ProductScreenRoutes.ClaimSubmission}"
+                        AutomationProperties.AutomationId="ProductClaimReference_BackToSubmission"
+                        Style="{StaticResource ProductSecondaryButtonStyle}" />
+            </DockPanel>
+
+            <Border Style="{StaticResource ProductPanelStyle}"
+                    AutomationProperties.AutomationId="ProductClaimReference_Context">
+                <StackPanel>
+                    <TextBlock Text="{StaticResource Ui.Product.ClaimReference.SelectedClaimLabel}"
+                               Style="{StaticResource ProductSubtitleStyle}" />
+                    <TextBlock Text="{Binding SelectedClaimDisplayTitle}"
+                               FontWeight="SemiBold"
+                               Margin="0,4,0,0" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource ProductPanelStyle}"
+                    Margin="0,14,0,0"
+                    AutomationProperties.AutomationId="ProductClaimReference_State">
+                <TextBlock Text="{Binding StateMessage}"
+                           TextWrapping="Wrap" />
+            </Border>
+
+            <Border Style="{StaticResource ProductPanelStyle}"
+                    Margin="0,14,0,0"
+                    AutomationProperties.AutomationId="ProductClaimReference_CoverageResults">
+                <StackPanel>
+                    <TextBlock Text="{StaticResource Ui.Product.ClaimReference.CoverageResultsSectionTitle}"
+                               Style="{StaticResource ProductSectionTitleStyle}"
+                               Margin="0,0,0,10" />
+                    <DataGrid ItemsSource="{Binding CoverageResults}"
+                              IsReadOnly="True"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              HeadersVisibility="Column"
+                              HorizontalScrollBarVisibility="Disabled"
+                              VerticalScrollBarVisibility="Auto"
+                              AutomationProperties.AutomationId="ProductClaimReference_CoverageGrid">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.ClaimReference.PolicyLabel}"
+                                                Binding="{Binding PolicyDisplayName}"
+                                                Width="1.1*" />
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.ClaimReference.CoverageLabel}"
+                                                Binding="{Binding CoverageDisplayName}"
+                                                Width="1.1*" />
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.ClaimReference.ResultGroupLabel}"
+                                                Binding="{Binding ResultGroupDisplay}"
+                                                Width="1.1*" />
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.ClaimReference.EvidenceLabel}"
+                                                Binding="{Binding EvidenceDisplay}"
+                                                Width="2*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <TextBlock Text="{StaticResource Ui.Product.ClaimReference.ExcludedUnconfirmedMessage}"
+                               Margin="0,10,0,0">
+                        <TextBlock.Style>
+                            <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource ProductSubtitleStyle}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasExcludedUnconfirmedCoverages}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource ProductPanelStyle}"
+                    Margin="0,14,0,0"
+                    AutomationProperties.AutomationId="ProductClaimReference_SimilarClaims">
+                <StackPanel>
+                    <TextBlock Text="{StaticResource Ui.Product.ClaimReference.SimilarClaimsSectionTitle}"
+                               Style="{StaticResource ProductSectionTitleStyle}"
+                               Margin="0,0,0,10" />
+                    <DataGrid ItemsSource="{Binding SimilarClaims}"
+                              IsReadOnly="True"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              HeadersVisibility="Column"
+                              HorizontalScrollBarVisibility="Disabled"
+                              VerticalScrollBarVisibility="Auto"
+                              AutomationProperties.AutomationId="ProductClaimReference_SimilarClaimGrid">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.ClaimReference.PolicyLabel}"
+                                                Binding="{Binding PolicyDisplayName}"
+                                                Width="1.5*" />
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.ClaimReference.SimilarityLabel}"
+                                                Binding="{Binding SimilarityDisplay}"
+                                                Width="*" />
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.ClaimReference.TreatmentDateLabel}"
+                                                Binding="{Binding TreatmentDateDisplay}"
+                                                Width="*" />
+                            <DataGridTextColumn Header="{StaticResource Ui.Product.ClaimReference.PaymentSummaryLabel}"
+                                                Binding="{Binding PaymentSummaryDisplay}"
+                                                Width="1.5*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -335,7 +335,8 @@ public sealed class ProductShellViewModelTests
             parameter => Assert.Equal(typeof(ClaimSubmissionManagementViewModel), parameter.ParameterType),
             parameter => Assert.Equal(typeof(ClaimCompleteSummaryViewModel), parameter.ParameterType),
             parameter => Assert.Equal(typeof(ClaimHistoryViewModel), parameter.ParameterType),
-            parameter => Assert.Equal(typeof(HomeDashboardViewModel), parameter.ParameterType));
+            parameter => Assert.Equal(typeof(HomeDashboardViewModel), parameter.ParameterType),
+            parameter => Assert.Equal(typeof(ClaimReferenceResultViewModel), parameter.ParameterType));
     }
 
     [Fact]
